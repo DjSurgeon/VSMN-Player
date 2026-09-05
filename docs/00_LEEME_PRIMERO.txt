@@ -1,0 +1,233 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                ║
+║                    🎬 IPTV PLAYER — PROYECTO PORTFOLIO                        ║
+║                     Tu Plan para Conseguir Empleo en C++                      ║
+║                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+
+📋 CONTENIDO DE ESTA CARPETA:
+────────────────────────────────────────────────────────────────────────────────
+
+1. 📍 00_LEEME_PRIMERO.txt (este archivo)
+   └─ Guía de qué leer y en qué orden
+
+2. 🚀 QUICK_START.md (15 minutos de lectura)
+   └─ Acciones inmediatas para esta semana
+   └─ Empieza AQUÍ si tienes prisa
+
+3. 📊 EXECUTIVE_SUMMARY.md (15 minutos)
+   └─ Visión 30,000 ft del proyecto
+   └─ Por qué esto te ayuda a conseguir empleo
+   └─ Timeline realista
+
+4. 🏗️  ARCHITECTURE.md (45 minutos)
+   └─ Diseño completo del proyecto
+   └─ CERO código, PURO pensamiento arquitectónico
+   └─ 3-thread design, circular buffers, componentes
+
+5. 🎯 TECHNICAL_DECISIONS.md (30 minutos)
+   └─ 16 decisiones técnicas clave documentadas
+   └─ Por qué C++ vs Rust, mutex vs lock-free, etc.
+   └─ Lo que dirás en interviews
+
+6. 📝 EXECUTION_PLAN.md (1 hora)
+   └─ Checklist semana-a-semana detallado
+   └─ Hitos, tareas, métricas
+   └─ Week 1-12 organized
+
+7. 🚀 ROADMAP_VISUAL.txt (15 minutos)
+   └─ Síntesis visual de todo
+   └─ Timeline, decisiones, skills
+   └─ "Golden rules"
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+
+🎯 ORDEN DE LECTURA (Recomendado):
+
+Si tienes 2 horas hoy:
+├─ QUICK_START.md           (20 min)  → Entiende acciones inmediatas
+├─ EXECUTIVE_SUMMARY.md     (15 min)  → Entiende por qué este proyecto
+├─ ROADMAP_VISUAL.txt       (15 min)  → Ve el big picture
+└─ ARCHITECTURE.md          (70 min)  → Aprende diseño
+
+Próxima sesión (2 horas):
+├─ TECHNICAL_DECISIONS.md   (45 min)  → Entiende justificaciones
+├─ EXECUTION_PLAN.md        (60 min)  → Planifica Week 1
+└─ Copy docs/ to GitHub repo (15 min) → Primer commit
+
+Total: 4 horas de lectura = arquitectura completa entendida
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+
+✅ RESUMEN: QUÉ VAS A CONSTRUIR
+
+Un IPTV Player desktop en C++20 que:
+├─ Descarga playlists M3U8 (networking)
+├─ Decodifica video H.264 + audio AAC (FFmpeg)
+├─ Renderiza con OpenGL (graphics)
+├─ Toca audio con SDL2 (multimedia)
+├─ Tiene GUI con ImGui (user interface)
+├─ Está coordinado por 3 threads especializados (concurrency)
+├─ Es testeado (GTest, >80% coverage)
+├─ Pasa sanitizers (AddressSanitizer, ThreadSanitizer)
+├─ Tiene CI/CD (GitHub Actions)
+└─ Es deployable (Docker)
+
+DURACIÓN: 12 semanas (100-120 horas)
+HITO 1:   Week 6  → MVP (video plays, no crashes)
+HITO 2:   Week 12 → Production (portfolio-ready)
+
+Por qué impresiona:
+└─ Es un PRODUCTO REAL, no ejercicios
+└─ Demuestra 9 skill categories
+└─ Production-grade (tests, sanitizers, CI/CD, Docker)
+└─ Recruiters lo reconocen
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+
+🚀 ACCIÓN INMEDIATA (esta semana):
+
+1. Lee QUICK_START.md (30 min)
+2. Crea GitHub repo "iptv-player"
+3. Copia estos .md files a repo/docs/
+4. Primer commit: "Initial project structure with documentation"
+5. Setup GitHub Actions (skeleton)
+
+Resultado: GitHub repo que PARECE profesional desde día 1
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+
+💡 DIFERENCIADORES
+
+Este proyecto vs típicos portfolios:
+├─ Typical:  "Hello World", TODO list, algoritmo random
+└─ Este:     IPTV Player profesional, multithreaded, producción-ready
+
+Que ven recruiters:
+├─ Código:     "Entiende concurrencia, memoria, arquitectura"
+├─ Tests:      "Toma testing en serio (>80% coverage)"
+├─ DevOps:     "Sabe CI/CD, Docker, cross-platform builds"
+├─ Docs:       "Documenta decisiones, no random code"
+└─ Demo:       "Se ve en pantalla, no imaginar"
+
+Resultado: "Ese candidato es serio" → Llamada de recruiter
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+
+⏱️  TIMELINE VISUAL:
+
+WEEK 1-2    WEEK 3-4    WEEK 5-6    WEEK 7-8     WEEK 9-10  WEEK 11-12
+┌───────┬──────────┬──────────┬──────────┬──────────┬───────────┐
+│Network│ Decoder  │ Render + │Advanced  │ Testing  │Docs &     │
+│ + GUI │Integration│ GUI Sync │Features  │ Quality  │Release v1 │
+│ MVP   │ MVP      │MVP Ready │+ Perf    │ Focus    │           │
+└───────┴──────────┴──────────┴──────────┴──────────┴───────────┘
+        ✅ MVP v1.0                                   ✅ Prod v1.0
+        (Funcional)                                  (Polished)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+
+🎓 SKILLS QUE APRENDERÁS:
+
+Networking:          Concurrency:         Media:
+├─ HTTP/HTTPS        ├─ std::thread       ├─ FFmpeg
+├─ M3U8 parsing      ├─ mutex/CV          ├─ H.264/AAC
+├─ TLS/SSL           ├─ race conditions   ├─ demuxing
+├─ Retries/backoff   └─ ThreadSanitizer   └─ A/V sync
+
+Graphics:            Build & Deployment:  Testing:
+├─ OpenGL            ├─ CMake             ├─ GTest
+├─ Textures          ├─ Conan             ├─ Fixtures
+├─ Shaders           ├─ Docker            ├─ Mocking
+└─ 60 FPS real-time  ├─ GitHub Actions    ├─ Coverage
+                     └─ CI/CD             └─ Sanitizers
+
+Audio:               Architecture:        Professional:
+├─ SDL2 audio        ├─ Design patterns   ├─ Documentation
+├─ PCM playback      ├─ State machine     ├─ Code review
+└─ Synchronization   ├─ Error handling    └─ Deployment
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+
+❓ PREGUNTAS FRECUENTES:
+
+P: ¿Realmente necesito 12 semanas?
+A: A 15 h/semana sí. Si trabajas 40 h/semana, 6-8 semanas es factible.
+
+P: ¿Es muy difícil?
+A: Media-Alta dificultad. Pero es factible si sigues timeline.
+
+P: ¿Qué pasa si me atraso?
+A: Common. Ajusta timeline, pero NO hagas scope creep.
+   Mejor MVP en 6 weeks que incompleto en 12.
+
+P: ¿Necesito experiencia previa?
+A: C++ básico: sí. FFmpeg: no (lo aprendes).
+
+P: ¿Este proyecto me ayuda a conseguir empleo?
+A: SÍ. Es un diferenciador. Recruiters lo reconocen.
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+
+📊 SUCCESS METRICS (Week 12):
+
+TÉCNICO:
+✅ Compila sin warnings
+✅ All tests pass
+✅ AddressSanitizer clean
+✅ ThreadSanitizer clean
+✅ >80% code coverage
+✅ GitHub Actions verde
+✅ Docker image works
+✅ Performance: 60 FPS, <100ms latency
+
+PORTFOLIO:
+✅ GitHub repo profesional
+✅ README impresiona
+✅ Architecture document
+✅ Code limpio, bien comentado
+✅ Demo video listo
+
+CARRERA:
+✅ Stand out vs bootcamp graduates
+✅ Recruiters te llaman
+✅ Puedes aplicar a roles "2+ años exp"
+✅ Confianza en abilities
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+
+🎯 PRÓXIMO PASO:
+
+1. Abre QUICK_START.md (ahora)
+2. Sigue acciones inmediatas
+3. Crea GitHub repo esta semana
+4. Empieza Week 1 próxima semana
+
+¡Confía en el plan, ejecuta con disciplina!
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Version: 1.0
+Created: September 2026
+Status: Ready to execute ✅
+

@@ -1,0 +1,323 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    IPTV PLAYER PROJECT — VISUAL ROADMAP                       ║
+║                       Portfolio Project para C++ Seniors                        ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 📊 PROJECT OVERVIEW                                                            ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                                 ┃
+┃  OBJETIVO:      Construir un IPTV Player profesional en C++20                  ┃
+┃  DURACIÓN:      12 semanas (100-120 horas)                                     ┃
+┃  DIFICULTAD:    Media-Alta (por eso impresiona)                                ┃
+┃  STACK:         C++20, FFmpeg, libcurl, OpenGL, SDL2, CMake, Docker           ┃
+┃  CI/CD:         GitHub Actions (Linux/Windows/macOS)                           ┃
+┃  TESTING:       GTest, AddressSanitizer, ThreadSanitizer, >80% coverage        ┃
+┃                                                                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 🏗️  ARQUITECTURA EN 60 SEGUNDOS                                                ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                                 ┃
+┃  ┌─ NETWORK THREAD ────────────────────────────────────────┐                  ┃
+┃  │ ├─ Descargar M3U8 (libcurl + TLS)                       │                  ┃
+┃  │ ├─ Parsear canales                                      │                  ┃
+┃  │ └─ Descargar segmentos TS (streaming)                   │                  ┃
+┃  │    → Enqueue a NetworkBuffer (50 MB)                   │                  ┃
+┃  └──────────────────────────────────────────────────────────┘                  ┃
+┃           ↓ CircularBuffer + Condition Variable                                ┃
+┃  ┌─ DECODER THREAD ─────────────────────────────────────────┐                 ┃
+┃  │ ├─ Dequeue TS bytes de NetworkBuffer                   │                 ┃
+┃  │ ├─ FFmpeg demux + decode                               │                 ┃
+┃  │ │  ├─ H.264 video → YUV frames                         │                 ┃
+┃  │ │  └─ AAC audio → PCM samples                          │                 ┃
+┃  │ └─ Enqueue VideoFrames + AudioFrames                   │                 ┃
+┃  └──────────────────────────────────────────────────────────┘                 ┃
+┃           ↓ CircularBuffer (Video: 300MB, Audio: 10MB)                        ┃
+┃  ┌─ RENDER THREAD (Main) ───────────────────────────────────┐                 ┃
+┃  │ ├─ Dequeue VideoFrame, render con OpenGL               │                 ┃
+┃  │ ├─ Dequeue AudioFrame, play con SDL2 audio             │                 ┃
+┃  │ ├─ Mantener 60 FPS (16.67ms per frame)                 │                 ┃
+┃  │ └─ A/V synchronization (PTS tracking)                  │                 ┃
+┃  └──────────────────────────────────────────────────────────┘                 ┃
+┃           ↓ GUI (ImGui) - Observa cambios de estado                           ┃
+┃  ┌─ GUI LAYER (ImGui) ──────────────────────────────────────┐                 ┃
+┃  │ ├─ Channel list (filtrable)                            │                 ┃
+┃  │ ├─ Play/Pause/Stop botones                             │                 ┃
+┃  │ ├─ Video canvas (OpenGL texture)                       │                 ┃
+┃  │ └─ Stats panel (bitrate %, FPS, buffer %)              │                 ┃
+┃  └──────────────────────────────────────────────────────────┘                 ┃
+┃                                                                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ ⏱️  TIMELINE: 12 SEMANAS → 2 FASES + BONUS                                      ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                                 ┃
+┃  PHASE 1: MVP (6 SEMANAS) — FUNCIONAL                                          ┃
+┃  ├─ W1-2:  Network + HTTP client + M3U8 parser (+ tests)                       ┃
+┃  ├─ W3:    FFmpeg wrapper + decoder component                                  ┃
+┃  ├─ W4:    Render thread (SDL2 + OpenGL)                                       ┃
+┃  ├─ W5:    ImGui GUI + threading sync (circular buffer)                        ┃
+┃  └─ W6:    Stabilization (ASan/TSan clean, tests pass)                         ┃
+┃             ✅ MVP v1.0: PLAYS VIDEO, NO CRASHES                               ┃
+┃                                                                                 ┃
+┃  PHASE 2: PRODUCTION (4 SEMANAS) — PROFESIONAL                                 ┃
+┃  ├─ W7-8:  Advanced features (seeking, adaptive bitrate, A/V sync)             ┃
+┃  ├─ W9:    Testing & Quality (coverage >80%, TSan clean)                       ┃
+┃  ├─ W10:   Deployment (Docker, cross-platform CI/CD)                           ┃
+┃  └─ W11-12: Documentation + polish + release v1.0                              ┃
+┃             ✅ PRODUCTION v1.0: PORTFOLIO-READY                                ┃
+┃                                                                                 ┃
+┃  BONUS: (if energy remains)                                                    ┃
+┃  ├─ Lock-free circular buffer                                                  ┃
+┃  ├─ POSIX sockets networking                                                   ┃
+┃  ├─ Qt GUI polish                                                              ┃
+┃  └─ NVIDIA NVDEC acceleration                                                  ┃
+┃                                                                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 🎯 DECISIONES TÉCNICAS CLAVE                                                   ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                                 ┃
+┃  ✅ MULTI-THREAD (3 threads)                                                   ┃
+┃     ├─ Realista (Netflix, YouTube, VLC lo hacen)                               ┃
+┃     ├─ Demuestra concurrencia (HIGH PORTFOLIO VALUE)                           ┃
+┃     └─ Performance natural (threads no bloquean)                                ┃
+┃                                                                                 ┃
+┃  ✅ MUTEX + CONDITION VARIABLES (MVP)                                          ┃
+┃     ├─ Simpleza → debugging fácil                                              ┃
+┃     ├─ Suficientemente rápido para streaming                                    ┃
+┃     └─ ThreadSanitizer lo valida automáticamente                               ┃
+┃                                                                                 ┃
+┃  ✅ IMGUI (GUI framework)                                                      ┃
+┃     ├─ Rápido de implementar (1-2 semanas)                                      ┃
+┃     ├─ Funcional + responsive                                                  ┃
+┃     └─ Qt bonus si tiempo queda                                                ┃
+┃                                                                                 ┃
+┃  ✅ LIBCURL (networking)                                                       ┃
+┃     ├─ Production-ready (HTTPS, HTTP pipelining)                               ┃
+┃     ├─ POSIX sockets bonus para low-level networking                           ┃
+┃     └─ Faster path to MVP                                                      ┃
+┃                                                                                 ┃
+┃  ✅ FFMPEG (media decoding)                                                    ┃
+┃     ├─ Industrial standard (Netflix, YouTube, VLC)                             ┃
+┃     ├─ Soporta todos formatos (H.264, H.265, VP9, AV1)                         ┃
+┃     └─ NVIDIA NVDEC bonus para GPU acceleration                                ┃
+┃                                                                                 ┃
+┃  ✅ C++20 (language)                                                           ┃
+┃     ├─ Modern (std::thread, std::atomic, ranges)                               ┃
+┃     ├─ Industrial-grade adoption                                               ┃
+┃     └─ Recruiters esperan C++17+ mínimo                                        ┃
+┃                                                                                 ┃
+┃  ✅ GTEST + SANITIZERS (testing)                                               ┃
+┃     ├─ GTest = estándar industrial                                             ┃
+┃     ├─ AddressSanitizer = memory safety                                        ┃
+┃     ├─ ThreadSanitizer = race condition detection                              ┃
+┃     └─ >80% coverage target                                                    ┃
+┃                                                                                 ┃
+┃  ✅ CMAKE + CONAN (build system)                                               ┃
+┃     ├─ CMake = cross-platform standard                                         ┃
+┃     ├─ Conan = reproducible dependency management                              ┃
+┃     └─ Docker deployment-ready                                                 ┃
+┃                                                                                 ┃
+┃  ✅ GITHUB ACTIONS (CI/CD)                                                     ┃
+┃     ├─ Free + integrated con repo                                              ┃
+┃     ├─ Multi-platform builds (Linux/Windows/macOS)                             ┃
+┃     └─ Visible progress (green checks impress recruiters)                      ┃
+┃                                                                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 📈 SKILLS DEMOSTRADOS (= EMPLEABILIDAD)                                        ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                                 ┃
+┃  NETWORKING                    CONCURRENCY            MEDIA PROCESSING         ┃
+┃  ├─ HTTP/HTTPS protocols       ├─ Multithreading      ├─ Video decoding       ┃
+┃  ├─ M3U8 parsing               ├─ Mutex synchronization│  (H.264)              ┃
+┃  ├─ Error handling + retries   ├─ Condition variables │  ├─ Audio (AAC)        ┃
+┃  ├─ Bandwidth monitoring       ├─ Producer-consumer   │  ├─ A/V sync          ┃
+┃  └─ TLS security               ├─ Race condition      │  └─ Container parsing  ┃
+┃                                │  detection (TSan)    │                        ┃
+┃  GRAPHICS                      │  └─ Lock-free        │  ARCHITECTURE         ┃
+┃  ├─ OpenGL rendering           │     structures       ├─ Design patterns       ┃
+┃  ├─ Texture management         │     (bonus)          ├─ State machine        ┃
+┃  ├─ YUV→RGB conversion         │                      ├─ RAII idiom           ┃
+┃  ├─ Real-time frame rate       │  MEMORY SAFETY       ├─ Error handling       ┃
+┃  └─ Audio playback (SDL2)      ├─ AddressSanitizer    └─ Design decisions     ┃
+┃                                │  (leak detection)    │                        ┃
+┃  BUILD & DEPLOYMENT            ├─ Valgrind profiling │  QUALITY ASSURANCE    ┃
+┃  ├─ CMake                      ├─ Manual memory       ├─ Unit testing          ┃
+┃  ├─ Conan package management   │  management (no GC)  ├─ Integration testing   ┃
+┃  ├─ Docker containerization    └─ Smart pointers      ├─ Code coverage (>80%)  ┃
+┃  ├─ GitHub Actions CI/CD          (RAII cleanup)     ├─ Static analysis       ┃
+┃  └─ Cross-platform builds                            └─ Performance profiling │
+┃                                                                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 📋 DOCUMENTACIÓN INCLUIDA                                                      ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                                 ┃
+┃  1. EXECUTIVE_SUMMARY.md                                                       ┃
+┃     └─ Visión 30,000 ft: qué es, por qué importa, timeline                    ┃
+┃                                                                                 ┃
+┃  2. ARCHITECTURE.md                                                            ┃
+┃     └─ Diseño completo: componentes, patrones, sincronización (0 código)       ┃
+┃                                                                                 ┃
+┃  3. TECHNICAL_DECISIONS.md                                                     ┃
+┃     └─ Justificación: por qué C++ vs Rust, mutex vs lock-free, etc.            ┃
+┃                                                                                 ┃
+┃  4. EXECUTION_PLAN.md                                                          ┃
+┃     └─ Checklist semana-a-semana: tareas concretas, hitos, métricas            ┃
+┃                                                                                 ┃
+┃  5. ROADMAP_VISUAL.txt (este archivo)                                          ┃
+┃     └─ Síntesis visual: timeline, decisiones, skills                           ┃
+┃                                                                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 🚀 CÓMO VENDERLO A RECRUITERS                                                  ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                                 ┃
+┃  CV BULLET:                                                                    ┃
+┃  ────────────────────────────────────────────────────────────────────          ┃
+┃  "Architected 3-thread IPTV streaming engine in C++20 demonstrating            ┃
+┃   real-time concurrency, zero-copy circular buffers, FFmpeg integration.       ┃
+┃   Network, decoder, and render threads coordinated via producer-consumer       ┃
+┃   pattern with zero race conditions (ThreadSanitizer validated).               ┃
+┃   Delivered comprehensive CI/CD (GitHub Actions), 85%+ code coverage,          ┃
+┃   AddressSanitizer/clang-tidy clean, Docker-ready deployment."                 ┃
+┃                                                                                 ┃
+┃  GITHUB README (first 60 seconds):                                              ┃
+┃  ──────────────────────────────────                                             ┃
+┃  [Hero image: screenshot of player]                                             ┃
+┃                                                                                 ┃
+┃  # IPTV Player — Production-Grade C++20 Streaming Engine                        ┃
+┃                                                                                 ┃
+┃  Real-time multithreaded architecture demonstrating:                            ┃
+┃  • 3-thread streaming pipeline (network I/O, FFmpeg decode, GPU render)         ┃
+┃  • Zero-copy producer-consumer pattern, 20+ Mbps sustained throughput           ┃
+┃  • FFmpeg H.264/AAC integration with RAII memory management                     ┃
+┃  • 60 FPS responsive UI (ImGui) under network congestion                        ┃
+┃  • Comprehensive testing: GTest, sanitizers, 85%+ coverage                      ┃
+┃  • Production deployment: Docker, cross-platform CI/CD                          ┃
+┃                                                                                 ┃
+┃  ⬇️ [GitHub Actions badge: all green]                                           ┃
+┃                                                                                 ┃
+┃  INTERVIEW TALKING POINTS:                                                     ┃
+┃  ──────────────────────                                                        ┃
+┃  Q: "Walk us through your threading model"                                     ┃
+┃  A: [Explain 3-thread architecture, circular buffers, CV notifications]        ┃
+┃                                                                                 ┃
+┃  Q: "How do you prevent race conditions?"                                      ┃
+┃  A: [ThreadSanitizer in CI/CD, mutex protection, design patterns]              ┃
+┃                                                                                 ┃
+┃  Q: "Tell us about a complex library integration"                              ┃
+┃  A: [FFmpeg: context management, RAII wrappers, error handling]                ┃
+┃                                                                                 ┃
+┃  Q: "How do you approach testing?"                                             ┃
+┃  A: [Unit + integration + E2E, fixtures, mock networking, >80% coverage]       ┃
+┃                                                                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ ✅ SUCCESS METRICS (WEEK 12)                                                   ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                                 ┃
+┃  TECHNICAL:                                                                    ┃
+┃  ✅ Compiles without warnings                                                  ┃
+┃  ✅ All tests pass (50+ unit + integration + E2E)                              ┃
+┃  ✅ AddressSanitizer clean (0 leaks, 0 errors)                                 ┃
+┃  ✅ ThreadSanitizer clean (0 race conditions)                                  ┃
+┃  ✅ Code coverage >80%                                                         ┃
+┃  ✅ GitHub Actions green (Linux/Windows/macOS)                                 ┃
+┃  ✅ Docker image builds & runs                                                 ┃
+┃  ✅ Performance: 60 FPS stable, <100ms decode latency, 20+ Mbps throughput     ┃
+┃                                                                                 ┃
+┃  PORTFOLIO:                                                                    ┃
+┃  ✅ GitHub repo looks professional                                             ┃
+┃  ✅ README impresses in 60 seconds                                             ┃
+┃  ✅ Architecture document justifies decisions                                  ┃
+┃  ✅ Code is clean, well-commented, no hacks                                    ┃
+┃  ✅ Demo video or live-coding ready for interviews                             ┃
+┃  ✅ Can explain every design choice                                            ┃
+┃                                                                                 ┃
+┃  CAREER IMPACT:                                                                ┃
+┃  ✅ Stand out vs bootcamp graduates                                            ┃
+┃  ✅ Recruiters call for serious conversations                                  ┃
+┃  ✅ Can apply to roles normally requiring "2+ years experience"                ┃
+┃  ✅ Confidence in technical abilities (you built something REAL)               ┃
+┃                                                                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 🎯 REGLAS DE ORO (DON'T BREAK THESE)                                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                                 ┃
+┃  1. NO SCOPE CREEP                                                              ┃
+┃     → MVP first (week 6), features second, bonus last                          ┃
+┃     → "Let me add Kubernetes..." = trap → ignore                               ┃
+┃                                                                                 ┃
+┃  2. CI/CD ALWAYS GREEN                                                         ┃
+┃     → Never merge failing PR                                                   ┃
+┃     → Tests before commits                                                     ┃
+┃     → Sanitizers pass in CI                                                    ┃
+┃                                                                                 ┃
+┃  3. DOCUMENT DECISIONS                                                         ┃
+┃     → Why C++ vs Rust? Document it.                                            ┃
+┃     → Why mutex vs lock-free? Document it.                                     ┃
+┃     → This is what separates "real engineering" from "random coding"           ┃
+┃                                                                                 ┃
+┃  4. REALISTIC SCHEDULE                                                         ┃
+┃     → 10-15 h/week sustained > 40 h/week burnout                               ┃
+┃     → Weekends off (you're human)                                              ┃
+┃     → 12 weeks is realistic, not optimistic                                    ┃
+┃                                                                                 ┃
+┃  5. QUALITY > QUANTITY                                                         ┃
+┃     → 1 polished project > 5 mediocre                                          ┃
+┃     → Recruiters read the code                                                 ┃
+┃     → Tech debt kills portfolio value                                          ┃
+┃                                                                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 🚀 NEXT STEPS                                                                  ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                                 ┃
+┃  IMMEDIATELY (this week):                                                      ┃
+┃  1. Create GitHub repo: "iptv-player"                                          ┃
+┃  2. Read all documentation (2 hours)                                           ┃
+┃  3. Setup environment (CMake, Conan, Git)                                      ┃
+┃  4. Create initial directory structure                                         ┃
+┃  5. Make first commit: "Initial project structure"                             ┃
+┃                                                                                 ┃
+┃  NEXT WEEK:                                                                    ┃
+┃  1. CMakeLists.txt + conanfile.txt                                             ┃
+┃  2. GitHub Actions workflows                                                   ┃
+┃  3. Start Week 1 checklist from EXECUTION_PLAN.md                              ┃
+┃                                                                                 ┃
+┃  WEEK AFTER:                                                                   ┃
+┃  1. Network component MVP (HTTP client + M3U8 parser)                          ┃
+┃  2. First unit tests (test_http_client.cpp, test_playlist_parser.cpp)          ┃
+┃  3. CI/CD pasing (all green checks)                                            ┃
+┃                                                                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                          ¡EMPECEMOS! 🎬                                       ║
+║                    12 semanas → Portfolio impresionante                        ║
+║                 Confía en el plan, ejecuta con disciplina                      ║
+╚════════════════════════════════════════════════════════════════════════════════╝
