@@ -11,7 +11,6 @@ set -e
 
 # Colors
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
 RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
@@ -30,7 +29,6 @@ TESTS_FAILED=0
 test_command() {
     local name="$1"
     local command="$2"
-    local min_version="$3"
     
     echo -n "Testing $name ... "
     
@@ -107,10 +105,9 @@ libraries=(
 
 for lib_pair in "${libraries[@]}"; do
     lib_name="${lib_pair%%:*}"
-    lib_dev="${lib_pair##*:}"
     
     if pkg-config --exists "$lib_name" 2>/dev/null; then
-        echo -e "  ${GREEN}✅${NC} $lib_name ($(pkg-config --modversion $lib_name))"
+        echo -e "  ${GREEN}✅${NC} $lib_name ($(pkg-config --modversion "$lib_name"))"
         TESTS_PASSED=$((TESTS_PASSED + 1))
     else
         echo -e "  ${RED}❌${NC} $lib_name (missing)"

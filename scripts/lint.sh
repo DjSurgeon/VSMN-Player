@@ -22,7 +22,7 @@ if [ ! -f "build/Release/compile_commands.json" ]; then
 fi
 
 # Default targets if none provided
-TARGETS="${@:-src tests}"
+TARGETS="${*:-src tests}"
 
 echo -e "\033[0;34m╔════════════════════════════════════════════════════════════════════╗\033[0m"
 echo -e "\033[0;34m║                 IPTV PLAYER - STATIC ANALYSIS                      ║\033[0m"
@@ -36,7 +36,7 @@ echo "Running clang-tidy... (this may take a moment)"
 FILES=""
 for TARGET in $TARGETS; do
     if [ -d "$TARGET" ]; then
-        FILES="$FILES $(find $TARGET -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" \))"
+        FILES="$FILES $(find "$TARGET" -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" \))"
     elif [ -f "$TARGET" ]; then
         FILES="$FILES $TARGET"
     fi
@@ -48,6 +48,7 @@ if [ -z "$FILES" ]; then
 fi
 
 # Run clang-tidy
+# shellcheck disable=SC2086
 clang-tidy $FILES -p build/Release
 
 echo -e "\033[0;32m✅ Static analysis complete!\033[0m"

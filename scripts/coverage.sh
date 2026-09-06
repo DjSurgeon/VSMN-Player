@@ -31,7 +31,7 @@ cmake -B $BUILD_DIR -DCMAKE_TOOLCHAIN_FILE=build/Debug/generators/conan_toolchai
     -DCMAKE_SHARED_LINKER_FLAGS="--coverage" > /dev/null
 
 echo "🔨 Building project..."
-cmake --build $BUILD_DIR --parallel $(nproc) > /dev/null
+cmake --build "$BUILD_DIR" --parallel "$(nproc)" > /dev/null
 
 echo "🧪 Running unit tests..."
 cd $BUILD_DIR

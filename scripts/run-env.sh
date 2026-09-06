@@ -5,15 +5,15 @@ set -e
 xhost +local:docker > /dev/null 2>&1
 
 # Create .env file with custom variables for docker-compose
-export MY_UID=$(id -u)
-export MY_GID=$(id -g)
+MY_UID=$(id -u); export MY_UID
+MY_GID=$(id -g); export MY_GID
 echo "MY_UID=$MY_UID" > .env
 echo "MY_GID=$MY_GID" >> .env
 
 echo "🐳 Building IPTV Player Development Container..."
 
 # Build dev image
-docker build --build-arg UID=$MY_UID --build-arg GID=$MY_GID -f ../Dockerfile.dev -t iptv-player:dev .
+docker build --build-arg UID="$MY_UID" --build-arg GID="$MY_GID" -f ../Dockerfile.dev -t iptv-player:dev .
 
 echo "✅ Development container built!"
 echo ""
