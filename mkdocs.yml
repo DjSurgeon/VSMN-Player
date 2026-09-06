@@ -1,0 +1,10 @@
+site_name: IPTV Streaming Engine — Technical Docs
+site_description: Architecture, Concurrency Models, and API Reference
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: indigo
+
+nav:
+  - Overview: index.md

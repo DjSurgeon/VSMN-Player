@@ -58,5 +58,17 @@ Este documento servirá como bitácora de desarrollo (Dev Log) para registrar to
 - **`.gitignore`**: Ignora directorios de CMake, Python cache, binarios, `.env` y configuraciones específicas del IDE.
 - **`README.md`**: Actualización con instrucciones de inicialización del entorno en Docker y arquitectura preliminar.
 
+### 7. Integración Continua (CI) y Resolución de Problemas (07/09/2026)
+Durante la configuración de la pipeline en GitHub Actions (`.github/workflows/ci-linux.yml`), nos encontramos y resolvimos varios problemas técnicos valiosos para el futuro:
+
+- **Depreciación en GitHub Actions:** Las acciones `actions/cache@v3` y `actions/upload-artifact@v3` fallaban automáticamente por estar obsoletas. Se migraron a `v4`.
+- **Simplificación ("Menos es más"):** Se eliminaron las pipelines de Windows y macOS para reducir la complejidad inicial, centrando el Hito 0/1 estrictamente en Linux/Docker.
+- **Integración Conan 2 + CMake:** 
+  - En entornos antiguos (Ubuntu 22.04 con CMake 3.22), CMake no soporta los *Presets* (`CMakePresets.json`) generados por Conan 2. Se solucionó invocando explícitamente el `-DCMAKE_TOOLCHAIN_FILE`.
+  - En la CI, pasamos de usar una ruta estática (`--output-folder=build`) a delegar la estructura a Conan (`-s build_type=Debug/Release`), inyectando luego el toolchain correcto a CMake.
+  - Para evitar bloqueos si Conan Center no tiene binarios precompilados para compiladores recientes (ej. GCC 13), se añadió la bandera `--build=missing`.
+  - Se ajustó el orden en la CI para seleccionar el compilador (`CC` y `CXX`) **antes** de ejecutar `conan profile detect`, asegurando que Conan descargue dependencias coherentes con la matriz de compilación.
+- **Soporte para Clang 18:** Fallos de "Invalid compiler version" al usar Clang 18 en `ubuntu-latest` se debían a que la versión de Conan estaba anclada a una muy antigua (`2.0.17`). Se solucionó desanclando la versión (`pip3 install conan`) en CI y Docker para instalar la última rama 2.x, garantizando compatibilidad con compiladores modernos.
+
 ---
-*Fin del Hito 0. El entorno está listo y el código compila de inicio a fin.*
+*Fin del Hito 0. El entorno está listo, testeado en local y validado con éxito en CI.*
