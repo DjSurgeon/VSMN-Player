@@ -47,6 +47,13 @@ jobs:
           done
           echo "✅ Static analysis complete"
 
+      - name: Markdown analysis (markdownlint)
+        run: |
+          sudo npm install -g markdownlint-cli
+          echo "Running markdownlint..."
+          markdownlint '**/*.md' --ignore 'build/**' --ignore 'build-tsan/**' --ignore 'build-debug/**' --ignore 'build-coverage/**' || true
+          echo "✅ Markdown analysis complete"
+
       - name: Shell scripts analysis (shellcheck)
         run: |
           sudo apt-get install -y shellcheck
