@@ -1,0 +1,62 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        UID: ${MY_UID:-1000}
+        GID: ${MY_GID:-1000}
+    image: iptv-player:dev
+    container_name: iptv-player-dev
+    
+    # Expose for X11 forwarding (GUI)
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_GL_THREAD_SAFE=1 # QT GUI
+      - PULSE_SERVER=unix:/run/user/${MY_UID:-1000}/pulse/native
+      - CONAN_USER_HOME=/home/developer
+      
+    # Volumes mapping (Code, Cache, GUI and Audio)
+    volumes:
+      - .:/workspace:z
+      - conan-cache:/home/developer/.conan2                             # Conan cache (Docker volume - clean perms)
+      - /run/user/${MY_UID:-1000}/pulse/native:/run/user/${MY_UID:-1000}/pulse/native:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${HOME}/.Xauthority:/home/developer/.Xauthority:rw
+      
+    devices:
+      - /dev/dri:/dev/dri # Graphics Intel/AMD/Nvidia
+
+    # Keep container running
+    stdin_open: true
+    tty: true
+    
+    # Network
+    network_mode: host
+
+  # CI/CD container (Ubuntu)
+  ci:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: iptv-player:ci
+    
+    volumes:
+      - .:/workspace
+      - conan-cache:/home/developer/.conan2
+
+    environment:
+      - CONAN_USER_HOME=/home/developer
+
+    # Run CI pipeline
+    command: |
+      bash -c "
+        conan install . --output-folder=build &&
+        cmake -B build &&
+        cmake --build build &&
+        ctest
+      "
+# Docker-managed volume for Conan cache (clean permissions)
+volumes:
+  conan-cache:
+    driver: local

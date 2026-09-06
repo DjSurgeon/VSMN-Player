@@ -1,0 +1,77 @@
+FROM ubuntu:22.04
+
+# Prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+ENV CONAN_USER_HOME=/home/developer
+
+# Update package lists
+RUN apt-get update && apt-get upgrade -y
+
+# Install build essentials
+RUN apt-get install -y --no-install-recommends \
+    build-essential \
+    ninja-build \
+    cmake \
+    git \
+    curl \
+    wget \
+    pkg-config \
+	ca-certificates \
+    python3 \
+    python3-pip
+
+# Install Conan
+RUN pip3 install --no-cache-dir conan==2.0.17
+
+# Install development dependencies
+RUN apt-get install -y \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libavcodec-dev \
+    libavformat-dev \
+    libavutil-dev \
+    libswscale-dev \
+    libswresample-dev \
+    libsdl2-dev \
+    libgl1-mesa-dri \
+    libgl1-mesa-glx \
+    libpulse0 \
+    libgl1-mesa-dev \
+    libxrandr-dev \
+    libxinerama-dev \
+    libxcursor-dev \
+    libxi-dev
+
+# Install testing tools
+RUN apt-get install -y \
+    valgrind \
+    gdb \
+    clang-format \
+    clang-tidy
+
+# Create non-root user (optional, but recommended)
+ARG USER=developer
+ARG UID=1000
+ARG GID=1000
+
+# Create group and user
+RUN groupadd -g ${GID} ${USER} || true && \
+    useradd -m -u ${UID} -g ${GID} -s /bin/bash ${USER} && \
+    usermod -aG video,audio ${USER}
+
+# Create Conan directories with proper permissions
+RUN mkdir -p /home/developer/.conan2 && \
+    chown -R ${UID}:${GID} /home/developer/.conan2
+
+# Initialize default Conan profile
+RUN conan profile detect --force
+
+# Set user
+USER ${USER}
+WORKDIR /workspace
+
+# Initialize default Conan profile for developer user
+RUN conan profile show > /dev/null 2>&1 || conan profile detect --force
+
+CMD ["/bin/bash"]
