@@ -99,7 +99,7 @@ jobs:
       - name: Conan install
         run: |
           cd $GITHUB_WORKSPACE
-          conan install . --output-folder=build
+          conan install . --output-folder=build --build=missing
       
       - name: CMake configure (Debug with sanitizers)
         run: |
@@ -154,7 +154,7 @@ jobs:
       - name: Conan install
         run: |
           cd $GITHUB_WORKSPACE
-          conan install . --output-folder=build
+          conan install . --output-folder=build --build=missing
       
       - name: CMake configure (TSan)
         run: |
@@ -203,7 +203,7 @@ jobs:
       - name: Conan install
         run: |
           cd $GITHUB_WORKSPACE
-          conan install . --output-folder=build
+          conan install . --output-folder=build --build=missing
       
       - name: CMake configure (Release)
         run: |
