@@ -82,7 +82,7 @@ jobs:
             libswscale-dev libswresample-dev \
             libsdl2-dev libgl1-mesa-dev
           
-          pip3 install --no-cache-dir conan==2.0.0
+          pip3 install --no-cache-dir conan==2.0.17
           conan profile detect --force
       
       - name: Select compiler
@@ -148,7 +148,7 @@ jobs:
             libswscale-dev libswresample-dev \
             libsdl2-dev libgl1-mesa-dev
           
-          pip3 install --no-cache-dir conan==2.0.0
+          pip3 install --no-cache-dir conan==2.0.17
           conan profile detect --force
       
       - name: Conan install
@@ -197,7 +197,7 @@ jobs:
             libswscale-dev libswresample-dev \
             libsdl2-dev libgl1-mesa-dev
           
-          pip3 install --no-cache-dir conan==2.0.0
+          pip3 install --no-cache-dir conan==2.0.17
           conan profile detect --force
       
       - name: Conan install
