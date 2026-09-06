@@ -1,0 +1,14 @@
+# Line endings
+* text=auto
+*.cpp text eol=lf
+*.h text eol=lf
+*.cmake text eol=lf
+*.md text eol=lf
+CMakeLists.txt text eol=lf
+
+# Binaries
+*.bin binary
+*.exe binary
+*.o binary
+*.a binary
+*.so binary
