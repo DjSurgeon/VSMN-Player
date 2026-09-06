@@ -32,3 +32,4 @@ htmlcov/
 *.exe
 
 *.log
+.env

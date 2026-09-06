@@ -140,7 +140,7 @@ test_path "Conan cache" "/home/developer/.conan2"
 test_path "Conan profile" "/home/developer/.conan2/profiles/default"
 test_path "Git repository" "/workspace/.git"
 test_path "CMakeLists.txt" "/workspace/CMakeLists.txt"
-test_path "conanfile.txt" "/workspace/conanfile.txt"
+test_path "conanfile.py" "/workspace/conanfile.py"
 test_path "Dockerfile.dev" "/workspace/Dockerfile.dev"
 test_path "docker-compose.yml" "/workspace/docker-compose.yml"
 
