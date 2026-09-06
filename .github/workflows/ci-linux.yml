@@ -71,6 +71,17 @@ jobs:
           restore-keys: |
             conan-${{ runner.os }}-${{ matrix.compiler }}-
       
+      - name: Select compiler
+        run: |
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            sudo apt-get install -y clang
+            echo "CC=clang" >> $GITHUB_ENV
+            echo "CXX=clang++" >> $GITHUB_ENV
+          else
+            echo "CC=gcc" >> $GITHUB_ENV
+            echo "CXX=g++" >> $GITHUB_ENV
+          fi
+          
       - name: Setup build environment
         run: |
           sudo apt-get update
@@ -85,26 +96,15 @@ jobs:
           pip3 install --no-cache-dir conan==2.0.17
           conan profile detect --force
       
-      - name: Select compiler
-        run: |
-          if [ "${{ matrix.compiler }}" = "clang" ]; then
-            sudo apt-get install -y clang
-            echo "CC=clang" >> $GITHUB_ENV
-            echo "CXX=clang++" >> $GITHUB_ENV
-          else
-            echo "CC=gcc" >> $GITHUB_ENV
-            echo "CXX=g++" >> $GITHUB_ENV
-          fi
-      
       - name: Conan install
         run: |
           cd $GITHUB_WORKSPACE
-          conan install . --output-folder=build --build=missing
+          conan install . --build=missing -s build_type=Debug
       
       - name: CMake configure (Debug with sanitizers)
         run: |
           cd $GITHUB_WORKSPACE
-          cmake -B build \
+          cmake -B build-debug -DCMAKE_TOOLCHAIN_FILE=build/Debug/generators/conan_toolchain.cmake \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_CXX_COMPILER=${{ env.CXX }} \
             -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -g"
@@ -112,19 +112,19 @@ jobs:
       - name: Build
         run: |
           cd $GITHUB_WORKSPACE
-          cmake --build build --parallel $(nproc)
+          cmake --build build-debug --parallel $(nproc)
       
       - name: Run tests
         run: |
-          cd $GITHUB_WORKSPACE/build
+          cd $GITHUB_WORKSPACE/build-debug
           ctest --verbose --output-on-failure
       
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ matrix.compiler }}
-          path: build/
+          path: build-debug/
 
   # ════════════════════════════════════════════════════════════════════
   # THREAD SAFETY - TSan check
@@ -154,12 +154,12 @@ jobs:
       - name: Conan install
         run: |
           cd $GITHUB_WORKSPACE
-          conan install . --output-folder=build --build=missing
+          conan install . --build=missing -s build_type=Debug
       
       - name: CMake configure (TSan)
         run: |
           cd $GITHUB_WORKSPACE
-          cmake -B build-tsan \
+          cmake -B build-tsan -DCMAKE_TOOLCHAIN_FILE=build/Debug/generators/conan_toolchain.cmake \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_CXX_FLAGS="-fsanitize=thread -fPIC -g"
       
@@ -203,12 +203,12 @@ jobs:
       - name: Conan install
         run: |
           cd $GITHUB_WORKSPACE
-          conan install . --output-folder=build --build=missing
+          conan install . --build=missing -s build_type=Release
       
       - name: CMake configure (Release)
         run: |
           cd $GITHUB_WORKSPACE
-          cmake -B build-release \
+          cmake -B build-release -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_CXX_FLAGS="-O3 -march=native"
       
@@ -218,7 +218,7 @@ jobs:
           cmake --build build-release --parallel $(nproc)
       
       - name: Upload Release Binary
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: iptv-player-release-linux
           path: build-release/bin/iptv_player
