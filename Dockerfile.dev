@@ -22,7 +22,7 @@ RUN apt-get install -y --no-install-recommends \
     python3-pip
 
 # Install Conan
-RUN pip3 install --no-cache-dir conan==2.0.17
+RUN pip3 install --no-cache-dir conan
 
 # Install development dependencies
 RUN apt-get install -y \
