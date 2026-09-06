@@ -1,3 +1,3 @@
 namespace iptv::internal {
-    void placeholder() {}
-}
+void placeholder() {}
+}  // namespace iptv::internal
