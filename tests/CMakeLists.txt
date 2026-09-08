@@ -11,6 +11,7 @@
 
 add_executable(unit_tests
     unit/test_sanity.cpp
+    unit/network/test_http_response.cpp
 )
 target_link_libraries(unit_tests PRIVATE GTest::gtest_main iptv_core)
 target_compile_options(unit_tests PRIVATE ${PROJECT_WARNINGS})
