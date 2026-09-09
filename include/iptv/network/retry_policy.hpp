@@ -8,7 +8,7 @@ namespace iptv::network {
 /**
  * @brief Strategy used to calculate the delay between network retries.
  */
-enum class BackoffStrategy {
+enum class BackoffStrategy : std::uint8_t {
     /// No delay between retries (immediate retry).
     None,
     /// Wait a fixed amount of time (initial_delay) between each retry.
