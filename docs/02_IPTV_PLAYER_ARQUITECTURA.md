@@ -2,23 +2,6 @@
 
 > **Fase 0: Diseño Puro** | Solo arquitectura, cero código | Semana 1 de planificación
 
----
-
-## 📋 ÍNDICE
-
-1. [Visión General](#visión-general)
-2. [Análisis de Requisitos](#análisis-de-requisitos)
-3. [Arquitectura de Sistema](#arquitectura-de-sistema)
-4. [Diseño de Componentes](#diseño-de-componentes)
-5. [Patrones de Comunicación](#patrones-de-comunicación)
-6. [Estrategia de Testing](#estrategia-de-testing)
-7. [DevOps & CI/CD](#devops--cicd)
-8. [Plan de Desarrollo (Fases)](#plan-de-desarrollo-fases)
-9. [Riesgos & Mitigación](#riesgos--mitigación)
-10. [Stack Técnico Definido](#stack-técnico-definido)
-
----
-
 ## 🎯 VISIÓN GENERAL
 
 ### **Objetivo Principal**
