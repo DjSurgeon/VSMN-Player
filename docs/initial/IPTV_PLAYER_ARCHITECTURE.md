@@ -5,23 +5,6 @@
 **Estado:** Design Phase - Listo para implementación  
 **Audiencia:** Recruiters, Interviewers, Future Maintainers
 
----
-
-## 📑 TABLA DE CONTENIDOS
-
-1. [Visión Estratégica](#1-visión-estratégica)
-2. [Decisiones Arquitectónicas Clave](#2-decisiones-arquitectónicas-clave)
-3. [Estructura de Componentes](#3-estructura-de-componentes)
-4. [Patrones de Sincronización](#4-patrones-de-sincronización)
-5. [Flujo de Datos](#5-flujo-de-datos)
-6. [Stack Tecnológico Justificado](#6-stack-tecnológico-justificado)
-7. [Estructura de Directorios](#7-estructura-de-directorios)
-8. [Criterios de Éxito](#8-criterios-de-éxito)
-9. [Timeline Realista](#9-timeline-realista)
-10. [Riesgos y Mitigación](#10-riesgos-y-mitigación)
-
----
-
 ## 1. VISIÓN ESTRATÉGICA
 
 ### 1.1 Objetivo del Proyecto
