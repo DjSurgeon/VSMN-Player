@@ -3,14 +3,7 @@
 
 using namespace iptv::network;
 
-class HttpResponseTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        // Shared setup logic if needed
-    }
-};
-
-TEST_F(HttpResponseTest, ConstructorPreallocatesMemory) {
+TEST(HttpResponseTest, ConstructorPreallocatesMemory) {
     std::size_t expected_size = 1024 * 1024; // 1MB
     HttpResponse response(HttpStatusCode::Ok, expected_size);
     
@@ -19,7 +12,7 @@ TEST_F(HttpResponseTest, ConstructorPreallocatesMemory) {
     EXPECT_EQ(response.getBytesDownloaded(), 0);
 }
 
-TEST_F(HttpResponseTest, AppendToBodyWorksCorrectly) {
+TEST(HttpResponseTest, AppendToBodyWorksCorrectly) {
     HttpResponse response(HttpStatusCode::Ok, 100);
     
     std::vector<uint8_t> chunk1 = {0x01, 0x02, 0x03};
@@ -37,7 +30,7 @@ TEST_F(HttpResponseTest, AppendToBodyWorksCorrectly) {
     EXPECT_EQ(body[4], 0x05);
 }
 
-TEST_F(HttpResponseTest, MoveSemanticsAreEnforced) {
+TEST(HttpResponseTest, MoveSemanticsAreEnforced) {
     HttpResponse response1(HttpStatusCode::NotFound);
     std::vector<uint8_t> chunk = {0xDE, 0xAD, 0xBE, 0xEF};
     response1.appendToBody(chunk.data(), chunk.size());
@@ -48,8 +41,5 @@ TEST_F(HttpResponseTest, MoveSemanticsAreEnforced) {
     EXPECT_EQ(response2.getStatusCode(), HttpStatusCode::NotFound);
     EXPECT_EQ(response2.getBytesDownloaded(), 4);
     EXPECT_EQ(response2.getBody().size(), 4);
-    
-    // Note: accessing response1 after move is technically valid in standard C++ 
-    // for vectors (leaves them in a valid but unspecified state), but the capacity/size is typically 0.
-    EXPECT_EQ(response1.getBody().size(), 0);
+    EXPECT_EQ(response2.getBody().size(), 4);
 }

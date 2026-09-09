@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace iptv::network {
 
 /**
@@ -7,7 +9,7 @@ namespace iptv::network {
  * 
  * Defines standard HTTP response status codes to avoid using naked integers.
  */
-enum class HttpStatusCode : int {
+enum class HttpStatusCode : std::int16_t {
     // 1xx Informational
     Continue = 100,
     SwitchingProtocols = 101,

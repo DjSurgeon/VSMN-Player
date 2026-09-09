@@ -35,6 +35,8 @@ public:
         }
     }
 
+    ~HttpResponse() = default;
+
     // Rule of 5: Move-only semantics (Zero-Copy)
     HttpResponse(const HttpResponse&) = delete;
     HttpResponse& operator=(const HttpResponse&) = delete;
@@ -48,7 +50,9 @@ public:
      * @param size Number of bytes to append.
      */
     void appendToBody(const uint8_t* data, std::size_t size) {
-        if (!data || size == 0) return;
+        if (data == nullptr || size == 0) {
+            return;
+        }
         body_.insert(body_.end(), data, data + size);
     }
 
