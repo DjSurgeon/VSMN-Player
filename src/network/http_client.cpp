@@ -1,18 +1,51 @@
 #include "iptv/network/http_client.hpp"
+#include "iptv/network/init.hpp"
+#include <curl/curl.h>
 #include <stdexcept>
 
 namespace iptv::network {
 
-// Define the hidden implementation class (currently a skeleton)
+// Global Init/Shutdown implementations
+void Initialize() {
+    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
+        throw std::runtime_error("Failed to initialize libcurl globally.");
+    }
+}
+
+void Shutdown() {
+    curl_global_cleanup();
+}
+
+// Define the hidden implementation class with strict RAII
 class HttpClient::Impl {
 public:
-    Impl() = default;
-    ~Impl() = default;
+    Impl() {
+        handle_ = curl_easy_init();
+        if (!handle_) {
+            throw std::runtime_error("Failed to initialize curl easy handle.");
+        }
+    }
 
-    // We will add curl easy handle initialization here later
+    ~Impl() {
+        if (handle_) {
+            curl_easy_cleanup(handle_);
+            handle_ = nullptr;
+        }
+    }
+
+    // Rule of 5: Prohibit copy/move for Impl to ensure strict lifecycle of raw handle
+    Impl(const Impl&) = delete;
+    Impl& operator=(const Impl&) = delete;
+    Impl(Impl&&) = delete;
+    Impl& operator=(Impl&&) = delete;
+
+    CURL* get() const noexcept { return handle_; }
+
+private:
+    CURL* handle_ = nullptr;
 };
 
-// Lifecycle methods (must be defined here where Impl is complete)
+// Lifecycle methods for HttpClient
 
 HttpClient::HttpClient() : pimpl_(std::make_unique<Impl>()) {}
 
@@ -28,15 +61,15 @@ HttpClient& HttpClient::operator=(HttpClient&& other) noexcept {
     return *this;
 }
 
-// Interface implementations (Skeleton)
+// Interface implementations (Skeleton for now)
 
 HttpResponse HttpClient::download(const std::string& /*url*/, std::chrono::milliseconds /*timeout*/) {
-    // Skeleton implementation: Will be implemented in NET-05
+    // We have the raw handle available here via pimpl_->get() for NET-07
     throw std::logic_error("HttpClient::download is not yet implemented");
 }
 
 void HttpClient::setRetryPolicy(const RetryPolicy& /*policy*/) {
-    // Skeleton implementation: Will be implemented in NET-05
+    // Will be implemented in NET-07
 }
 
 } // namespace iptv::network

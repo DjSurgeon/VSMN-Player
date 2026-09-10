@@ -50,6 +50,7 @@ endif()
 
 # Locate dependencies managed by Conan 2
 find_package(spdlog REQUIRED)
+find_package(CURL REQUIRED)
 
 # Include public headers
 include_directories(include)
@@ -61,7 +62,7 @@ add_library(iptv_core STATIC
 )
 target_include_directories(iptv_core PUBLIC include)
 target_compile_options(iptv_core PRIVATE ${PROJECT_WARNINGS})
-target_link_libraries(iptv_core PUBLIC spdlog::spdlog)
+target_link_libraries(iptv_core PUBLIC spdlog::spdlog CURL::libcurl)
 
 # Main executable
 add_executable(iptv_player src/main.cpp)

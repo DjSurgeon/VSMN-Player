@@ -13,3 +13,4 @@ class IptvPlayerConan(ConanFile):
     def requirements(self):
         self.requires("spdlog/1.13.0")
         self.requires("gtest/1.14.0")
+        self.requires("libcurl/8.10.1")
