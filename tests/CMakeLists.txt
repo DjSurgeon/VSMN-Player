@@ -13,8 +13,9 @@ add_executable(unit_tests
     unit/test_sanity.cpp
     unit/network/test_http_response.cpp
     unit/network/test_retry_policy.cpp
+    unit/network/test_i_http_client.cpp
 )
-target_link_libraries(unit_tests PRIVATE GTest::gtest_main iptv_core)
+target_link_libraries(unit_tests PRIVATE GTest::gmock GTest::gtest_main iptv_core)
 target_compile_options(unit_tests PRIVATE ${PROJECT_WARNINGS})
 
 include(GoogleTest)
