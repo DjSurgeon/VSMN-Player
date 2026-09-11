@@ -4,6 +4,16 @@
 
 namespace iptv::network {
 
+// libcurl write callback
+static size_t WriteCallback(char* ptr, size_t size, size_t nmemb, void* userdata) {
+    if (!userdata) return 0;
+    
+    auto* response = static_cast<HttpResponse*>(userdata);
+    std::size_t total_size = size * nmemb;
+    response->appendToBody(reinterpret_cast<const uint8_t*>(ptr), total_size);
+    return total_size;
+}
+
 // Define the hidden implementation class with strict RAII
 class HttpClient::Impl {
 public:
@@ -12,6 +22,7 @@ public:
         if (!handle_) {
             throw std::runtime_error("Failed to initialize curl easy handle.");
         }
+        curl_easy_setopt(handle_, CURLOPT_WRITEFUNCTION, WriteCallback);
     }
 
     ~Impl() {
@@ -54,6 +65,14 @@ HttpClient& HttpClient::operator=(HttpClient&& other) noexcept {
 HttpResponse HttpClient::download(const std::string& /*url*/, std::chrono::milliseconds /*timeout*/) {
     // We have the raw handle available here via pimpl_->get() for NET-07
     throw std::logic_error("HttpClient::download is not yet implemented");
+}
+
+void HttpClient::setNetworkConfig(const NetworkConfig& config) {
+    curl_easy_setopt(pimpl_->get(), CURLOPT_USERAGENT, config.user_agent.c_str());
+    curl_easy_setopt(pimpl_->get(), CURLOPT_FOLLOWLOCATION, config.follow_redirects ? 1L : 0L);
+    curl_easy_setopt(pimpl_->get(), CURLOPT_SSL_VERIFYPEER, config.ssl_verify ? 1L : 0L);
+    curl_easy_setopt(pimpl_->get(), CURLOPT_SSL_VERIFYHOST, config.ssl_verify ? 2L : 0L);
+    curl_easy_setopt(pimpl_->get(), CURLOPT_TIMEOUT_MS, static_cast<long>(config.timeout.count()));
 }
 
 void HttpClient::setRetryPolicy(const RetryPolicy& /*policy*/) {

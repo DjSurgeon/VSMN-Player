@@ -40,7 +40,10 @@ public:
     HttpClient& operator=(HttpClient&&) noexcept;
 
     // IHttpClient interface implementation
-    HttpResponse download(const std::string& url, std::chrono::milliseconds timeout) override;
+    HttpResponse download(const std::string& url, std::chrono::milliseconds timeout = std::chrono::milliseconds{0}) override;
+
+    void setNetworkConfig(const NetworkConfig& config) override;
+
     void setRetryPolicy(const RetryPolicy& policy) override;
 
 private:

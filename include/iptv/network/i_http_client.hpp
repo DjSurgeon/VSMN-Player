@@ -2,6 +2,7 @@
 
 #include "iptv/network/http_response.hpp"
 #include "iptv/network/http_retry_policy.hpp"
+#include "iptv/network/network_config.hpp"
 #include <chrono>
 #include <string>
 
@@ -41,7 +42,12 @@ public:
     virtual HttpResponse download(const std::string& url, std::chrono::milliseconds timeout) = 0;
 
     /**
-     * @brief Sets the retry policy for subsequent requests.
+     * @brief Configures global network options (TLS, User-Agent, redirects).
+     */
+    virtual void setNetworkConfig(const NetworkConfig& config) = 0;
+
+    /**
+     * @brief Configures retry behavior for failed requests.
      * 
      * @param policy The configuration detailing backoff strategy and max retries.
      */
