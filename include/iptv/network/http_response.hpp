@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -10,7 +11,7 @@
 namespace iptv::network {
 
 /**
- * @brief Telemetría detallada de la transferencia HTTP.
+ * @brief Detailed telemetry of the HTTP transfer.
  */
 struct NetworkMetrics {
   std::chrono::microseconds ttfb{0};  ///< Pure network transport latency (DNS + TLS + TTFB)
@@ -19,7 +20,7 @@ struct NetworkMetrics {
   size_t bytes_downloaded{0};  ///< Total payload bytes received
 
   /**
-   * @brief Calcula el throughput real percibido en Megabits por segundo (Mbps).
+   * @brief Calculates the actual perceived throughput in Megabits per second (Mbps).
    * @return double The calculated throughput in Mbps.
    */
   [[nodiscard]] double throughputMbps() const noexcept {
@@ -65,16 +66,36 @@ class HttpResponse {
   HttpResponse& operator=(HttpResponse&&) noexcept = default;
 
   /**
-   * @brief Appends data to the response body without full copy reallocations.
+   * @brief Appends data to the response body using SIMD-optimized memory copy.
    *
-   * @param data Pointer to the raw bytes.
+   * @param src Pointer to the raw bytes.
    * @param size Number of bytes to append.
    */
-  void appendToBody(const uint8_t* data, std::size_t size) {
-    if (data == nullptr || size == 0) {
-      return;
+  void appendToBody(const uint8_t* src, std::size_t size) noexcept {
+    if (src == nullptr || size == 0) return;
+    const size_t current_size = body_.size();
+    body_.resize(current_size + size);
+    std::memcpy(body_.data() + current_size, src, size);
+  }
+
+  /**
+   * @brief Clears the response state but retains memory capacity for reuse.
+   */
+  void clear() noexcept {
+    body_.clear();
+    status_code_ = HttpStatusCode::Unknown;
+    metrics_ = NetworkMetrics{};
+    latency_ = std::chrono::milliseconds{0};
+  }
+
+  /**
+   * @brief Explicitly reserves capacity in the internal vector.
+   * @param capacity Expected total body size.
+   */
+  void reserveBody(std::size_t capacity) {
+    if (capacity > body_.capacity()) {
+      body_.reserve(capacity);
     }
-    body_.insert(body_.end(), data, data + size);
   }
 
   /**

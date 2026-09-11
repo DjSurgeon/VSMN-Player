@@ -2,7 +2,10 @@
 
 #include <curl/curl.h>
 
+#include <charconv>
+#include <random>
 #include <stdexcept>
+#include <string_view>
 #include <thread>
 
 namespace iptv::network {
@@ -19,6 +22,33 @@ static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata
   return total_size;
 }
 
+// libcurl header callback for zero-allocation Content-Length pre-reservation
+static size_t headerCallback(char* buffer, size_t size, size_t nitems, void* userdata) {
+  if (userdata == nullptr) {
+    return size * nitems;
+  }
+  size_t total = size * nitems;
+  std::string_view line(buffer, total);
+  
+  if (line.starts_with("Content-Length:") || line.starts_with("content-length:")) {
+    size_t pos = line.find(':');
+    if (pos != std::string_view::npos) {
+      std::string_view val = line.substr(pos + 1);
+      auto first = val.find_first_not_of(" \t\r\n");
+      if (first != std::string_view::npos) {
+        val = val.substr(first);
+        size_t content_length = 0;
+        auto [p, ec] = std::from_chars(val.data(), val.data() + val.size(), content_length);
+        if (ec == std::errc{}) {
+          auto* response = static_cast<HttpResponse*>(userdata);
+          response->reserveBody(content_length);
+        }
+      }
+    }
+  }
+  return total;
+}
+
 // Define the hidden implementation class with strict RAII
 class HttpClient::Impl {
   friend class HttpClient;
@@ -29,6 +59,7 @@ class HttpClient::Impl {
       throw std::runtime_error("Failed to initialize curl easy handle.");
     }
     curl_easy_setopt(handle_, CURLOPT_WRITEFUNCTION, writeCallback);
+    curl_easy_setopt(handle_, CURLOPT_HEADERFUNCTION, headerCallback);
   }
 
   ~Impl() {
@@ -79,9 +110,12 @@ HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseco
     curl_easy_setopt(pimpl_->get(), CURLOPT_TIMEOUT_MS, static_cast<long>(timeout.count()));
   }
 
+  HttpResponse response(HttpStatusCode::Unknown);
+  curl_easy_setopt(pimpl_->get(), CURLOPT_WRITEDATA, &response);
+  curl_easy_setopt(pimpl_->get(), CURLOPT_HEADERDATA, &response);
+
   for (std::uint32_t attempt = 0; attempt <= retries; ++attempt) {
-    HttpResponse response(HttpStatusCode::Unknown);
-    curl_easy_setopt(pimpl_->get(), CURLOPT_WRITEDATA, &response);
+    response.clear();
 
     const auto start_wall_clock = std::chrono::steady_clock::now();
     CURLcode res = curl_easy_perform(pimpl_->get());
@@ -119,7 +153,11 @@ HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseco
 
     // Apply backoff
     if (backoff_strategy != BackoffStrategy::None) {
-      std::this_thread::sleep_for(current_delay);
+      thread_local std::mt19937 gen{std::random_device{}()};
+      std::uniform_int_distribution<long long> dist(0, current_delay.count());
+      std::chrono::milliseconds jittered_delay(dist(gen));
+
+      std::this_thread::sleep_for(jittered_delay);
       if (backoff_strategy == BackoffStrategy::Exponential) {
         current_delay *= 2;
         if (current_delay > pimpl_->policy_.max_delay) {
@@ -129,7 +167,7 @@ HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseco
     }
   }
 
-  return HttpResponse(HttpStatusCode::Unknown);
+  return response;
 }
 
 void HttpClient::setNetworkConfig(const NetworkConfig& config) {
@@ -139,7 +177,7 @@ void HttpClient::setNetworkConfig(const NetworkConfig& config) {
   curl_easy_setopt(pimpl_->get(), CURLOPT_SSL_VERIFYHOST, config.ssl_verify ? 2L : 0L);
 
   // Connection timeout vs general timeout anti-stall
-  curl_easy_setopt(pimpl_->get(), CURLOPT_CONNECTTIMEOUT_MS, 5000L);  // 5 seconds connect max
+  curl_easy_setopt(pimpl_->get(), CURLOPT_CONNECTTIMEOUT_MS, static_cast<long>(config.connect_timeout.count()));
 
   // Anti-stall safeguards: abort if < 10KB/s for 3s
   curl_easy_setopt(pimpl_->get(), CURLOPT_LOW_SPEED_LIMIT, 10240L);

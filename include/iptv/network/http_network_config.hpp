@@ -29,7 +29,12 @@ struct NetworkConfig {
   bool follow_redirects{true};
 
   /**
-   * @brief Maximum time allowed for the connection phase.
+   * @brief Maximum time allowed for the connection phase (TCP/TLS handshake).
+   */
+  std::chrono::milliseconds connect_timeout{3000};
+
+  /**
+   * @brief Maximum time allowed for the full payload download phase.
    */
   std::chrono::milliseconds timeout{5000};
 };
