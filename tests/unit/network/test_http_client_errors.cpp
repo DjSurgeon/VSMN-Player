@@ -29,6 +29,13 @@ class HttpClientErrorsTest : public ::testing::Test {
       res.set_content("Not Found", "text/plain");
     });
 
+    // 3.1. 403 Route: Fail-Fast testing (Auth Error)
+    server_->Get("/403", [this](const httplib::Request&, httplib::Response& res) {
+      forbidden_counter_++;
+      res.status = 403;
+      res.set_content("Forbidden", "text/plain");
+    });
+
     // 4. 500 Route: Retry loop testing
     server_->Get("/500", [this](const httplib::Request&, httplib::Response& res) {
       internal_error_counter_++;
@@ -57,6 +64,7 @@ class HttpClientErrorsTest : public ::testing::Test {
 
  public:
   std::atomic<int> not_found_counter_{0};
+  std::atomic<int> forbidden_counter_{0};
   std::atomic<int> internal_error_counter_{0};
 };
 
@@ -108,6 +116,23 @@ TEST_F(HttpClientErrorsTest, FailFastOn404) {
   EXPECT_FALSE(response.isSuccess());
   EXPECT_EQ(response.getStatusCode(), HttpStatusCode::NotFound);
   EXPECT_EQ(not_found_counter_.load(), 1);  // Exactamente 1 petición, sin reintentos
+}
+
+// 3.1. FailFastOn403Forbidden
+TEST_F(HttpClientErrorsTest, FailFastOn403Forbidden) {
+  HttpClient client;
+
+  // Set 5 retries. A 403 is a client error, it should not retry.
+  RetryPolicy policy;
+  policy.max_retries = 5;
+  policy.initial_delay = std::chrono::milliseconds(1);
+  client.setRetryPolicy(policy);
+
+  auto response = client.download(getUrl("/403"), std::chrono::milliseconds(5000));
+
+  EXPECT_FALSE(response.isSuccess());
+  EXPECT_EQ(response.getStatusCode(), HttpStatusCode::Forbidden);
+  EXPECT_EQ(forbidden_counter_.load(), 1);  // Cero reintentos
 }
 
 // 4. RetryLoopRespectsMaxCount

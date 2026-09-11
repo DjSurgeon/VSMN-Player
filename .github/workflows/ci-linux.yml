@@ -122,6 +122,7 @@ jobs:
             -e "build/.*" \
             -e "tests/.*" \
             -e "test/.*" \
+            --gcov-ignore-parse-errors=negative_hits.warn \
             --html-details -o build-coverage/reports/coverage.html \
             --print-summary
             
