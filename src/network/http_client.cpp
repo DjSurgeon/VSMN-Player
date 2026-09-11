@@ -93,7 +93,11 @@ HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseco
 
     long status = 0;
     curl_easy_getinfo(pimpl_->get(), CURLINFO_RESPONSE_CODE, &status);
-    response.setStatusCode(static_cast<HttpStatusCode>(status));
+    if (res != CURLE_OK) {
+      response.setStatusCode(HttpStatusCode::Unknown);
+    } else {
+      response.setStatusCode(static_cast<HttpStatusCode>(status));
+    }
 
     curl_off_t starttransfer_us = 0;
     curl_easy_getinfo(pimpl_->get(), CURLINFO_STARTTRANSFER_TIME_T, &starttransfer_us);

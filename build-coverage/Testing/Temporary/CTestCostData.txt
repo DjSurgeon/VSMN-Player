@@ -1,8 +1,0 @@
-SanityCheck.ToolchainVerification 1 0.00282482
-HttpResponseTest.ConstructorPreallocatesMemory 1 0.00256359
-HttpResponseTest.AppendToBodyWorksCorrectly 1 0.00271844
-HttpResponseTest.MoveSemanticsAreEnforced 1 0.00270678
-RetryPolicyTest.DefaultValuesAreIndustryStandard 1 0.00269724
-RetryPolicyTest.CustomValuesAreRespected 1 0.00254214
-IHttpClientTest.MockingIsSupported 1 0.00296689
----
