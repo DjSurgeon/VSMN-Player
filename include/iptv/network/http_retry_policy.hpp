@@ -41,7 +41,8 @@ struct RetryPolicy {
   std::chrono::milliseconds initial_delay{1000};
 
   /**
-   * @brief Maximum possible delay between retries (ceil for Exponential strategy).
+   * @brief Maximum possible delay between retries (ceil for Exponential
+   * strategy).
    */
   std::chrono::milliseconds max_delay{15000};
 

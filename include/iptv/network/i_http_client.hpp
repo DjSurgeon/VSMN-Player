@@ -3,9 +3,9 @@
 #include <chrono>
 #include <string>
 
+#include "iptv/network/http_network_config.hpp"
 #include "iptv/network/http_response.hpp"
 #include "iptv/network/http_retry_policy.hpp"
-#include "iptv/network/http_network_config.hpp"
 
 namespace iptv::network {
 
@@ -13,7 +13,8 @@ namespace iptv::network {
  * @brief Abstract base interface for HTTP clients.
  *
  * Defines the contract for downloading data over HTTP. Designed to allow
- * dependency injection and mocking for higher-level components (like HLS parsers).
+ * dependency injection and mocking for higher-level components (like HLS
+ * parsers).
  */
 class IHttpClient {
  public:
@@ -40,7 +41,8 @@ class IHttpClient {
    * @param timeout The maximum time allowed for the request.
    * @return HttpResponse The result of the HTTP request.
    */
-  virtual HttpResponse download(const std::string& url, std::chrono::milliseconds timeout) = 0;
+  virtual HttpResponse download(const std::string& url,
+                                std::chrono::milliseconds timeout) = 0;
 
   /**
    * @brief Configures global network options (TLS, User-Agent, redirects).

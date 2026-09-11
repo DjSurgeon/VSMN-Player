@@ -13,8 +13,8 @@ void initialize();
 /**
  * @brief Global network cleanup.
  *
- * Must be called once at application shutdown after all HttpClients are destroyed.
- * Wraps libcurl global cleanup.
+ * Must be called once at application shutdown after all HttpClients are
+ * destroyed. Wraps libcurl global cleanup.
  */
 void shutdown();
 
