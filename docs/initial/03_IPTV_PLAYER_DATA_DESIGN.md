@@ -36,6 +36,7 @@ ByteBuffer
 ```
 
 **Consideraciones:**
+
 - Pre-allocado (no malloc en hot path)
 - Move-semantics (transferencia de ownership entre threads)
 - Optional CRC32 para validar integridad
@@ -69,6 +70,7 @@ Channel
 ```
 
 **Consideraciones:**
+
 - Parseable from .m3u8 extended format
 - Soporta múltiples variantes (adaptive bitrate)
 - Optional EPG metadata
@@ -147,6 +149,7 @@ Playlist
 ```
 
 **Consideraciones:**
+
 - Puede ser grande (1000+ canales)
 - Parseable incrementalmente (streaming parse)
 - Updateable in-place
@@ -224,6 +227,7 @@ VideoFrame
 ```
 
 **Tamaño estimado:**
+
 - 1080p YUV420p: 3.1 MB
 - 720p YUV420p: 1.4 MB
 - 360p YUV420p: 350 KB
@@ -551,6 +555,7 @@ class ThreadSafeQueue {
 ```
 
 **Implementaciones posibles:**
+
 - Lock-free (moodycamel::ConcurrentQueue) → mejor performance
 - Mutex + condition_variable → más simple, fácil de debuggear
 
@@ -570,6 +575,7 @@ write_pos (producer advances)
 ```
 
 **Properties:**
+
 - Fixed size (no memory allocation after init)
 - Blocks producer if full (backpressure)
 - Blocks consumer if empty (wait for data)
@@ -642,6 +648,7 @@ Total Budget: ~500 MB per instance
 ## 🎯 CONCLUSIÓN
 
 Este documento define:
+
 - ✅ Todos los tipos principales
 - ✅ Formatos de datos
 - ✅ Interfaces de comunicación

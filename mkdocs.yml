@@ -8,3 +8,6 @@ theme:
 
 nav:
   - Overview: index.md
+  - Network Architecture: network.md
+  - Build & CI/CD: build.md
+  - API Reference: api.md

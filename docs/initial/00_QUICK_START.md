@@ -16,6 +16,7 @@ Tienes **5 documentos** en este folder:
 6. **ARCHITECTURE_DIAGRAMS.md** ← Diagramas ASCII
 
 **Lectura recomendada:**
+
 - Día 1: QUICK_START + EXECUTIVE_SUMMARY (30 min)
 - Día 2: ARQUITECTURA completa (2 horas)
 - Día 3: DATA_DESIGN + DIAGRAMS (1 hora)
@@ -65,6 +66,7 @@ SEMANA 1 (PHASE 0 - Architecture Only)
 ## 🎯 TUS 5 PRÓXIMAS SEMANAS (Summary)
 
 ### **SEMANA 1: Arquitectura (Sin código)**
+
 ```
 OBJETIVO: Finalizar ALL planning
 DELIVERABLE: Ready-to-code skeleton
@@ -80,6 +82,7 @@ TAREAS:
 ```
 
 ### **SEMANA 2-3: Network Subsystem**
+
 ```
 OBJETIVO: Descargar m3u8 y segmentos
 DELIVERABLE: HTTP client funcionando
@@ -87,6 +90,7 @@ TIEMPO: 30 horas
 ```
 
 ### **SEMANA 4: Decoder Subsystem**
+
 ```
 OBJETIVO: Decodificar H.264 + AAC
 DELIVERABLE: FFmpeg decode funcionando
@@ -94,6 +98,7 @@ TIEMPO: 20 horas
 ```
 
 ### **SEMANA 5: Render + GUI**
+
 ```
 OBJETIVO: Display video + audio
 DELIVERABLE: ImGui + OpenGL funcionando
@@ -101,6 +106,7 @@ TIEMPO: 20 horas
 ```
 
 ### **SEMANA 6: Testing & Polish**
+
 ```
 OBJETIVO: MVP completo y robusto
 DELIVERABLE: IPTV player funcional
@@ -113,7 +119,7 @@ TIEMPO: 20 horas
 ## 💡 DECISIONES CLAVE YA TOMADAS
 
 | Aspecto | Decisión |
-|---------|----------|
+| --------- | ---------- |
 | **Lenguaje** | C++20 |
 | **Build** | CMake + Conan |
 | **GUI** | ImGui (MVP) |
@@ -131,17 +137,20 @@ TIEMPO: 20 horas
 ## 🔧 REQUISITOS DEL SISTEMA
 
 **Hardware mínimo:**
+
 - CPU: Quad-core 2.0+ GHz
 - RAM: 4 GB
 - Disk: 10 GB (includes build artifacts, dependencies)
 - GPU: OpenGL 4.5 capable
 
 **OS recomendado para desarrollo:**
+
 - Ubuntu 22.04 LTS (primary target)
 - macOS 12+ (secondary)
 - Windows 11 + WSL2 (tertiary)
 
 **Software necesario:**
+
 - Git
 - CMake 3.22+
 - GCC 11+ or Clang 14+
@@ -177,7 +186,7 @@ TOOLS:
 
 ---
 
-## 🎬 AHORA, LOS SIGUIENTES PASOS:
+## 🎬 AHORA, LOS SIGUIENTES PASOS
 
 ### **Opción A: Estoy convencido, empiezo AHORA**
 
@@ -188,6 +197,7 @@ TOOLS:
 5. Push commits diarios (show progress)
 
 **Comando rápido:**
+
 ```bash
 git clone https://github.com/[tu-usuario]/iptv-player.git
 cd iptv-player
@@ -206,6 +216,7 @@ git checkout -b develop
 ### **Opción C: Me da miedo, quiero simplificar**
 
 **Por favor NO hagas esto.** El proyecto está:
+
 - ✅ Bien scoped (12 semanas, no más)
 - ✅ Modular (puedes hacer MVP sin features avanzadas)
 - ✅ Realista (has práctica en C++, networking, etc)
@@ -220,30 +231,35 @@ Si te da miedo, es normal. Pero es el miedo del crecimiento, no del fracaso.
 ## 📊 EXPECTATIVAS REALISTAS
 
 ### **Semana 1: Aburrida pero importante**
+
 - Solo setup, no "haciendo código"
 - Pero necesaria para no tropezar luego
 - Puedes estar frustrado ("¿cuándo empiezo a codificar?")
 - ✅ Persevera, es normal
 
 ### **Semana 2-3: Emocionante**
+
 - Primer código que compila y corre
 - Network thread descargando m3u8
 - Ya se siente un proyecto real
 - ✅ Momentum building
 
 ### **Semana 4: Desafío FFmpeg**
+
 - FFmpeg es complejo
 - Memory leaks, crashes, crashes, crashes
 - Frustración alta
 - ✅ Solución: ASan + Valgrind desde día 1
 
 ### **Semana 5: "Eureka!"**
+
 - Primera vez que ves video en pantalla
 - Todo conecta: network → decode → render
 - Momento increíble
 - ✅ Motivation peak
 
 ### **Semana 6-10: Productización**
+
 - Muchos pequeños bugs
 - Performance tweaking
 - Testing, documentation
@@ -251,6 +267,7 @@ Si te da miedo, es normal. Pero es el miedo del crecimiento, no del fracaso.
 - ✅ Profesionalismo
 
 ### **Semana 11-12: Pride**
+
 - Versión final funciona bien
 - Documentación profesional
 - Demo video ready
@@ -278,14 +295,16 @@ R: Sí, pero añade 2 semanas. Stick con ImGui para MVP, Qt en fase 2 si queda t
 
 **P: ¿Esto realmente impresiona a recruiters?**
 R: **Sí.** Porque:
-  - No es toy project (es real, funcional)
-  - Muestra multithreading (hard skill)
-  - Muestra integración de librerías complejas (FFmpeg)
-  - Muestra DevOps (Docker, CI/CD)
-  - Puedes demostrar vivo en entrevista
+
+- No es toy project (es real, funcional)
+- Muestra multithreading (hard skill)
+- Muestra integración de librerías complejas (FFmpeg)
+- Muestra DevOps (Docker, CI/CD)
+- Puedes demostrar vivo en entrevista
 
 **P: ¿Qué hago si me estanco?**
 R: Opciones:
+
   1. Slack en #general? No, pregunta a Stack Overflow
   2. Revisa documentación (FFmpeg docs, SDL2 docs)
   3. Debug con GDB / AddressSanitizer
@@ -351,14 +370,16 @@ RECRUITER IMPRESIONADO ✅
 
 **¿Continuamos o no?**
 
-### Sí, continuamos porque:
+### Sí, continuamos porque
+
 - ✅ Plan realista (12 semanas, proven timeline)
 - ✅ Well-scoped (MVP claro, Phase 2 es enhancement)
 - ✅ Modular (puedo cambiar componentes si needed)
 - ✅ Valuable (portfolio + empleabilidad)
 - ✅ Learning (multithreading, streaming, DevOps)
 
-### No continuamos porque:
+### No continuamos porque
+
 - ❌ No tengo tiempo (requiere 15h/week mínimo)
 - ❌ No confío en mi C++ (pero esto te lo enseña!)
 - ❌ Quiero algo más simple (OK, pero menos impresionante)
@@ -394,6 +415,7 @@ ACTIONABLE ITEMS FOR TODAY:
 ## 🚀 YOU'RE READY
 
 You have:
+
 - ✅ Clear architecture (no ambiguity)
 - ✅ 12-week roadmap (realistic)
 - ✅ Risk mitigation (sleep better)
@@ -403,11 +425,13 @@ You have:
 **Only thing missing: You pressing Start.**
 
 **This week:**
+
 - Finalize understanding
 - Create GitHub repo
 - Schedule your time
 
 **Next week:**
+
 - Start Phase 0
 - First commits
 - Build momentum

@@ -5,7 +5,9 @@
 ## 🎯 VISIÓN GENERAL
 
 ### **Objetivo Principal**
+
 Construir un **IPTV Player production-grade en C++20** que demuestre:
+
 - Arquitectura multithreaded real
 - Integración con librerías complejas (FFmpeg)
 - Networking robusto (HTTP, TLS)
@@ -15,7 +17,7 @@ Construir un **IPTV Player production-grade en C++20** que demuestre:
 ### **Por qué este proyecto es FUERTE para portfolio**
 
 | Factor | Valor |
-|--------|-------|
+| -------- | ------- |
 | **Complejidad técnica** | Alta (3 threads, sincronización, media handling) |
 | **Visibilidad** | Alta (GUI funcional, demo-able) |
 | **Relevancia profesional** | Altísima (streaming es industria $B) |
@@ -30,23 +32,27 @@ Construir un **IPTV Player production-grade en C++20** que demuestre:
 ### **REQUISITOS FUNCIONALES**
 
 #### **RF1: Reproducción de Streams IPTV**
+
 - **Qué:** Reproducir video en tiempo real desde URL de playlist IPTV (.m3u8)
 - **Cómo:** HTTP GET → m3u8 parsing → descargar segmentos .ts → decode → render
 - **Éxito:** Video fluyendo en pantalla sin buffering visible
 
 #### **RF2: Control de Reproducción**
+
 - **Play/Pause:** Parar/reanudar descarga y decode
 - **Stop:** Limpiar buffers, detener todos los threads
 - **Seek:** Saltar a otro punto (avanzado, fase 2)
 - **Interfaz:** Botones GUI + teclado shortcuts
 
 #### **RF3: Visualización de Canales**
+
 - **Listado:** Mostrar todos los canales del m3u8
 - **Búsqueda:** Filter por nombre
 - **Selección:** Click para cambiar canal
 - **Feedback:** Indicación visual de canal actual
 
 #### **RF4: Estadísticas en Tiempo Real**
+
 - **Metrics mostradas:**
   - Bitrate actual (Mbps)
   - FPS (frames por segundo)
@@ -55,6 +61,7 @@ Construir un **IPTV Player production-grade en C++20** que demuestre:
   - Latencia (network → display)
 
 #### **RF5: Manejo de Errores Gracioso**
+
 - **Red:** Reintentos automáticos, timeout handling
 - **Decode:** Skip de frames corruptos, logging detallado
 - **Render:** Fallback a resolución menor si GPU saturada
@@ -65,28 +72,33 @@ Construir un **IPTV Player production-grade en C++20** que demuestre:
 ### **REQUISITOS NO-FUNCIONALES**
 
 #### **RNF1: Performance**
+
 - Decode latency: < 200ms desde descarga a pantalla
 - Render: 60 FPS estable
 - Network: 10+ Mbps sustained
 - Memory: < 300MB durante playback
 
 #### **RNF2: Confiabilidad**
+
 - Cero memory leaks (validado con ASan)
 - Cero race conditions (validado con ThreadSanitizer)
 - Code coverage > 80%
 - MTBF (Mean Time Between Failures) > 1 hora
 
 #### **RNF3: Escalabilidad**
+
 - Manejar streams 720p, 1080p, 4K
 - Adaptive bitrate (seleccionar mejor variante)
 - Múltiples conexiones simultáneas
 
 #### **RNF4: Usabilidad**
+
 - UI responsiva (no freeza con red lenta)
 - Cross-platform (Linux, Windows, macOS)
 - Docker-deployable
 
 #### **RNF5: Mantenibilidad**
+
 - Código limpio, bien documentado
 - Componentes desacoplados
 - Fácil de testear unitariamente
@@ -144,6 +156,7 @@ Construir un **IPTV Player production-grade en C++20** que demuestre:
 ```
 
 **Características:**
+
 - Main thread: GUI y state management
 - 3 worker threads: I/O intensivo (network), CPU intensivo (decode), GPU intensivo (render)
 - Comunicación: Lock-free queues / circular buffers
@@ -207,6 +220,7 @@ Construir un **IPTV Player production-grade en C++20** que demuestre:
 ### **COMPONENTE 1: NETWORK SUBSYSTEM**
 
 #### **Responsabilidades Clave**
+
 1. **Playlist Parsing**
    - Descargar URL m3u8
    - Parsear formato (extUSIG, ext-x-stream-inf, etc)
@@ -231,6 +245,7 @@ Construir un **IPTV Player production-grade en C++20** que demuestre:
    - Packet loss estimado
 
 #### **Interfaces Principales**
+
 ```
 NetworkSubsystem:
   - start() → void
@@ -242,22 +257,26 @@ NetworkSubsystem:
 ```
 
 #### **Datos de Entrada**
+
 - Channel URL (from GUI/Controller)
 - Retry policy (max attempts, backoff strategy)
 - Bandwidth limits (optional throttling)
 
 #### **Datos de Salida**
+
 - ByteBuffer queue (to decoder)
 - NetworkStats (to GUI)
 - Error events (to controller)
 
 #### **Decisiones de Diseño Clave**
+
 - **Buffer Size:** 2-3 segmentos en memoria (típicamente 10-50 MB)
 - **Download Strategy:** Sliding window (descargar siguiente mientras se decodifica actual)
 - **Error Recovery:** Reintentos con backoff exponencial, timeout 10s por segmento
 - **Thread Model:** Single thread (I/O bound, waiting on network)
 
 #### **Desafíos Técnicos**
+
 - ⚠️ HTTP pipelining (mantener conexión abierta)
 - ⚠️ Handling redirects (m3u8 puede apuntar a otras URLs)
 - ⚠️ Time-based segments (algunos streams son en vivo)
@@ -269,6 +288,7 @@ NetworkSubsystem:
 ### **COMPONENTE 2: DECODER SUBSYSTEM**
 
 #### **Responsabilidades Clave**
+
 1. **Demuxing**
    - Consumir ByteBuffer (contiene .ts file)
    - Identificar streams (video, audio, subtitles)
@@ -292,6 +312,7 @@ NetworkSubsystem:
    - Graceful degradation
 
 #### **Interfaces Principales**
+
 ```
 DecoderSubsystem:
   - start() → void
@@ -303,20 +324,24 @@ DecoderSubsystem:
 ```
 
 #### **Datos de Entrada**
+
 - ByteBuffer queue (from network)
 
 #### **Datos de Salida**
+
 - VideoFrame queue (to render)
 - AudioFrame queue (to audio output)
 - DecoderStats (fps, resolution, decoded count)
 
 #### **Decisiones de Diseño Clave**
+
 - **FFmpeg Context:** Una por thread, reutilizada entre segmentos
 - **Memory Strategy:** Pre-allocate frame buffers (circular pool)
 - **Queue Depth:** 5-10 frames buffered (balance latency vs robustness)
 - **Thread Model:** Single thread (CPU bound, heavy decode work)
 
 #### **Desafíos Técnicos**
+
 - ⚠️ FFmpeg memory management (leaks, crashes)
 - ⚠️ Stream format variations (diferentes codecs, resolutions)
 - ⚠️ Timing discontinuities (.ts segments may have PTS gaps)
@@ -328,6 +353,7 @@ DecoderSubsystem:
 ### **COMPONENTE 3: RENDER SUBSYSTEM**
 
 #### **Responsabilidades Clave**
+
 1. **Video Rendering**
    - Consume VideoFrame queue
    - Upload texture to GPU (OpenGL)
@@ -348,6 +374,7 @@ DecoderSubsystem:
    - Frame drop strategy (si decode es lento)
 
 #### **Interfaces Principales**
+
 ```
 RenderSubsystem:
   - start() → void
@@ -358,15 +385,18 @@ RenderSubsystem:
 ```
 
 #### **Datos de Entrada**
+
 - VideoFrame queue (from decoder)
 - AudioFrame queue (from decoder)
 
 #### **Datos de Salida**
+
 - Window + rendered video (visual output)
 - Audio through speakers
 - RenderStats (fps, dropped frames, audio latency)
 
 #### **Decisiones de Diseño Clave**
+
 - **Rendering Backend:** OpenGL 4.5 (modern, cross-platform)
 - **Audio Backend:** SDL2 Audio (simple, funciona everywhere)
 - **Target FPS:** 60 (o vSync del monitor)
@@ -374,6 +404,7 @@ RenderSubsystem:
 - **Frame Dropping:** Inteligente (drop late frames, keep recent)
 
 #### **Desafíos Técnicos**
+
 - ⚠️ OpenGL context affinity (solo el thread que crea context puede usarlo)
 - ⚠️ Audio underrun prevention (audio callback may be real-time)
 - ⚠️ Variable resolution streams (resolution changes mid-playback)
@@ -385,6 +416,7 @@ RenderSubsystem:
 ### **COMPONENTE 4: CONTROLLER (Orquestación)**
 
 #### **Responsabilidades Clave**
+
 1. **State Management**
    - Estados: IDLE, CONNECTING, PLAYING, PAUSED, STOPPED, ERROR
    - Transiciones válidas
@@ -411,6 +443,7 @@ RenderSubsystem:
    - Graceful shutdown sequence
 
 #### **Interfaces Principales**
+
 ```
 Controller:
   - playChannel(url: string) → void
@@ -459,6 +492,7 @@ Controller:
 ### **COMPONENTE 5: GUI SUBSYSTEM**
 
 #### **Responsabilidades Clave**
+
 1. **Channel Management UI**
    - List all channels from current playlist
    - Search/filter
@@ -485,7 +519,7 @@ Controller:
 #### **Technology Choice: ImGui vs Qt**
 
 | Aspecto | ImGui | Qt |
-|---------|-------|-----|
+| --------- | ------- | ----- |
 | **Aprendizaje** | Rápido (immediate-mode) | Lento (signal-slot) |
 | **Render latency** | Bajo | Medio |
 | **Polish** | Funcional | Profesional |
@@ -511,11 +545,13 @@ Controller:
 ```
 
 **Implementación:**
+
 - Lock-free queue (moodycamel::ConcurrentQueue) O manual con mutex + condition_variable
 - Buffer circular pre-allocado (zero allocation durante playback)
 - Size límite (backpressure if decoder slow)
 
 **Ventajas:**
+
 - Desacoplamiento total entre threads
 - Timing-isolated (cada thread a su ritmo)
 - Easy debugging (inspeccionar queue sizes)
@@ -536,6 +572,7 @@ Controller quiere pausar:
 ```
 
 **Implementación:**
+
 - mutex + condition_variable per subsystem
 - Cada thread reports readiness (paused, stopped, etc)
 - Controller waits for all confirmations
@@ -563,6 +600,7 @@ GUI:
 ### **NIVEL 1: UNIT TESTS (Componentes Aislados)**
 
 #### **Network Subsystem Tests**
+
 - Parsear m3u8 válido → extraer canales correctos
 - Parsear m3u8 inválido → error handling
 - Download con timeout → reintentos
@@ -571,6 +609,7 @@ GUI:
 - Bandwidth calculation → valores razonables
 
 #### **Decoder Subsystem Tests**
+
 - Decodificar .ts válido → frames correctos
 - Manejo de frames corruptos → skip sin crash
 - Cambio de resolución → buffer resizing
@@ -578,6 +617,7 @@ GUI:
 - Timestamp handling → sincronización correcta
 
 #### **Render Subsystem Tests**
+
 - Frame upload a GPU → sin crashes
 - Audio buffering → sin underruns
 - Resolution change → adaptive rendering
@@ -585,6 +625,7 @@ GUI:
 - Window resize → layout adjustment
 
 #### **Controller Tests**
+
 - State transitions válidas → permitidas
 - State transitions inválidas → rechazadas
 - Play → pause → stop → play → secuencia correcta
@@ -594,6 +635,7 @@ GUI:
 ### **NIVEL 2: INTEGRATION TESTS**
 
 #### **End-to-End Scenarios**
+
 1. Start application → IDLE state
 2. Select channel → CONNECTING state
 3. Network downloads m3u8 → OK
@@ -602,12 +644,14 @@ GUI:
 6. Final state: PLAYING with video flowing
 
 #### **Stress Tests**
+
 - Play 10 hours continuously → no memory leaks
 - Switch channels 100 times → proper cleanup
 - Pause/resume rapidly → no deadlocks
 - Network failures mid-stream → recovery
 
 #### **Performance Tests**
+
 - Decode latency < 200ms
 - Render at 60 FPS stable
 - Network throughput 10+ Mbps
@@ -740,7 +784,7 @@ iptv-player/
 ### **CI/CD CHECKS**
 
 | Check | Tool | Frekuencia | Criterio Éxito |
-|-------|------|------------|----------------|
+| ------- | ------ | ------------ | ---------------- |
 | Build | CMake | Per push | Compile exitoso |
 | Unit Tests | GTest | Per push | 100% pass |
 | Integration Tests | Custom | Per push | 100% pass |
@@ -760,6 +804,7 @@ iptv-player/
 **Objetivo:** Arquitectura definida, estructura lista, cero código
 
 **Tareas:**
+
 - ✅ Finalizar documento de arquitectura (ESTE)
 - ✅ Definir estructura de directorios
 - ✅ Crear GitHub repo skeleton
@@ -769,6 +814,7 @@ iptv-player/
 - ✅ Definir interfaces (headers) sin implementación
 
 **Deliverables:**
+
 - GitHub repo con estructura
 - CMakeLists.txt que compila (empty targets)
 - conanfile.txt con todas las deps
@@ -785,6 +831,7 @@ iptv-player/
 **Objetivo:** Sistema funcional end-to-end jugando IPTV
 
 #### **Sprint 1.1: Network Subsystem (1.5 weeks)**
+
 - Implement HTTP client (libcurl)
 - M3U8 parsing
 - Segment downloading loop
@@ -794,6 +841,7 @@ iptv-player/
 **Testing:** Unit tests + manual with real m3u8
 
 #### **Sprint 1.2: Decoder Subsystem (1.5 weeks)**
+
 - FFmpeg context setup
 - Demux .ts files
 - H.264 decode
@@ -803,6 +851,7 @@ iptv-player/
 **Testing:** Unit tests + decode actual segments
 
 #### **Sprint 1.3: Render Subsystem (1 week)**
+
 - SDL2 window creation
 - OpenGL texture upload
 - Render loop @ 60fps
@@ -812,6 +861,7 @@ iptv-player/
 **Testing:** Render decoded frames + play audio
 
 #### **Sprint 1.4: Controller + GUI (1 week)**
+
 - State machine implementation
 - Thread orchestration
 - ImGui channel list + controls
@@ -821,6 +871,7 @@ iptv-player/
 **Testing:** Full end-to-end: select channel → video plays
 
 **Deliverables:**
+
 - Playable IPTV player (may be rough)
 - All unit tests passing
 - 70%+ code coverage
@@ -828,6 +879,7 @@ iptv-player/
 - Dockerfile builds
 
 **Success Metrics:**
+
 - Play real IPTV stream
 - Display video and audio
 - UI responsive (no freezes)
@@ -839,6 +891,7 @@ iptv-player/
 ### **FASE 2: PRODUCTION-READY (Semanas 6-10) - ROBUSTEZ + POLISH**
 
 #### **Sprint 2.1: Error Handling & Recovery (1 week)**
+
 - Network failure handling + retries
 - Decoder error handling (skip corrupt frames)
 - Graceful degradation
@@ -846,6 +899,7 @@ iptv-player/
 - User notifications (UI)
 
 #### **Sprint 2.2: Performance & Optimization (1 week)**
+
 - Profile decode latency (goal < 200ms)
 - Optimize FFmpeg context usage
 - Zero-copy optimizations
@@ -853,6 +907,7 @@ iptv-player/
 - Bandwidth adaptive streaming (select best variant)
 
 #### **Sprint 2.3: Advanced Features (1.5 weeks)**
+
 - Seeking support
 - A/V sync refinement
 - Buffer depth indicators
@@ -860,6 +915,7 @@ iptv-player/
 - Aspect ratio / scaling
 
 #### **Sprint 2.4: Quality & Testing (1.5 weeks)**
+
 - Expand unit test coverage → > 85%
 - Stress tests (24h playback, 100+ channel switches)
 - Performance benchmarks
@@ -867,6 +923,7 @@ iptv-player/
 - Documentation (BUILD.md, API docs, design docs)
 
 #### **Sprint 2.5: Deployment & Polish (1 week)**
+
 - Docker image optimization
 - Docker-compose for dev
 - Cross-platform testing (Linux, macOS, Windows)
@@ -874,6 +931,7 @@ iptv-player/
 - README + showcase videos
 
 **Deliverables:**
+
 - Production-ready IPTV player
 - 85%+ code coverage
 - Zero ASan/TSan findings
@@ -882,6 +940,7 @@ iptv-player/
 - Performance benchmarks
 
 **Success Metrics:**
+
 - Sustained 20+ Mbps streaming
 - Decode latency < 100ms
 - 60 FPS rendering guarantee
@@ -893,6 +952,7 @@ iptv-player/
 ### **FASE 3: PORTFOLIO POLISH (Semana 11-12) - PRESENTATION**
 
 #### **Sprint 3.1: Documentation & Showcase**
+
 - Professional README
 - Architecture diagrams (ASCII art + SVG)
 - Setup instructions
@@ -900,6 +960,7 @@ iptv-player/
 - Feature list
 
 #### **Sprint 3.2: GitHub & Demo**
+
 - Organize issues (bug tracking)
 - Create project board (kanban)
 - Tag releases (v1.0)
@@ -907,6 +968,7 @@ iptv-player/
 - Performance benchmark report
 
 #### **Sprint 3.3: Portfolio Optimization**
+
 - Tailor README for each job type
 - Extract testimonials / metrics
 - Create "lessons learned" post
@@ -914,6 +976,7 @@ iptv-player/
 - LinkedIn post
 
 **Deliverables:**
+
 - Showcase-ready GitHub repo
 - Demo video
 - Metrics report
@@ -930,6 +993,7 @@ iptv-player/
 **Impacto:** Alto (puede bloquear todo proyecto)
 
 **Mitigación:**
+
 - Fase 0: Investigar FFmpeg API en profundidad
 - Encapsular FFmpeg en wrapper seguro (RAII, unique_ptr)
 - Unit tests tempranos con segmentos de prueba
@@ -945,6 +1009,7 @@ iptv-player/
 **Impacto:** Alto (produtcion killer)
 
 **Mitigación:**
+
 - Usar lock-free structures donde posible
 - ThreadSanitizer CI/CD checks
 - Minimize shared state (copiar datos en vez de compartir)
@@ -960,6 +1025,7 @@ iptv-player/
 **Impacto:** Medio (user sees errors)
 
 **Mitigación:**
+
 - Robust m3u8 parser (handle variants)
 - Retry logic con exponential backoff
 - Timeout handling (10s max per segment)
@@ -975,6 +1041,7 @@ iptv-player/
 **Impacto:** Medio (timeline slip)
 
 **Mitigación:**
+
 - MVP scope bien definido (este documento)
 - Phase-based approach (MVP first, polish second)
 - "No feature" por defecto (only if planned)
@@ -989,6 +1056,7 @@ iptv-player/
 **Impacto:** Alto (producto unusable)
 
 **Mitigación:**
+
 - Performance budgets claros (< 200ms decode latency)
 - Profile early and often
 - Benchmark comparisons
@@ -1002,7 +1070,7 @@ iptv-player/
 ### **LENGUAJE & COMPILACIÓN**
 
 | Componente | Decisión | Justificación |
-|-----------|----------|---------------|
+| ----------- | ---------- | --------------- |
 | Lenguaje | C++20 | Modern, efficient, portfolio impact |
 | Standard | C++20 | Latest features (coroutines, concepts) |
 | Compiler | GCC 11+ / Clang 14+ | Good C++20 support |
@@ -1012,7 +1080,7 @@ iptv-player/
 ### **DEPENDENCIAS CLAVE**
 
 | Librería | Versión | Uso | Link |
-|----------|---------|-----|------|
+| ---------- | --------- | ----- | ------ |
 | FFmpeg | 5.1+ | Media decode/demux | ffmpeg.org |
 | libcurl | 7.80+ | HTTP requests | curl.se |
 | SDL2 | 2.0.18+ | Windowing, audio | libsdl.org |
@@ -1025,7 +1093,7 @@ iptv-player/
 ### **HERRAMIENTAS DE DESARROLLO**
 
 | Herramienta | Uso |
-|------------|-----|
+| ------------ | ----- |
 | GDB / LLDB | Debugging |
 | Valgrind | Memory profiling |
 | AddressSanitizer | Memory error detection |
@@ -1040,12 +1108,14 @@ iptv-player/
 ### **REQUISITOS DEL SISTEMA**
 
 **Mínimo:**
+
 - OS: Linux, macOS, Windows (con WSL2)
 - CPU: Quad-core, 2.0+ GHz
 - RAM: 4 GB
 - GPU: OpenGL 4.5 capable
 
 **Recomendado para desarrollo:**
+
 - OS: Ubuntu 22.04 LTS (development target)
 - CPU: 8+ cores
 - RAM: 16 GB
@@ -1074,6 +1144,7 @@ Antes de escribir UNA SOLA LÍNEA de código:
 ## 🎯 CONCLUSIÓN
 
 Esta arquitectura proporciona:
+
 - ✅ Roadmap claro en 12 semanas
 - ✅ Componentes desacoplados (fácil testing)
 - ✅ Production-grade design patterns

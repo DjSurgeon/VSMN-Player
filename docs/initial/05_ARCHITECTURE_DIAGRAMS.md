@@ -605,6 +605,7 @@ USER ACTION              SYSTEM RESPONSE            STATE CHANGE
 ## SUMMARY
 
 These diagrams show:
+
 - ✅ Layered architecture (presentation → logic → subsystems)
 - ✅ Data flow (producer-consumer pipeline)
 - ✅ Synchronization (queues, state machine)

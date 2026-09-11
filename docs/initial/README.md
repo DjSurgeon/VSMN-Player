@@ -120,12 +120,14 @@ README.md (este)                     ← Índice y guía de lectura
 **RESULTADO:** Aplicación funcional + GitHub showcase-ready
 
 **STACK:**
+
 - C++20 | CMake | Conan
 - FFmpeg | libcurl | OpenGL | SDL2 | ImGui
 - GTest | Docker | GitHub Actions
 - AddressSanitizer | ThreadSanitizer
 
 **COMPONENTES PRINCIPALES:**
+
 1. Network Thread (HTTP, m3u8 parsing, .ts download)
 2. Decoder Thread (FFmpeg H.264/AAC decode)
 3. Render Thread (OpenGL GPU render + SDL audio)
@@ -133,6 +135,7 @@ README.md (este)                     ← Índice y guía de lectura
 5. GUI (ImGui channel list + playback controls)
 
 **FASES:**
+
 - Phase 0: Arquitectura (Week 1-2)
 - Phase 1: MVP funcional (Week 3-6)
 - Phase 2: Producción (Week 7-10)
@@ -162,7 +165,7 @@ Antes de escribir UNA SOLA línea:
 ## 🎯 RIESGOS PRINCIPALES & MITIGACIÓN
 
 | Risk | Probability | Mitigation |
-|------|------------|-----------|
+| ------ | ------------ | ----------- |
 | FFmpeg complexity | High | ASan + wrapper desde día 1 |
 | Thread race conditions | Medium | ThreadSanitizer + stress tests |
 | Network resilience | Medium | Robust parsing, retry logic |
@@ -174,16 +177,19 @@ Antes de escribir UNA SOLA línea:
 ## 💡 POR QUÉ ESTE PROYECTO ES GANADOR
 
 **vs. 5 proyectos separados:**
+
 - ✅ Coherencia (single product, not scattered)
 - ✅ Eficiencia (12 weeks vs 24 weeks)
 - ✅ Portfolio impact ("built system" not "exercises")
 
 **vs. Toy project (calculator, tic-tac-toe):**
+
 - ✅ Real complexity (networking, threading, GPU)
 - ✅ Visible output (video playing)
 - ✅ Production patterns (error handling, metrics)
 
 **vs. Copying existing player:**
+
 - ✅ Your own architecture (show thinking)
 - ✅ Authentic (no plagiarism risk)
 - ✅ Deep learning (understand, not copy)
@@ -237,7 +243,7 @@ RESULTADO: Completamente listo para Week 1
 ## 📊 DOCUMENTO METRICS
 
 | Document | Size | Reading Time | Key Info |
-|----------|------|--------------|----------|
+| ---------- | ------ | -------------- | ---------- |
 | QUICK_START | 8 KB | 15 min | Start here |
 | EXECUTIVE_SUMMARY | 7.5 KB | 10 min | Project overview |
 | ARQUITECTURA | 39 KB | 2-3 hours | Core design |
@@ -302,6 +308,7 @@ R: **Sí.** Porque es real, funcional, y muestra skills profundos.
 ## ✅ CONCLUSIÓN
 
 **Tienes todo lo que necesitas:**
+
 - ✅ Arquitectura clara (sin ambigüedades)
 - ✅ Plan realista (12 semanas, probado)
 - ✅ Risk mitigation (duerme mejor)
@@ -312,7 +319,7 @@ R: **Sí.** Porque es real, funcional, y muestra skills profundos.
 
 ---
 
-**Próximo paso:** Lee 00_QUICK_START.md y empieza. 
+**Próximo paso:** Lee 00_QUICK_START.md y empieza.
 
 **You're ready. Let's build. 💪🎬**
 

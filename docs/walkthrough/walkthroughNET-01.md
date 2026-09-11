@@ -32,5 +32,6 @@
 ## ⏭️ Próximos Pasos
 
 El issue **NET-01** está técnicamente resuelto. El siguiente paso lógico, basándonos en tu lista, sería abordar:
+
 - **[NET-02] RetryPolicy y NetworkConfig**
 - O hacer *commit* de estos cambios a tu rama actual.

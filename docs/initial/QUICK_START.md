@@ -14,6 +14,7 @@ EXECUTIVE_SUMMARY.md
 ```
 
 **Preguntas que deberías poder responder:**
+
 - ¿Cuántas semanas necesito?
 - ¿Qué es la arquitectura multi-thread?
 - ¿Por qué importa ThreadSanitizer?
@@ -36,6 +37,7 @@ ARCHITECTURE.md
 ```
 
 **Después deberías poder:**
+
 - Explicar qué hace Network thread vs Decoder thread
 - Dibujar circular buffer en una servilleta
 - Justificar por qué mutex > lock-free para MVP
@@ -54,6 +56,7 @@ TECHNICAL_DECISIONS.md
 ```
 
 **Esto es lo que dirás en interviews:**
+
 - "¿Por qué C++20 y no Rust?" → tienes respuesta
 - "¿Por qué ImGui y no Qt?" → tienes respuesta
 - "¿Por qué mutex y no lock-free?" → tienes respuesta
@@ -70,6 +73,7 @@ EXECUTION_PLAN.md
 ```
 
 **Markers importantes:**
+
 - Week 6: ✅ MVP LISTO (video plays, no crashes)
 - Week 12: ✅ PRODUCCIÓN LISTA (portfolio-worthy)
 
@@ -94,26 +98,31 @@ Valida que tienes:
 ### Ambiente Técnico
 
 - [ ] **C++20 compiler** instalado
+
   ```bash
   g++ --version  # Necesitas GCC 11+ o Clang 13+
   ```
 
 - [ ] **CMake 3.24+** instalado
+
   ```bash
   cmake --version
   ```
 
 - [ ] **Conan 2.x** instalado
+
   ```bash
   conan --version
   ```
 
 - [ ] **Docker** instalado (para week 10, pero mejor tener ahora)
+
   ```bash
   docker --version
   ```
 
 - [ ] **Git** configurado
+
   ```bash
   git config --list
   ```
@@ -131,10 +140,13 @@ Valida que tienes:
 
 - [ ] Cuenta GitHub creada
 - [ ] SSH keys configurado
+
   ```bash
   ssh -T git@github.com
   ```
+
 - [ ] Nombre + email configurado
+
   ```bash
   git config --global user.name "Tu Nombre"
   git config --global user.email "tu@email.com"
@@ -150,9 +162,10 @@ Valida que tienes:
 
 ## 🎯 ACCIÓN INMEDIATA (Hoy)
 
-### En 30 minutos:
+### En 30 minutos
 
 1. **Crea GitHub repo**
+
    ```bash
    # En GitHub UI:
    # New repo → iptv-player
@@ -163,12 +176,14 @@ Valida que tienes:
    ```
 
 2. **Clona repo**
+
    ```bash
    git clone git@github.com:TU_USER/iptv-player.git
    cd iptv-player
    ```
 
 3. **Copia documentación al repo**
+
    ```bash
    # Copia los 5 archivos .md a:
    # iptv-player/docs/ARCHITECTURE.md
@@ -184,6 +199,7 @@ Valida que tienes:
    ```
 
 4. **Primer commit**
+
    ```bash
    git add docs/
    git commit -m "Add architecture & planning documentation"
@@ -201,7 +217,7 @@ Valida que tienes:
 
 ## 📊 ESTA SEMANA
 
-### Plan:
+### Plan
 
 - [ ] **Hoy:** GitHub repo + documentación pushada
 - [ ] **Mañana:** Leer ARCHITECTURE.md completamente
@@ -209,7 +225,7 @@ Valida que tienes:
 - [ ] **Jueves:** Crear proyecto C++20 boilerplate
 - [ ] **Viernes:** Setup GitHub Actions CI/CD
 
-### Resultado esperado:
+### Resultado esperado
 
 ```
 iptv-player/
@@ -233,6 +249,7 @@ iptv-player/
 ```
 
 Primera línea de commit:
+
 ```bash
 git commit -m "Initial project structure with CMake skeleton"
 ```
@@ -272,7 +289,7 @@ Viernes:
 
 ## 🆘 SI ALGO NO ESTÁ CLARO
 
-### Preguntas comunes:
+### Preguntas comunes
 
 **P: ¿Realmente necesito 12 semanas?**
 A: A 15 h/semana sí. Si trabajas 40 h/semana, 6-8 semanas es factible pero con riesgo de burnout. Mantén disciplina sobre velocidad.
@@ -293,34 +310,40 @@ A: Common. Ajusta timeline, pero NO hagas scope creep. Mejor 6 weeks + MVP que 1
 
 ## 📚 RECURSOS EXTERNOS
 
-### Si necesitas learn más:
+### Si necesitas learn más
 
 **CMake:**
-- Oficiale: https://cmake.org/cmake/help/latest/
-- Tutorial rápido: https://www.youtube.com/watch?v=HPMvU64QPIA
+
+- Oficiale: <https://cmake.org/cmake/help/latest/>
+- Tutorial rápido: <https://www.youtube.com/watch?v=HPMvU64QPIA>
 
 **Conan:**
-- Docs: https://docs.conan.io/
+
+- Docs: <https://docs.conan.io/>
 
 **FFmpeg:**
-- API docs: https://ffmpeg.org/doxygen/
-- Tutorials: https://github.com/leandromoreira/ffmpeg-libav-tutorial
+
+- API docs: <https://ffmpeg.org/doxygen/>
+- Tutorials: <https://github.com/leandromoreira/ffmpeg-libav-tutorial>
 
 **Multithreading C++:**
+
 - "C++ Concurrency in Action" (book)
 - cppreference.com/std::thread
 
 **GTest:**
-- https://github.com/google/googletest/blob/main/docs/primer.md
+
+- <https://github.com/google/googletest/blob/main/docs/primer.md>
 
 **ImGui:**
-- https://github.com/ocornut/imgui (+ examples/)
+
+- <https://github.com/ocornut/imgui> (+ examples/)
 
 ---
 
 ## 💡 MINDSET
 
-### Recuerda:
+### Recuerda
 
 1. **Done is better than perfect**
    - Semana 6 MVP > Semana 20 perfecto
@@ -345,7 +368,7 @@ A: Common. Ajusta timeline, pero NO hagas scope creep. Mejor 6 weeks + MVP que 1
 
 ## 🎬 TÚ ESTÁS LISTO?
 
-### Responde sí a todo:
+### Responde sí a todo
 
 - [ ] ¿Entiendo qué es este proyecto?
 - [ ] ¿Tengo 12 semanas disponibles?
@@ -354,7 +377,7 @@ A: Common. Ajusta timeline, pero NO hagas scope creep. Mejor 6 weeks + MVP que 1
 - [ ] ¿Voy a respetar el timeline (no scope creep)?
 - [ ] ¿Tengo ambiente técnico setup?
 
-**Si todo es SÍ:** 
+**Si todo es SÍ:**
 
 ## 🚀 EMPECEMOS
 

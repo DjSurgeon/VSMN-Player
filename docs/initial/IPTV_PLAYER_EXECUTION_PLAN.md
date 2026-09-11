@@ -44,6 +44,7 @@
 
 - [ ] Clonar template repo C++20 (o crear desde cero)
 - [ ] Crear estructura de directorios:
+
   ```
   src/
   test/
@@ -53,6 +54,7 @@
   .github/workflows/
   docker/
   ```
+
 - [ ] Commit: "Initial project structure"
 
 #### Martes-Miércoles
@@ -75,6 +77,7 @@
 - [ ] Setup .clang-format (Google style o LLVM)
 - [ ] Setup .clang-tidy config
 - [ ] Setup GitHub Actions workflow (ci-linux.yml):
+
   ```yaml
   - checkout
   - setup conan
@@ -85,6 +88,7 @@
   - Run clang-tidy
   - Run AddressSanitizer
   ```
+
 - [ ] Commit: "GitHub Actions CI/CD setup"
 - [ ] Verificar que PR pasa CI
 
@@ -108,6 +112,7 @@
 
 - [ ] Crear `src/network/` directory
 - [ ] Escribir `src/network/types.h`:
+
   ```cpp
   struct Channel {
       std::string name;
@@ -121,7 +126,9 @@
       uint32_t segments;
   };
   ```
+
 - [ ] Escribir stub `src/network/http_client.h`:
+
   ```cpp
   class HttpClient {
   public:
@@ -129,6 +136,7 @@
       // More methods later
   };
   ```
+
 - [ ] Escribir implementación mínima con libcurl
 - [ ] Commit: "HttpClient basic implementation"
 - [ ] **Crear unit test:** `test/network/test_http_client.cpp`
@@ -140,12 +148,14 @@
 #### Miércoles-Jueves
 
 - [ ] Crear `src/network/playlist_parser.h`:
+
   ```cpp
   class PlaylistParser {
   public:
       std::vector<Channel> parseM3U8(const std::string& content);
   };
   ```
+
 - [ ] Implementar parser:
   - [ ] Simple regex para `#EXTINF:` (duración)
   - [ ] Extraer URL siguiente
@@ -159,6 +169,7 @@
 #### Viernes
 
 - [ ] Crear `src/network/network_component.h` (interface):
+
   ```cpp
   class NetworkComponent {
   public:
@@ -169,6 +180,7 @@
       void stop();
   };
   ```
+
 - [ ] Crear implementación stub (no threads aún)
 - [ ] Commit: "NetworkComponent interface & stub"
 
@@ -189,6 +201,7 @@
 
 - [ ] Add FFmpeg a conanfile.txt
 - [ ] Crear `src/decoder/ffmpeg_wrapper.h`:
+
   ```cpp
   class FFmpegWrapper {
   public:
@@ -199,12 +212,14 @@
       void close();
   };
   ```
+
 - [ ] Implementar wrapper (manejo básico de AVFormatContext)
 - [ ] Commit: "FFmpeg wrapper - demux"
 
 #### Miércoles-Jueves
 
 - [ ] Crear `src/decoder/av_frame.h` (RAII wrapper):
+
   ```cpp
   class AVFrameWrapper {
   private:
@@ -215,8 +230,10 @@
       AVFrame* get();
   };
   ```
+
 - [ ] Implementar RAII cleanup
 - [ ] Crear `src/decoder/decoder_component.h`:
+
   ```cpp
   class DecoderComponent {
   public:
@@ -226,6 +243,7 @@
       DecoderStats getStats();
   };
   ```
+
 - [ ] Implementar decodificación:
   - [ ] Abrir demuxer con FFmpeg
   - [ ] Loop: leer packet → decode
@@ -259,6 +277,7 @@
 
 - [ ] Add SDL2 a conanfile
 - [ ] Crear `src/render/sdl_window.h`:
+
   ```cpp
   class SDLWindow {
   public:
@@ -269,12 +288,14 @@
       void close();
   };
   ```
+
 - [ ] Implementar SDL window + OpenGL context
 - [ ] Commit: "SDL2 window"
 
 #### Miércoles
 
 - [ ] Crear `src/render/gl_shader.h`:
+
   ```cpp
   class GLShader {
   public:
@@ -283,12 +304,14 @@
       void setUniform(...);
   };
   ```
+
 - [ ] Implementar simple vertex + fragment shader (YUV → RGB)
 - [ ] Commit: "OpenGL shader"
 
 #### Jueves-Viernes
 
 - [ ] Crear `src/render/render_component.h`:
+
   ```cpp
   class RenderComponent {
   public:
@@ -299,6 +322,7 @@
       void stop();
   };
   ```
+
 - [ ] Implementar:
   - [ ] OpenGL texture from YUV data
   - [ ] Draw quad con shader
@@ -321,6 +345,7 @@
 
 - [ ] Add ImGui a conanfile (o build from source)
 - [ ] Crear `src/gui/imgui_window.h`:
+
   ```cpp
   class ImGuiWindow {
   public:
@@ -330,6 +355,7 @@
       void render();
   };
   ```
+
 - [ ] Implementar ImGui init + SDL2 backend
 - [ ] Commit: "ImGui setup"
 
@@ -346,6 +372,7 @@
 #### Jueves-Viernes
 
 - [ ] Crear `src/app/player_controller.h` (interface):
+
   ```cpp
   class PlayerController {
   public:
@@ -355,7 +382,9 @@
       PlayerState getState();
   };
   ```
+
 - [ ] Crear circular buffer thread-safe en `src/common/circular_buffer.h`:
+
   ```cpp
   template<typename T>
   class CircularBuffer {
@@ -368,6 +397,7 @@
       bool dequeue(T& item);
   };
   ```
+
 - [ ] Commit: "PlayerController + CircularBuffer"
 
 ### Semana 5.2: Integration (7 horas)
@@ -375,6 +405,7 @@
 #### Lunes-Martes
 
 - [ ] Main loop architecture:
+
   ```cpp
   while (!quit) {
       gui.beginFrame();
@@ -386,6 +417,7 @@
       render_thread.update();
   }
   ```
+
 - [ ] Crear `src/main.cpp` básico
 - [ ] Threading:
   - [ ] Network thread: `std::thread`
@@ -463,7 +495,7 @@
   - [ ] Troubleshooting
 - [ ] Commit: "README + BUILDING docs"
 
-**Fin Semana 6:** 
+**Fin Semana 6:**
 ✅ MVP COMPLETE
 ✅ Compila sin warnings
 ✅ Tests passing
@@ -551,12 +583,14 @@
 #### Lunes-Miércoles
 
 - [ ] Analizar coverage actual:
+
   ```bash
   cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage"
   cmake --build build
   ctest
   gcov output (analyze)
   ```
+
 - [ ] Identificar uncovered lines
 - [ ] Escribir tests para:
   - [ ] Edge cases en parser
@@ -592,9 +626,11 @@
 #### Viernes
 
 - [ ] Valgrind (optional, heavy):
+
   ```bash
   valgrind --leak-check=full ./iptv_player
   ```
+
 - [ ] Commit: "Valgrind analysis"
 
 ---
@@ -609,6 +645,7 @@
 #### Lunes-Martes
 
 - [ ] Crear `docker/Dockerfile`:
+
   ```dockerfile
   FROM ubuntu:22.04
   WORKDIR /app
@@ -618,6 +655,7 @@
   RUN cmake -B build && cmake --build build
   ENTRYPOINT ["./build/iptv_player"]
   ```
+
 - [ ] Crear `docker/Dockerfile.dev` (with dev tools)
 - [ ] Crear `docker-compose.yml`:
   - [ ] Service: iptv_player
@@ -671,9 +709,11 @@
 #### Lunes-Martes
 
 - [ ] Generar API docs (Doxygen):
+
   ```bash
   doxygen Doxyfile
   ```
+
 - [ ] Escribir:
   - [ ] API.md (public interfaces)
   - [ ] DESIGN_DECISIONS.md (why we chose X over Y)
@@ -802,7 +842,7 @@
 ### Code Quality Metrics
 
 | Metric | Target | Check Method |
-|---|---|---|
+| --- | --- | --- |
 | Code Coverage | >80% | `gcov` + CI report |
 | Compiler Warnings | 0 | CI build step |
 | Clang-tidy issues | 0 | CI step |
@@ -813,7 +853,7 @@
 ### Testing Metrics
 
 | Metric | Target |
-|---|---|
+| --- | --- |
 | Unit tests | >50 |
 | Integration tests | >5 |
 | Manual test hours | >10 |
@@ -828,6 +868,7 @@
 **Señal:** No puedo compilar FFmpeg code, crashes en decode
 
 **Acción:**
+
 1. Revert a librería más simple (libav, openh264)
 2. O, usar wrapper existente (MXE, ffmpeg-python bindings)
 3. Delay Phase 2, focus en Phase 1 stability
@@ -837,6 +878,7 @@
 **Señal:** Deadlock, race condition (TSan), crashes
 
 **Acción:**
+
 1. Simplificar sincronización (mutex is fine, don't rush lock-free)
 2. Add debug logging copiously
 3. Run with DDD debugger
@@ -847,6 +889,7 @@
 **Señal:** ImGui or render thread blocks, GUI unresponsive
 
 **Acción:**
+
 1. Move blocking operations to separate thread
 2. Use non-blocking I/O (libcurl)
 3. Profile with perf/profiling tool
@@ -857,6 +900,7 @@
 **Señal:** Can't test with real IPTV (no access)
 
 **Acción:**
+
 1. Create fake M3U8 + sample TS files locally
 2. Mock HTTP server (simple Python Flask)
 3. Test with mocked network errors
@@ -866,6 +910,7 @@
 **Señal:** "Oh wait, let me also add Qt, MQTT, Kubernetes..."
 
 **Acción:**
+
 1. **Ignore.** Stick to MVP.
 2. Phase 2 is already generous with features.
 3. Phase 3 is bonus.

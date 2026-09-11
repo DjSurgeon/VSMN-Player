@@ -26,6 +26,7 @@ TOTAL: 12 SEMANAS (15h/week part-time) o 8 SEMANAS (full-time)
 **Tareas:**
 
 #### **Monday (8 hours)**
+
 - [ ] Finalizar arquitectura general (DONE: IPTV_PLAYER_ARQUITECTURA.md)
 - [ ] Finalizar data structures design (DONE: IPTV_PLAYER_DATA_DESIGN.md)
 - [ ] Crear decision log (este documento)
@@ -34,6 +35,7 @@ TOTAL: 12 SEMANAS (15h/week part-time) o 8 SEMANAS (full-time)
 - [ ] Definir conventions (code style, naming, folder structure)
 
 **Decision Log Entry:**
+
 ```
 DECISION #1: Repository Visibility
 - PUBLIC from start (portfolio benefit)
@@ -45,6 +47,7 @@ DECISION #1: Repository Visibility
 ---
 
 #### **Tuesday (8 hours)**
+
 - [ ] Crear estructura de carpetas (folder tree)
 - [ ] Crear CMakeLists.txt skeleton (compila pero no hace nada)
 - [ ] Crear conanfile.txt con todas las deps
@@ -53,6 +56,7 @@ DECISION #1: Repository Visibility
 - [ ] Documentar setup instructions (BUILD.md)
 
 **Decision Log Entry:**
+
 ```
 DECISION #2: Build System & Package Manager
 - CMake 3.22+ (industry standard)
@@ -66,6 +70,7 @@ DECISION #2: Build System & Package Manager
 ---
 
 #### **Wednesday (8 hours)**
+
 - [ ] Diseñar headers principales (sin .cpp)
   - [ ] network/network_subsystem.h
   - [ ] decoder/decoder_subsystem.h
@@ -77,6 +82,7 @@ DECISION #2: Build System & Package Manager
   - [ ] common/logging.h
 
 **Decision Log Entry:**
+
 ```
 DECISION #3: Thread-Safe Queue Implementation
 - Option 1: Lock-free (moodycamel::ConcurrentQueue)
@@ -92,6 +98,7 @@ DECISION #3: Thread-Safe Queue Implementation
 ---
 
 #### **Thursday (8 hours)**
+
 - [ ] Diseñar types principales (common/types.h)
   - [ ] ByteBuffer
   - [ ] VideoFrame
@@ -103,6 +110,7 @@ DECISION #3: Thread-Safe Queue Implementation
 - [ ] Documentar invariants y pre/post-conditions
 
 **Decision Log Entry:**
+
 ```
 DECISION #4: Memory Management Strategy
 - Option 1: Raw pointers (C-style)
@@ -121,6 +129,7 @@ DECISION #4: Memory Management Strategy
 ---
 
 #### **Friday (8 hours)**
+
 - [ ] Crear test skeleton (tests/CMakeLists.txt)
 - [ ] Setup GTest framework
 - [ ] Crear dummy unit tests (empty, just compile)
@@ -132,6 +141,7 @@ DECISION #4: Memory Management Strategy
 - [ ] Documentar testing strategy (TESTING.md)
 
 **Decision Log Entry:**
+
 ```
 DECISION #5: Testing Framework
 - GTest (Google Test)
@@ -144,6 +154,7 @@ DECISION #5: Testing Framework
 ### **SEMANA 2: Infrastructure & Skeleton (40 horas)**
 
 #### **Monday (8 hours)**
+
 - [ ] Setup local development environment
   - [ ] Docker dev container (optional but recommended)
   - [ ] Documentation: env setup instructions
@@ -162,6 +173,7 @@ DECISION #5: Testing Framework
 ---
 
 #### **Tuesday (8 hours)**
+
 - [ ] Create initial CI/CD pipeline
   - [ ] Push to develop → runs build + tests
   - [ ] PR to main → runs all checks
@@ -175,6 +187,7 @@ DECISION #5: Testing Framework
 ---
 
 #### **Wednesday (8 hours)**
+
 - [ ] Design CMake structure
   - [ ] Root CMakeLists.txt
   - [ ] src/CMakeLists.txt
@@ -187,6 +200,7 @@ DECISION #5: Testing Framework
 - [ ] Document build variables
 
 **Decision Log Entry:**
+
 ```
 DECISION #6: Compiler & C++ Version
 - Compiler: GCC 11+ or Clang 14+
@@ -199,6 +213,7 @@ DECISION #6: Compiler & C++ Version
 ---
 
 #### **Thursday (8 hours)**
+
 - [ ] Setup Conan configuration
   - [ ] Define all dependencies (FFmpeg, SDL2, OpenGL, spdlog, GTest, ImGui)
   - [ ] Version pinning (reproducible builds)
@@ -207,6 +222,7 @@ DECISION #6: Compiler & C++ Version
 - [ ] Document dependency management
 
 **Decision Log Entry:**
+
 ```
 DECISION #7: GUI Framework (ImGui vs Qt)
 - ImGui: Lighter, faster to MVP (2 weeks)
@@ -220,6 +236,7 @@ DECISION #7: GUI Framework (ImGui vs Qt)
 ---
 
 #### **Friday (8 hours)**
+
 - [ ] Create Docker configuration
   - [ ] Dockerfile (multi-stage)
   - [ ] docker-compose.yml (dev environment)
@@ -255,6 +272,7 @@ DECISION #7: GUI Framework (ImGui vs Qt)
 **Objetivo:** Descargar y parsear m3u8 + segmentos .ts
 
 #### **Monday-Tuesday: HTTP Client Basics**
+
 - [ ] Implement HTTP client (libcurl wrapper)
 - [ ] GET request handler
 - [ ] Response parsing
@@ -268,24 +286,28 @@ HTTPResponse: { status, headers, body, latency }
 ```
 
 #### **Wednesday: M3U8 Parser**
+
 - [ ] Parse M3U8 format
 - [ ] Extract channels (EXTINF, URL)
 - [ ] Handle variants (adaptive bitrate)
 - [ ] Unit tests
 
 #### **Thursday: Segment Download**
+
 - [ ] Implement segment downloader
 - [ ] Sequence-based (download current, next, prefetch)
 - [ ] Retry logic (exponential backoff)
 - [ ] Metrics collection
 
 #### **Friday: Network Thread + Integration**
+
 - [ ] Implement NetworkThread main loop
 - [ ] Thread-safe output queue
 - [ ] Controller communication
 - [ ] Integration test (download real m3u8)
 
 **Success Criteria:**
+
 - [ ] Can download m3u8 from real IPTV playlist
 - [ ] Can download .ts segments
 - [ ] Unit tests: > 80%
@@ -299,6 +321,7 @@ HTTPResponse: { status, headers, body, latency }
 **Objetivo:** Decodificar H.264 y AAC usando FFmpeg
 
 #### **Monday-Tuesday: FFmpeg Initialization**
+
 - [ ] Create FFmpeg context wrapper
 - [ ] Open file / stream
 - [ ] Find video/audio streams
@@ -306,17 +329,20 @@ HTTPResponse: { status, headers, body, latency }
 - [ ] Error handling
 
 #### **Wednesday: Video Decoding**
+
 - [ ] Decode H.264 NAL units
 - [ ] Convert YUV to renderable format (RGBA)
 - [ ] Frame timing (PTS)
 - [ ] Key frame handling
 
 #### **Thursday: Audio Decoding**
+
 - [ ] Decode AAC samples
 - [ ] Resample if needed
 - [ ] Sync with video (timing)
 
 #### **Friday: Decoder Thread + Integration**
+
 - [ ] Implement DecoderThread main loop
 - [ ] Input from network queue
 - [ ] Output to render queues
@@ -324,6 +350,7 @@ HTTPResponse: { status, headers, body, latency }
 - [ ] Integration test
 
 **Success Criteria:**
+
 - [ ] Decode actual .ts segments
 - [ ] Extract video frames + audio samples
 - [ ] FFmpeg memory clean (ASan)
@@ -337,6 +364,7 @@ HTTPResponse: { status, headers, body, latency }
 **Objetivo:** Display video, play audio, basic GUI
 
 #### **Monday: OpenGL Rendering**
+
 - [ ] SDL2 window creation
 - [ ] OpenGL context
 - [ ] Shader compilation (quad rendering)
@@ -344,24 +372,28 @@ HTTPResponse: { status, headers, body, latency }
 - [ ] Texture upload
 
 #### **Tuesday: Audio Output**
+
 - [ ] SDL Audio device
 - [ ] Audio callback setup
 - [ ] Sample queuing
 - [ ] A/V synchronization basics
 
 #### **Wednesday: Render Thread**
+
 - [ ] RenderThread main loop
 - [ ] 60 FPS timing
 - [ ] Frame dropping (if needed)
 - [ ] Stats collection
 
 #### **Thursday: ImGui Integration**
+
 - [ ] ImGui + OpenGL backend
 - [ ] Channel list
 - [ ] Play/Pause/Stop buttons
 - [ ] Basic stats display
 
 #### **Friday: End-to-End Integration Test**
+
 - [ ] Select channel → Network thread starts
 - [ ] Network downloads m3u8 + segments
 - [ ] Decoder decodes
@@ -370,6 +402,7 @@ HTTPResponse: { status, headers, body, latency }
 - [ ] Manual integration test
 
 **Success Criteria:**
+
 - [ ] IPTV player plays actual video
 - [ ] GUI responsive (60 FPS)
 - [ ] Audio synchronized
@@ -382,18 +415,21 @@ HTTPResponse: { status, headers, body, latency }
 **Objetivo:** MVP completo, robusto, testeado
 
 #### **Monday: Error Handling**
+
 - [ ] Network failures → UI notification
 - [ ] Decoder errors → skip frame, continue
 - [ ] Render errors → fallback resolution
 - [ ] Graceful shutdown
 
 #### **Tuesday: Synchronization & Deadlock Prevention**
+
 - [ ] Review all mutex usage
 - [ ] ThreadSanitizer clean
 - [ ] Graceful pause/stop sequences
 - [ ] No race conditions
 
 #### **Wednesday: Metrics & Logging**
+
 - [ ] Network stats (bandwidth, packet loss)
 - [ ] Decoder stats (fps, resolution, latency)
 - [ ] Render stats (fps, dropped frames)
@@ -401,6 +437,7 @@ HTTPResponse: { status, headers, body, latency }
 - [ ] Log to file + console
 
 #### **Thursday: Testing**
+
 - [ ] Unit tests for all subsystems
 - [ ] Integration tests end-to-end
 - [ ] Stress test (1 hour continuous)
@@ -408,6 +445,7 @@ HTTPResponse: { status, headers, body, latency }
 - [ ] Code coverage > 80%
 
 #### **Friday: Documentation & GitHub Polish**
+
 - [ ] README.md (final version)
 - [ ] Feature list
 - [ ] Screenshots / demo video
@@ -415,6 +453,7 @@ HTTPResponse: { status, headers, body, latency }
 - [ ] Building & running instructions
 
 **Success Criteria:**
+
 - [ ] MVP fully functional
 - [ ] All unit tests pass (80%+ coverage)
 - [ ] ASan/TSan clean
@@ -430,6 +469,7 @@ HTTPResponse: { status, headers, body, latency }
 **Objetivo:** Seeking, adaptive bitrate, better A/V sync
 
 #### **Tasks:**
+
 - [ ] Implement seeking (jump to position)
 - [ ] Adaptive bitrate (switch based on bandwidth)
 - [ ] Advanced A/V sync (audio clock reference)
@@ -437,6 +477,7 @@ HTTPResponse: { status, headers, body, latency }
 - [ ] Performance optimization profiling
 
 **Decision Log Entry:**
+
 ```
 DECISION #8: Adaptive Bitrate Strategy
 - Approach: Monitor bandwidth, switch variants
@@ -454,6 +495,7 @@ DECISION #8: Adaptive Bitrate Strategy
 **Objetivo:** Latency < 100ms, sustained 20+ Mbps, <300MB memory
 
 #### **Tasks:**
+
 - [ ] Profile with perf / gprof
 - [ ] Identify hotspots
 - [ ] Optimize FFmpeg usage
@@ -468,6 +510,7 @@ DECISION #8: Adaptive Bitrate Strategy
 **Objetivo:** Production standards
 
 #### **Tasks:**
+
 - [ ] Code coverage > 85%
 - [ ] Security audit
   - [ ] TLS certificate validation
@@ -484,6 +527,7 @@ DECISION #8: Adaptive Bitrate Strategy
 **Objetivo:** Containerized, deployable, releasable
 
 #### **Tasks:**
+
 - [ ] Docker image optimization (multi-stage)
 - [ ] Docker Compose for local dev
 - [ ] Docker Compose for cloud deployment (if applicable)
@@ -492,6 +536,7 @@ DECISION #8: Adaptive Bitrate Strategy
 - [ ] Binary distribution setup
 
 **Decision Log Entry:**
+
 ```
 DECISION #9: Release Strategy
 - Version scheme: SemVer (1.0.0)
@@ -510,6 +555,7 @@ DECISION #9: Release Strategy
 **Objetivo:** Make project portfolio-worthy
 
 #### **Tasks:**
+
 - [ ] Comprehensive README
 - [ ] Architecture documentation (with diagrams)
 - [ ] API documentation (doxygen?)
@@ -528,6 +574,7 @@ DECISION #9: Release Strategy
 **Objetivo:** Showcase ready
 
 #### **Tasks:**
+
 - [ ] Demo video (5-10 minutes)
   - [ ] Screen recording of player
   - [ ] Playing multiple channels
@@ -541,6 +588,7 @@ DECISION #9: Release Strategy
 - [ ] LinkedIn post announcing release
 
 **Final Deliverable:**
+
 ```
 ✅ Production-grade IPTV player
 ✅ 85%+ code coverage
@@ -558,6 +606,7 @@ DECISION #9: Release Strategy
 ## 🎯 KEY MILESTONES & GATES
 
 ### **Gate 1: End of Phase 0 (Semana 2)**
+
 - ✅ All architecture documented
 - ✅ Repo structure complete
 - ✅ CI/CD functional
@@ -565,6 +614,7 @@ DECISION #9: Release Strategy
 - **Success:** Yes (if setup complete)
 
 ### **Gate 2: End of Phase 1 (Semana 6)**
+
 - ✅ IPTV player plays actual video
 - ✅ MVP functional
 - ✅ Unit tests > 80%
@@ -572,6 +622,7 @@ DECISION #9: Release Strategy
 - **Success:** Yes (if MVP working and stable)
 
 ### **Gate 3: End of Phase 2 (Semana 10)**
+
 - ✅ Production-grade (latency < 100ms, memory < 300MB)
 - ✅ 85%+ coverage
 - ✅ All features working
@@ -579,6 +630,7 @@ DECISION #9: Release Strategy
 - **Success:** Yes → Release v1.0.0
 
 ### **Gate 4: End of Phase 3 (Semana 12)**
+
 - ✅ Documentation complete
 - ✅ Portfolio-ready
 - ✅ Demo video
@@ -692,6 +744,7 @@ Before moving to Phase 1, verify:
 ## 🎯 CONCLUSION
 
 This roadmap provides:
+
 - ✅ Week-by-week specifics
 - ✅ Clear deliverables per week
 - ✅ Success criteria at each stage

@@ -22,7 +22,7 @@ La función monolítica original `download()` fue despedazada aplicando el Princ
 
 ## 3. Arquitectura Zero-Copy y Rule of 5
 
-En el transporte masivo de vídeo (HLS/MPEG-TS), la memoria RAM es el cuello de botella. 
+En el transporte masivo de vídeo (HLS/MPEG-TS), la memoria RAM es el cuello de botella.
 
 * **Regla de 5 (Move Semantics):** La clase `HttpResponse` tiene explícitamente borrados (`= delete`) sus constructores de copia. El compilador lanzará un error fatal si un desarrollador júnior intenta copiar por valor un segmento de vídeo de 10MB en la RAM. Obligamos al uso de `std::move`.
 * **Inlining en Hot Paths:** Los métodos *Getters* y *Setters* cortos de `HttpResponse` (ej. `getBody()`, `getStatusCode()`) se implementan directamente en la cabecera `.hpp`.

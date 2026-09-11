@@ -22,6 +22,7 @@
 ### Decisión
 
 **Multi-thread architecture con 3 threads especializados:**
+
 1. Network thread (HTTP download)
 2. Decoder thread (FFmpeg)
 3. Render thread (OpenGL + audio)
@@ -52,7 +53,7 @@ Para sincronizar Network → Decoder → Render, ¿usar mutex o implementar lock
 ### Opciones Consideradas
 
 | Opción | Complejidad | Performance | Learning Value |
-|--------|---|---|---|
+| -------- | --- | --- | --- |
 | **Mutex + CV (MVP)** | Baja | Adecuada para streaming | Media (basics) |
 | **Lock-free (bonus)** | Alta | Óptima para HFT | Alta (advanced) |
 | **Atomic<bool> flags (risky)** | Muy baja | Mala | Ninguna |
@@ -73,6 +74,7 @@ Para sincronizar Network → Decoder → Render, ¿usar mutex o implementar lock
 ### Justificación Fase 2 (bonus)
 
 Si tiempo permite:
+
 - Lock-free demuestra conocimiento avanzado
 - Muestra optimización de performance
 - Modern C++ (std::atomic, std::memory_order)
@@ -128,7 +130,7 @@ public:
 ### Opciones Consideradas
 
 | Aspecto | ImGui | Qt | Raw OpenGL |
-|---------|-------|----|----|
+| --------- | ------- | ---- | ---- |
 | **Apariencia** | Funcional | Profesional | Custom |
 | **Curva aprendizaje** | Plana | Steep | Vertical |
 | **Tamaño ejecutable** | 10 MB | 100+ MB | Pequeño |
@@ -144,12 +146,14 @@ public:
 ### Justificación
 
 ImGui es la **decisión correcta para MVP**:
+
 - Funcionalmente completa (channel list, buttons, stats)
 - Integración OpenGL trivial (ImGui dibuja directamente en contexto)
 - Prueba rápida de arquitectura
 - No interfiere con threads (ImGui es single-threaded, GUI en main thread)
 
 Qt es overkill para MVP:
+
 - Qt threading model es complejo (signals/slots across threads)
 - Más líneas de código = más bugs
 - No agrega valor real en funcionalidad
@@ -176,7 +180,7 @@ If recruiter demands "professional UI", rewrite en semana 11-12. Pero código es
 ### Opciones Consideradas
 
 | Aspecto | libcurl | Raw Sockets |
-|---------|---------|------------|
+| --------- | --------- | ------------ |
 | **Líneas HTTP code** | 20 | 200+ |
 | **HTTPS/TLS** | Automático | Manual OpenSSL |
 | **HTTP pipelining** | Automático | Manual |
@@ -192,12 +196,14 @@ If recruiter demands "professional UI", rewrite en semana 11-12. Pero código es
 ### Justificación
 
 libcurl es industrial-standard para MVP:
+
 - FFmpeg usa libcurl
 - VLC usa libcurl
 - Compilar sin errores en semanas 1-2
 - Permite testing de architecture sin networking rabbit holes
 
 POSIX sockets bonus:
+
 - Demuestra conocimiento networking bajo-nivel
 - Más control (epoll, non-blocking, custom timeouts)
 - Diferenciador en interviews
@@ -243,7 +249,7 @@ Ventaja: Ambas implementaciones under same interface → easy swap.
 ### Opciones Consideradas
 
 | Aspecto | FFmpeg | OpenH264 | NVIDIA NVDEC |
-|---------|--------|----------|------------|
+| --------- | -------- | ---------- | ------------ |
 | **Formatos** | Todos | Solo H.264 | H.264/H.265 |
 | **Portabilidad** | Excelente | Buena | Nvidia GPU only |
 | **Aceleración HW** | Sí (vaapi, nvenc) | No | Sí, excelente |
@@ -254,6 +260,7 @@ Ventaja: Ambas implementaciones under same interface → easy swap.
 ### Decisión
 
 **FFmpeg, porque:**
+
 - Netflix, YouTube, VLC, OBS usan FFmpeg
 - Soporta todos los formatos (H.264, H.265, VP9, AV1)
 - Hardware aceleración available (vaapi en Linux)
@@ -310,7 +317,7 @@ class DecoderHW {
 ### Opciones Consideradas
 
 | Standard | Release | Features | Adoptado |
-|----------|---------|----------|----------|
+| ---------- | --------- | ---------- | ---------- |
 | **C++17** | 2017 | std::optional, structured bindings | Ancho |
 | **C++20** | 2020 | Concepts, ranges, coroutines | Creciendo |
 | **C++23** | 2023 | std::flat_map, deducing this | Muy nuevo |
@@ -369,7 +376,7 @@ auto [x, y] = point;
 ### Opciones Consideradas
 
 | Framework | Popularidad | Learning | GitHub Actions | Mock Support |
-|-----------|------------|----------|---------------|----|
+| ----------- | ------------ | ---------- | --------------- | ---- |
 | **GTest (nuestro)** | Industrial | Media | Excelente | GMock built-in |
 | **Catch2** | Creciendo | Baja | Buena | No built-in |
 | **Doctest** | Emergente | Baja | Okay | No |
@@ -423,7 +430,7 @@ TEST(Decoder, HandlesNetworkError) {
 ### Opciones Consideradas
 
 | Logger | Performance | Thread-safe | Estructura |
-|--------|-------------|-------------|-----------|
+| -------- | ------------- | ------------- | ----------- |
 | **spdlog (nuestro)** | Ultra-fast | Sí | JSON support |
 | **boost::log** | Bueno | Sí | Flexible |
 | **std::cerr** | Lento | Risky | Ninguno |
@@ -473,7 +480,7 @@ void decoderThread() {
 ### Opciones Consideradas
 
 | Enfoque | Pros | Contras |
-|---------|------|---------|
+| --------- | ------ | --------- |
 | **Exceptions (nuestro)** | Limpio, fuerza handling | Performance, stack unwinding |
 | **Return codes** | Rápido, control | Verbose, fácil ignorar |
 | **Result<T, E>** | Modern, type-safe | Template complexity |
@@ -538,7 +545,7 @@ void decoderThread() {
 ### Opciones Consideradas
 
 | Tipo | Memoria | Predictabilidad | Complejidad |
-|------|---------|-----------------|-------------|
+| ------ | --------- | ----------------- | ------------- |
 | **Fixed (nuestro)** | Preallocated | Sí, memoria constante | Baja |
 | **Dynamic** | On-demand | Impredictible | Media |
 | **Ring buffer** | Fixed, reutilizable | Sí, mejor utilización | Media |
@@ -564,6 +571,7 @@ class CircularBuffer {
 ```
 
 Ventajas:
+
 - ✅ Predecible (no GC pauses)
 - ✅ Memory efficient (no fragmentation)
 - ✅ No alloc en render thread (RT-safe)
@@ -572,7 +580,7 @@ Ventajas:
 ### Buffer Sizes (Justificados)
 
 | Buffer | Size | Justificación |
-|--------|------|---------------|
+| -------- | ------ | --------------- |
 | Network → Decoder | 50 MB | 2-3 seg @ 20 Mbps |
 | Decoder → Render | 300 MB (video) | 10-20 frames HD @ 30fps |
 | Decoder → Render | 10 MB (audio) | 2-3 seg PCM |
@@ -627,7 +635,7 @@ E2E / Manual (20%)
 ### Justificación
 
 | Platform | Rationale |
-|----------|-----------|
+| ---------- | ----------- |
 | **Linux** | Primary dev platform, fastest CI, cheapest |
 | **Windows** | Validar MSVC + win32 APIs (threads, sockets) |
 | **macOS** | Validar Clang + Objective-C interop (if GUI touches) |
@@ -726,11 +734,13 @@ ENTRYPOINT ["./build/iptv_player"]
 ```
 
 Ventajas:
+
 - ✅ Reproducible across machines
 - ✅ No dependency hell
 - ✅ Easy for interviews (just `docker run`)
 
 Native binaries:
+
 - Linux: AppImage
 - Windows: .exe (or .msi)
 - macOS: .dmg
@@ -742,7 +752,7 @@ Native binaries:
 ### Phase 2 Features (weeks 7-8)
 
 | Feature | Effort | Learning | Priority |
-|---------|--------|----------|----------|
+| --------- | -------- | ---------- | ---------- |
 | Seeking | Medium | Medium | HIGH |
 | Adaptive bitrate | Medium | High | MEDIUM |
 | A/V Sync | Low | Low | HIGH |

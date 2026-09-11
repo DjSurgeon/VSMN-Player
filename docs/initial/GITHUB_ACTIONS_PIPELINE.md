@@ -1,6 +1,7 @@
 # 🚀 GITHUB ACTIONS - PROFESSIONAL CI/CD PIPELINE
 
 **Objetivo:** Una pipeline que:
+
 - ✅ Compila sin warnings
 - ✅ Detecta memory leaks (AddressSanitizer)
 - ✅ Detecta race conditions (ThreadSanitizer)
@@ -480,7 +481,7 @@ test/ @YourGitHubUsername
 
 ## 🎯 QUÉ HACE ESTA PIPELINE
 
-### En cada `push` o `pull_request`:
+### En cada `push` o `pull_request`
 
 1. **Static Analysis** (2 min)
    - ✅ clang-format check
@@ -573,4 +574,3 @@ git push origin develop
 ---
 
 **Status:** Pipeline list para implementar ✅
-

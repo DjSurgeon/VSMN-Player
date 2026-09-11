@@ -46,8 +46,9 @@ Construir un **IPTV Player de calidad profesional** en C++20 que demuestre capac
 **Decisión:** Multi-thread con 3 threads especializados
 
 **Justificación:**
+
 | Aspecto | Single-Thread | Multi-Thread (Nuestro) |
-|--------|---|---|
+| -------- | --- | --- |
 | Complejidad | ✅ Simple | ❌ Compleja, pero realista |
 | Performance | ❌ Bajo (bloques de I/O) | ✅ Alto (paralelo) |
 | Realismo corporativo | ❌ No existe en producción | ✅ Standard en streaming |
@@ -55,6 +56,7 @@ Construir un **IPTV Player de calidad profesional** en C++20 que demuestre capac
 | Diferenciador en CV | ❌ Básico | ✅ **Altamente impresionante** |
 
 **Threads:**
+
 1. **Network Thread:** Descarga data, maneja retries, metricas
 2. **Decoder Thread:** FFmpeg, demux, decode
 3. **Render Thread:** OpenGL/SDL2, audio playback, timing
@@ -64,6 +66,7 @@ Construir un **IPTV Player de calidad profesional** en C++20 que demuestre capac
 **Decisión:** Mutex + Condition Variables (fase 1), lock-free para fase 2
 
 **Justificación:**
+
 - **Fase 1 (MVP):** Mutex es correcto, más simple de debuggear
 - **Fase 2 (Production):** Lock-free circular buffer demuestra conocimiento avanzado
 - Los recruiters entienden ambos enfoques; el mutex-based es suficiente
@@ -89,7 +92,7 @@ Render Thread (Consumidor final)
 **Justificación:**
 
 | Aspecto | ImGui | Qt |
-|--------|---|---|
+| -------- | --- | --- |
 | Curva de aprendizaje | ✅ Plana | ❌ Steep |
 | Líneas de código para GUI | ✅ ~200 | ❌ ~1000 |
 | Apariencia | ⚠️ Funcional | ✅ Profesional |
@@ -104,10 +107,12 @@ Render Thread (Consumidor final)
 **Decisión:** libcurl (MVP) → Raw sockets (fase 2/bonus)
 
 **Justificación:**
+
 - **libcurl:** Production-ready, HTTPS out-of-box, HTTP pipelining automático
 - **Raw sockets:** Más control, demuestra conocimiento networking, es overkill para MVP
 
 **Plan:**
+
 1. MVP: libcurl para funcionamiento rápido
 2. Fase 2: Opcional refactor a POSIX sockets bajo libcurl (wrapper architecture)
 
@@ -116,6 +121,7 @@ Render Thread (Consumidor final)
 **Decisión:** GTest
 
 **Justificación:**
+
 - Estándar industrial
 - Excelente con CMake/Conan
 - GitHub Actions integration nativa
@@ -183,6 +189,7 @@ Render Thread (Consumidor final)
 #### **A) NETWORK COMPONENT**
 
 **Responsabilidad:**
+
 - Descargar M3U8 playlist
 - Parsear canales y URLs
 - Descargar segmentos TS vía HTTP GET
@@ -190,6 +197,7 @@ Render Thread (Consumidor final)
 - Reportar métricas (Mbps, packet loss, etc.)
 
 **Interfaz Pública:**
+
 ```
 NetworkComponent:
   - loadPlaylist(url: string) → vector<Channel>
@@ -199,6 +207,7 @@ NetworkComponent:
 ```
 
 **Datos Internos:**
+
 - HTTP client context (libcurl handle)
 - Circular buffer output (thread-safe)
 - Retry policy (exponential backoff)
@@ -207,6 +216,7 @@ NetworkComponent:
 **Threads:** 1 (Network thread)
 
 **Responsabilidades no explícitas:**
+
 - ✅ Validar URLs (no descargar si URL es mal formada)
 - ✅ Timeout después de N segundos
 - ✅ Cerrar conexiones no usadas
@@ -218,6 +228,7 @@ NetworkComponent:
 #### **B) DECODER COMPONENT**
 
 **Responsabilidad:**
+
 - Consumir TS bytes del buffer de red
 - Demux (separar video + audio streams)
 - Decodificar H.264 → YUV frames
@@ -225,6 +236,7 @@ NetworkComponent:
 - Mantener A/V sync
 
 **Interfaz Pública:**
+
 ```
 DecoderComponent:
   - start(network_buffer: CircularBuffer)
@@ -235,6 +247,7 @@ DecoderComponent:
 ```
 
 **Datos Internos:**
+
 - FFmpeg AVFormatContext (demux)
 - FFmpeg AVCodecContext (decode video)
 - FFmpeg AVCodecContext (decode audio)
@@ -244,6 +257,7 @@ DecoderComponent:
 **Threads:** 1 (Decoder thread)
 
 **Responsabilidades no explícitas:**
+
 - ✅ Manejar corrupt frames (skip, no crash)
 - ✅ Sincronizar audio/video (PTS)
 - ✅ Memory management (no leaks en FFmpeg)
@@ -255,6 +269,7 @@ DecoderComponent:
 #### **C) RENDER COMPONENT**
 
 **Responsabilidad:**
+
 - Consumir VideoFrame del decoder buffer
 - Renderizar YUV → RGB en OpenGL texture
 - Consumir AudioFrame, playback via SDL2 audio
@@ -262,6 +277,7 @@ DecoderComponent:
 - Sincronizar audio/video en presentación
 
 **Interfaz Pública:**
+
 ```
 RenderComponent:
   - start(video_buffer: CircularBuffer, audio_buffer: CircularBuffer)
@@ -271,6 +287,7 @@ RenderComponent:
 ```
 
 **Datos Internos:**
+
 - SDL2 Window
 - OpenGL Shader program
 - OpenGL texture for YUV
@@ -281,6 +298,7 @@ RenderComponent:
 **Threads:** 1 (Render thread, runs event loop at 60 FPS)
 
 **Responsabilidades no explícitas:**
+
 - ✅ Drop frames si se atrasa (no acumular lag)
 - ✅ Mantener audio playing (más tolerante que video)
 - ✅ Respond to window resize (smoothly)
@@ -292,6 +310,7 @@ RenderComponent:
 #### **D) CONTROLLER COMPONENT**
 
 **Responsabilidad:**
+
 - Orquestar Network, Decoder, Render threads
 - Implementar state machine (Stopped → Loading → Playing → Paused)
 - Manejar errores en cualquier thread
@@ -299,6 +318,7 @@ RenderComponent:
 - Agregar métricas
 
 **Interfaz Pública:**
+
 ```
 PlayerController:
   - play(channel: Channel) → Status
@@ -311,6 +331,7 @@ PlayerController:
 ```
 
 **State Machine:**
+
 ```
 ┌─────────┐
 │ STOPPED │ ◄──┐
@@ -333,6 +354,7 @@ PlayerController:
 ```
 
 **Error Handling:**
+
 - Network error → pause, retry
 - Decoder error → skip frame, continue
 - Render error → show error message, attempt recovery
@@ -342,12 +364,14 @@ PlayerController:
 #### **E) LOGGER COMPONENT**
 
 **Responsabilidad:**
+
 - Log estructurado (spdlog)
 - Diferentes niveles (TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL)
 - Thread-safe logging desde threads múltiples
 - Output a file + console
 
 **Interfaz Pública:**
+
 ```
 Logger:
   - debug(msg: string)
@@ -382,6 +406,7 @@ GUI                 Controller            Network/Decoder/Render
 ```
 
 **Mecanismo de comunicación:**
+
 - Observer pattern para estado (GUI se suscribe a cambios)
 - Buffers thread-safe para data (VideoFrame, AudioFrame)
 - Callbacks para errores
@@ -413,6 +438,7 @@ Operaciones:
 ```
 
 **Tamaños:**
+
 - NetworkBuffer: 50 MB (2-3 segundos @ 20 Mbps)
 - VideoFrameBuffer: 300 MB max (10-20 frames HD @ 30fps)
 - AudioFrameBuffer: 10 MB (2-3 segundos audio)
@@ -420,11 +446,13 @@ Operaciones:
 ### 4.2 Condition Variables para Sincronización
 
 **Casos de uso:**
+
 1. Network produce, Decoder espera → not_empty CV
 2. Decoder produce, Render espera → not_empty CV
 3. Render consume rápido, Network no puede escribir → not_full CV
 
 **Implementación:**
+
 ```cpp
 // En circular buffer
 while (buffer.full()) {
@@ -449,6 +477,7 @@ PlayerState (guarded by mutex):
 ```
 
 **API:**
+
 ```cpp
 void setState(State s) {
     std::lock_guard<std::mutex> lock(state_mutex);
@@ -476,6 +505,7 @@ ErrorComponent:
 ```
 
 **Flujo:**
+
 ```
 Decoder catches exception
     ↓
@@ -598,7 +628,7 @@ Note: Seeking en streaming vivo es complicado (live no soporta seek)
 ### 6.1 Core Language & Compiler
 
 | Componente | Opción | Justificación |
-|---|---|---|
+| --- | --- | --- |
 | Lenguaje | C++20 | Modern, std::thread, concepts, ranges |
 | Compilador | GCC 11+ / Clang 13+ | Production-grade, sanitizers |
 | Standard | C++20 | No C++23/26 (menos widespread) |
@@ -606,7 +636,7 @@ Note: Seeking en streaming vivo es complicado (live no soporta seek)
 ### 6.2 Build System
 
 | Componente | Opción | Justificación |
-|---|---|---|
+| --- | --- | --- |
 | Build | CMake 3.24+ | Standard industrial, Conan integration |
 | Package manager | Conan 2.x | reproducible builds, cross-platform |
 | Test framework | GTest | Estándar, excelente GitHub Actions |
@@ -614,7 +644,7 @@ Note: Seeking en streaming vivo es complicado (live no soporta seek)
 ### 6.3 Media & Networking
 
 | Componente | Opción | Justificación |
-|---|---|---|
+| --- | --- | --- |
 | Media decoding | FFmpeg 6.x | Production-grade, H.264/AAC support |
 | Networking (MVP) | libcurl 8.x | HTTPS out-of-box, HTTP pipelining |
 | Networking (Bonus) | POSIX sockets | Low-level, demonstrates knowledge |
@@ -623,7 +653,7 @@ Note: Seeking en streaming vivo es complicado (live no soporta seek)
 ### 6.4 GUI & Graphics
 
 | Componente | Opción | Justificación |
-|---|---|---|
+| --- | --- | --- |
 | GUI (MVP) | ImGui 1.89+ | Fast to implement, OpenGL native |
 | Windowing | SDL2 2.28+ | Cross-platform, OpenGL context |
 | Graphics | OpenGL 4.6 | Standard, texture rendering simple |
@@ -632,14 +662,14 @@ Note: Seeking en streaming vivo es complicado (live no soporta seek)
 ### 6.5 Logging & Observability
 
 | Componente | Opción | Justificación |
-|---|---|---|
+| --- | --- | --- |
 | Logging | spdlog 1.12+ | Fast, structured, thread-safe |
 | Metrics | Custom + spdlog | Telemetry básico |
 
 ### 6.6 Quality Assurance
 
 | Componente | Opción | Justificación |
-|---|---|---|
+| --- | --- | --- |
 | Unit Testing | GTest | Standard, GMock support |
 | Memory Sanitizer | AddressSanitizer | Catches memory bugs, ASAN+UBSAN |
 | Thread Sanitizer | ThreadSanitizer | Race condition detection |
@@ -650,7 +680,7 @@ Note: Seeking en streaming vivo es complicado (live no soporta seek)
 ### 6.7 CI/CD & Deployment
 
 | Componente | Opción | Justificación |
-|---|---|---|
+| --- | --- | --- |
 | CI/CD | GitHub Actions | Free, native to GitHub |
 | Containerization | Docker | Production deployment, isolation |
 | Container Registry | Docker Hub | Free, standard |
@@ -658,7 +688,7 @@ Note: Seeking en streaming vivo es complicado (live no soporta seek)
 ### 6.8 Documentation
 
 | Componente | Opción | Justificación |
-|---|---|---|
+| --- | --- | --- |
 | Code docs | Doxygen | Extract from comments, HTML output |
 | README | Markdown + diagrams | GitHub native, accessible |
 | Architecture | This document | Design decisions clarity |
@@ -804,7 +834,7 @@ iptv-player/
 ### 8.1 Technical Success
 
 | Criterio | Métrica |
-|---|---|
+| --- | --- |
 | Build | ✅ `cmake -B build && cmake --build build` compila sin warnings |
 | Tests | ✅ `ctest` pasa 100% |
 | Memory Safety | ✅ AddressSanitizer clean (0 leaks, 0 errors) |
@@ -817,7 +847,7 @@ iptv-player/
 ### 8.2 Functional Success
 
 | Criterio | Métrica |
-|---|---|
+| --- | --- |
 | Playback | ✅ Reproduce .m3u8 playlists reales |
 | Stability | ✅ 1 hora playback sin crash |
 | Performance | ✅ 60 FPS sustained |
@@ -828,7 +858,7 @@ iptv-player/
 ### 8.3 Portfolio Success
 
 | Criterio | Métrica |
-|---|---|
+| --- | --- |
 | GitHub | ✅ README impresiona, stars/forks muestra interés |
 | Presentability | ✅ Demostrable en interview (video + live code) |
 | Documentation | ✅ Architectural doc clara, decisiones justificadas |
@@ -844,6 +874,7 @@ iptv-player/
 **Objetivo:** Functional streaming player with basic UI
 
 **Semana 1-2: Boilerplate & Network (20 horas)**
+
 - Setup GitHub repo, CMake skeleton
 - Conanfile.py (dependencies)
 - CI/CD skeleton (GitHub Actions)
@@ -855,6 +886,7 @@ iptv-player/
 - Deliverable: `cmake -B build && cmake --build build` works
 
 **Semana 3: Decoder Integration (15 horas)**
+
 - FFmpeg wrapper (AVFormatContext, AVCodecContext)
 - Demux + decode loop
 - RAII wrappers (AVFrame, AVCodecContext cleanup)
@@ -862,6 +894,7 @@ iptv-player/
 - Deliverable: Can decode sample TS segment
 
 **Semana 4: Render Thread (15 horas)**
+
 - SDL2 window creation
 - OpenGL context + shaders
 - YUV → RGB rendering
@@ -870,6 +903,7 @@ iptv-player/
 - Deliverable: Shows color on screen (at least)
 
 **Semana 5: GUI + Integration (15 horas)**
+
 - ImGui window
 - Channel list widget
 - Play/pause buttons
@@ -879,6 +913,7 @@ iptv-player/
 - Deliverable: Press play → video shows up (maybe with buffering issues)
 
 **Semana 6: Stabilization (10 horas)**
+
 - Thread safety hardening
 - Error handling
 - Retry logic
@@ -887,6 +922,7 @@ iptv-player/
 - Deliverable: MVP v1.0 ready
 
 **Phase 1 Output:**
+
 - ✅ Playable (simple playlists)
 - ✅ Compilable & testable
 - ✅ Memory safe (ASan clean)
@@ -900,6 +936,7 @@ iptv-player/
 **Objetivo:** Professional quality, comprehensive testing, Docker deployment
 
 **Semana 7-8: Advanced Features (20 horas)**
+
 - Seeking support (if stream supports it)
 - Adaptive bitrate (switch quality based on network)
 - Buffer status tracking
@@ -908,6 +945,7 @@ iptv-player/
 - Deliverable: Robust against network issues
 
 **Semana 9: Testing & Quality (15 horas)**
+
 - ThreadSanitizer clean (race condition detection)
 - Code coverage >80% (add missing unit tests)
 - Performance benchmarks (frame decode time, latency)
@@ -915,6 +953,7 @@ iptv-player/
 - Deliverable: All sanitizers + coverage targets met
 
 **Semana 10: Deployment (10 horas)**
+
 - Dockerfile (multi-stage)
 - docker-compose.yml (local development)
 - Cross-platform builds (Linux, Windows, macOS)
@@ -922,6 +961,7 @@ iptv-player/
 - Deliverable: `docker build .` + `docker run` works
 
 **Semana 11: Documentation & Polish (10 horas)**
+
 - Complete API documentation (Doxygen)
 - Architecture diagrams (draw.io → PNG)
 - README with features, screenshots, benchmarks
@@ -930,6 +970,7 @@ iptv-player/
 - Deliverable: README impresiona a recruiters
 
 **Semana 12: Final Polish & Testing (10 horas)**
+
 - Code review (self), clean up comments
 - clang-tidy clean
 - Final test run
@@ -938,6 +979,7 @@ iptv-player/
 - Deliverable: Portfolio-ready project
 
 **Phase 2 Output:**
+
 - ✅ Production-grade code
 - ✅ Comprehensive testing
 - ✅ Docker ready
@@ -949,6 +991,7 @@ iptv-player/
 ### 9.3 Phase 3: Bonus Features (Semanas 13+, optional)
 
 **Si tiempo/energía:**
+
 - Qt GUI polish (professional appearance)
 - POSIX sockets rewrite (low-level networking)
 - MQTT control (remote playback)
@@ -962,7 +1005,7 @@ iptv-player/
 ## 10. RIESGOS Y MITIGACIÓN
 
 | Riesgo | Probabilidad | Impacto | Mitigación |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | FFmpeg API complexity | Alta | Alto | Start with simple wrapper, increment complexity |
 | Thread synchronization bugs | Media | Alto | Use TSan early, test concurrency heavily |
 | Network timeout/retry logic | Media | Medio | Unit test with mocked HTTP failures |

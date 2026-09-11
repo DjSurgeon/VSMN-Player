@@ -1,6 +1,6 @@
 # [NET-01] Walkthrough: Refactorización "Ponytail" en HTTP Response
 
-¡Operación quirúrgica completada! Hemos aplicado los principios del manifiesto de simplicidad y ahora tenemos una capa de red libre de sobre-ingeniería. 
+¡Operación quirúrgica completada! Hemos aplicado los principios del manifiesto de simplicidad y ahora tenemos una capa de red libre de sobre-ingeniería.
 
 ## 🛠️ Qué se ha modificado
 
@@ -29,4 +29,5 @@
 
 La infraestructura de respuesta HTTP está finalizada, pulida y brillando.
 Ya puedes comitear estos cambios y saltar a:
+
 - **[NET-02] RetryPolicy y NetworkConfig**

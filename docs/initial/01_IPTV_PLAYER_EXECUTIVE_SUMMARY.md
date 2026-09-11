@@ -7,6 +7,7 @@
 ## 🎯 PROJECT VISION
 
 **Build a production-grade IPTV player in C++20** that demonstrates:
+
 - Real-time multithreading (3 coordinated threads)
 - Complex library integration (FFmpeg)
 - Networking & streaming (HTTP, TLS)
@@ -49,7 +50,7 @@
 ## 📊 COMPONENT BREAKDOWN
 
 | Component | Language | Tech Stack | Complexity | Est. Time |
-|-----------|----------|-----------|-----------|-----------|
+| ----------- | ---------- | ----------- | ----------- | ----------- |
 | **Network** | C++20 | libcurl, OpenSSL, Sockets | Medium | 1 week |
 | **Decoder** | C++20 | FFmpeg (libavcodec, libavformat) | High | 1 week |
 | **Render** | C++20 | SDL2, OpenGL 4.5 | Medium | 1 week |
@@ -95,7 +96,7 @@ PHASE 3: PORTFOLIO (Weeks 11-12) [40 hours]
 ## ⚠️ TOP RISKS & MITIGATION
 
 | Risk | Probability | Impact | Mitigation |
-|------|------------|--------|-----------|
+| ------ | ------------ | -------- | ----------- |
 | **FFmpeg complexity** | HIGH | HIGH | Wrapper + RAII, ASan from day 1 |
 | **Thread race conditions** | MEDIUM | HIGH | ThreadSanitizer + stress tests |
 | **Network resilience** | MEDIUM | MEDIUM | Robust parsing, retry logic |
@@ -109,6 +110,7 @@ PHASE 3: PORTFOLIO (Weeks 11-12) [40 hours]
 ## 🎯 SUCCESS CRITERIA
 
 **Technical:**
+
 - ✅ Plays actual IPTV streams (1080p, 30 fps minimum)
 - ✅ Latency: < 200ms (download → display)
 - ✅ Render: 60 FPS stable
@@ -117,6 +119,7 @@ PHASE 3: PORTFOLIO (Weeks 11-12) [40 hours]
 - ✅ Sanitizers: Clean
 
 **Portfolio:**
+
 - ✅ Showcase-worthy GitHub repo
 - ✅ 5,000+ LOC
 - ✅ Demo video (5-10 min)
@@ -145,7 +148,7 @@ Analysis:        clang-tidy, AddressSanitizer, ThreadSanitizer
 ## 📋 KEY DECISIONS
 
 | # | Decision | Chosen | Notes |
-|---|----------|--------|-------|
+| --- | ---------- | -------- | ------- |
 | 1 | Repository | PUBLIC | Portfolio visibility |
 | 2 | Build system | CMake + Conan | Industry standard |
 | 3 | Thread queue | Mutex + CV | MVP simplicity |
@@ -161,16 +164,19 @@ Analysis:        clang-tidy, AddressSanitizer, ThreadSanitizer
 ## 💡 WHY THIS WINS
 
 **vs. 5 Separate Projects:**
+
 - Single product (coherent narrative)
 - Faster development (unified, 12 vs 24 weeks)
 - Better portfolio impact ("built system" vs "exercises")
 
 **vs. Toy Project (calculator, tic-tac-toe):**
+
 - Real complexity (networking, threading, GPU)
 - Working GUI (demo-able)
 - Production patterns
 
 **vs. Cloning Existing Player:**
+
 - Your own architecture
 - Demonstrates learning
 - Authentic portfolio piece
@@ -190,12 +196,14 @@ Analysis:        clang-tidy, AddressSanitizer, ThreadSanitizer
 ## 📚 DOCUMENTATION
 
 **You have (this folder):**
+
 - IPTV_PLAYER_ARQUITECTURA.md (detailed)
 - IPTV_PLAYER_DATA_DESIGN.md (types & structures)
 - IPTV_PLAYER_ROADMAP.md (weekly + decisions)
 - IPTV_PLAYER_EXECUTIVE_SUMMARY.md (this)
 
 **GitHub repo will have:**
+
 - README.md (overview)
 - docs/ARCHITECTURE.md (detailed)
 - docs/BUILD.md (how to build)
