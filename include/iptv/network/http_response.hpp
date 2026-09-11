@@ -4,8 +4,30 @@
 #include <chrono>
 #include <cstdint>
 #include <vector>
+#include <string>
 
 namespace iptv::network {
+
+/**
+ * @brief Telemetría detallada de la transferencia HTTP.
+ */
+struct NetworkMetrics {
+    std::chrono::microseconds ttfb{0};             ///< Pure network transport latency (DNS + TLS + TTFB)
+    std::chrono::microseconds total_duration{0};    ///< End-to-end wall clock duration (including buffer copies)
+    size_t bytes_downloaded{0};                     ///< Total payload bytes received
+
+    /**
+     * @brief Calcula el throughput real percibido en Megabits por segundo (Mbps).
+     */
+    [[nodiscard]] double throughputMbps() const noexcept {
+        if (total_duration.count() <= 0 || bytes_downloaded == 0) {
+            return 0.0;
+        }
+        const double seconds = std::chrono::duration<double>(total_duration).count();
+        const double bits = static_cast<double>(bytes_downloaded) * 8.0;
+        return (bits / seconds) / 1'000'000.0;
+    }
+};
 
 /**
  * @brief Represents the outcome of an HTTP request with strict move-only semantics.
@@ -62,6 +84,11 @@ public:
         return status_code_; 
     }
     
+    [[nodiscard]] bool isSuccess() const noexcept {
+        const auto code = static_cast<int>(status_code_);
+        return code >= 200 && code < 300;
+    }
+    
     [[nodiscard]] const std::vector<uint8_t>& getBody() const noexcept {
         return body_;
     }
@@ -74,10 +101,24 @@ public:
         return latency_;
     }
 
+    [[nodiscard]] const NetworkMetrics& getMetrics() const noexcept {
+        return metrics_;
+    }
+    
+    // Mutable access for the HTTP client during construction
+    NetworkMetrics& getMetricsRef() noexcept {
+        return metrics_;
+    }
+    
+    void setStatusCode(HttpStatusCode code) noexcept {
+        status_code_ = code;
+    }
+
 private:
     HttpStatusCode status_code_;
     std::vector<uint8_t> body_;
     std::chrono::milliseconds latency_;
+    NetworkMetrics metrics_{};
 };
 
 } // namespace iptv::network
