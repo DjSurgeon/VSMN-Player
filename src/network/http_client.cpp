@@ -9,6 +9,30 @@
 
 namespace iptv::network {
 
+namespace {
+
+[[nodiscard]] bool isTransientError(CURLcode res, HttpStatusCode status) noexcept {
+  const auto code = static_cast<long>(status);
+  return (res == CURLE_OPERATION_TIMEDOUT || res == CURLE_COULDNT_CONNECT ||
+          res == CURLE_COULDNT_RESOLVE_HOST) ||
+         (code >= 500 && code < 600) || (code == 429);
+}
+
+void applyBackoffDelay(BackoffStrategy strategy, std::chrono::milliseconds& current_delay,
+                       std::chrono::milliseconds max_delay) {
+  if (strategy == BackoffStrategy::None) return;
+
+  thread_local std::mt19937 gen{std::random_device{}()};
+  std::uniform_int_distribution<long long> dist(0, current_delay.count());
+  std::this_thread::sleep_for(std::chrono::milliseconds(dist(gen)));
+
+  if (strategy == BackoffStrategy::Exponential) {
+    current_delay = std::min(current_delay * 2, max_delay);
+  }
+}
+
+}  // namespace
+
 // Define the hidden implementation class with strict RAII
 class HttpClient::Impl {
   friend class HttpClient;
@@ -37,6 +61,44 @@ class HttpClient::Impl {
 
   [[nodiscard]] CURL* get() const noexcept { return handle_; }
 
+  void prepareHandle(const std::string& url, std::chrono::milliseconds timeout) {
+    curl_easy_setopt(handle_, CURLOPT_URL, url.c_str());
+    if (timeout.count() > 0) {
+      curl_easy_setopt(handle_, CURLOPT_TIMEOUT_MS, static_cast<long>(timeout.count()));
+    }
+  }
+
+  void bindResponseBuffers(HttpResponse& response) {
+    curl_easy_setopt(handle_, CURLOPT_WRITEDATA, &response);
+    curl_easy_setopt(handle_, CURLOPT_HEADERDATA, &response);
+  }
+
+  CURLcode executeTransfer(std::chrono::microseconds& duration) {
+    const auto start_wall_clock = std::chrono::steady_clock::now();
+    CURLcode res = curl_easy_perform(handle_);
+    const auto end_wall_clock = std::chrono::steady_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(end_wall_clock - start_wall_clock);
+    return res;
+  }
+
+  void collectMetrics(CURLcode res, const std::chrono::microseconds& duration, HttpResponse& response) {
+    auto& metrics = response.getMetricsRef();
+    metrics.total_duration = duration;
+
+    long status = 0;
+    curl_easy_getinfo(handle_, CURLINFO_RESPONSE_CODE, &status);
+    if (res != CURLE_OK) {
+      response.setStatusCode(HttpStatusCode::Unknown);
+    } else {
+      response.setStatusCode(static_cast<HttpStatusCode>(status));
+    }
+
+    curl_off_t starttransfer_us = 0;
+    curl_easy_getinfo(handle_, CURLINFO_STARTTRANSFER_TIME_T, &starttransfer_us);
+    metrics.ttfb = std::chrono::microseconds(starttransfer_us);
+    metrics.bytes_downloaded = response.getBytesDownloaded();
+  }
+
  private:
   CURL* handle_ = nullptr;
   RetryPolicy policy_;
@@ -60,71 +122,31 @@ HttpClient& HttpClient::operator=(HttpClient&& other) noexcept {
 // Interface implementations (Skeleton for now)
 
 HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseconds timeout) {
-  auto retries = pimpl_->policy_.max_retries;
-  const auto backoff_strategy = pimpl_->policy_.strategy;
-  auto current_delay = pimpl_->policy_.initial_delay;
-
-  // Config global for this specific download
-  curl_easy_setopt(pimpl_->get(), CURLOPT_URL, url.c_str());
-  if (timeout.count() > 0) {
-    curl_easy_setopt(pimpl_->get(), CURLOPT_TIMEOUT_MS, static_cast<long>(timeout.count()));
-  }
+  pimpl_->prepareHandle(url, timeout);
 
   HttpResponse response(HttpStatusCode::Unknown);
-  curl_easy_setopt(pimpl_->get(), CURLOPT_WRITEDATA, &response);
-  curl_easy_setopt(pimpl_->get(), CURLOPT_HEADERDATA, &response);
+  pimpl_->bindResponseBuffers(response);
+
+  const auto retries = pimpl_->policy_.max_retries;
+  auto current_delay = pimpl_->policy_.initial_delay;
 
   for (std::uint32_t attempt = 0; attempt <= retries; ++attempt) {
     response.clear();
 
-    const auto start_wall_clock = std::chrono::steady_clock::now();
-    CURLcode res = curl_easy_perform(pimpl_->get());
-    const auto end_wall_clock = std::chrono::steady_clock::now();
+    std::chrono::microseconds duration{0};
+    const CURLcode res = pimpl_->executeTransfer(duration);
 
-    auto& metrics = response.getMetricsRef();
-    metrics.total_duration =
-        std::chrono::duration_cast<std::chrono::microseconds>(end_wall_clock - start_wall_clock);
-
-    long status = 0;
-    curl_easy_getinfo(pimpl_->get(), CURLINFO_RESPONSE_CODE, &status);
-    if (res != CURLE_OK) {
-      response.setStatusCode(HttpStatusCode::Unknown);
-    } else {
-      response.setStatusCode(static_cast<HttpStatusCode>(status));
-    }
-
-    curl_off_t starttransfer_us = 0;
-    curl_easy_getinfo(pimpl_->get(), CURLINFO_STARTTRANSFER_TIME_T, &starttransfer_us);
-    metrics.ttfb = std::chrono::microseconds(starttransfer_us);
-    metrics.bytes_downloaded = response.getBytesDownloaded();
+    pimpl_->collectMetrics(res, duration, response);
 
     if (res == CURLE_OK && response.isSuccess()) {
       return response;
     }
 
-    // Determine if it's a permanent or transient error
-    const bool is_transient = (res == CURLE_OPERATION_TIMEDOUT || res == CURLE_COULDNT_CONNECT ||
-                               res == CURLE_COULDNT_RESOLVE_HOST) ||
-                              (status >= 500 && status < 600) || (status == 429);
-
-    if (!is_transient || attempt == retries) {
-      return response;  // Fail fast or out of retries
+    if (!isTransientError(res, response.getStatusCode()) || attempt == retries) {
+      return response;
     }
 
-    // Apply backoff
-    if (backoff_strategy != BackoffStrategy::None) {
-      thread_local std::mt19937 gen{std::random_device{}()};
-      std::uniform_int_distribution<long long> dist(0, current_delay.count());
-      std::chrono::milliseconds jittered_delay(dist(gen));
-
-      std::this_thread::sleep_for(jittered_delay);
-      if (backoff_strategy == BackoffStrategy::Exponential) {
-        current_delay *= 2;
-        if (current_delay > pimpl_->policy_.max_delay) {
-          current_delay = pimpl_->policy_.max_delay;
-        }
-      }
-    }
+    applyBackoffDelay(pimpl_->policy_.strategy, current_delay, pimpl_->policy_.max_delay);
   }
 
   return response;
