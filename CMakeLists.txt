@@ -58,6 +58,7 @@ include_directories(include)
 # Core library definition
 add_library(iptv_core STATIC
     src/pipeline/dummy.cpp
+    src/network/http_curl_callbacks.cpp
     src/network/http_client.cpp
     src/network/http_init.cpp
 )

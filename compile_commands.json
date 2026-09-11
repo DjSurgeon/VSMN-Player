@@ -1,0 +1,57 @@
+[
+{
+  "directory": "/home/sergio/vscode/VSMN-Player/build/Debug",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/sergio/vscode/VSMN-Player/include -isystem /home/developer/.conan2/p/b/spdloa5da8257a6bb4/p/include -isystem /home/developer/.conan2/p/b/fmt767ef94699343/p/include -isystem /home/developer/.conan2/p/b/libcu9e6114361c2eb/p/include -m64 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -std=c++20 -o CMakeFiles/iptv_core.dir/src/pipeline/dummy.cpp.o -c /home/sergio/vscode/VSMN-Player/src/pipeline/dummy.cpp",
+  "file": "/home/sergio/vscode/VSMN-Player/src/pipeline/dummy.cpp"
+},
+{
+  "directory": "/home/sergio/vscode/VSMN-Player/build/Debug",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/sergio/vscode/VSMN-Player/include -isystem /home/developer/.conan2/p/b/spdloa5da8257a6bb4/p/include -isystem /home/developer/.conan2/p/b/fmt767ef94699343/p/include -isystem /home/developer/.conan2/p/b/libcu9e6114361c2eb/p/include -m64 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -std=c++20 -o CMakeFiles/iptv_core.dir/src/network/http_curl_callbacks.cpp.o -c /home/sergio/vscode/VSMN-Player/src/network/http_curl_callbacks.cpp",
+  "file": "/home/sergio/vscode/VSMN-Player/src/network/http_curl_callbacks.cpp"
+},
+{
+  "directory": "/home/sergio/vscode/VSMN-Player/build/Debug",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/sergio/vscode/VSMN-Player/include -isystem /home/developer/.conan2/p/b/spdloa5da8257a6bb4/p/include -isystem /home/developer/.conan2/p/b/fmt767ef94699343/p/include -isystem /home/developer/.conan2/p/b/libcu9e6114361c2eb/p/include -m64 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -std=c++20 -o CMakeFiles/iptv_core.dir/src/network/http_client.cpp.o -c /home/sergio/vscode/VSMN-Player/src/network/http_client.cpp",
+  "file": "/home/sergio/vscode/VSMN-Player/src/network/http_client.cpp"
+},
+{
+  "directory": "/home/sergio/vscode/VSMN-Player/build/Debug",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/sergio/vscode/VSMN-Player/include -isystem /home/developer/.conan2/p/b/spdloa5da8257a6bb4/p/include -isystem /home/developer/.conan2/p/b/fmt767ef94699343/p/include -isystem /home/developer/.conan2/p/b/libcu9e6114361c2eb/p/include -m64 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -std=c++20 -o CMakeFiles/iptv_core.dir/src/network/http_init.cpp.o -c /home/sergio/vscode/VSMN-Player/src/network/http_init.cpp",
+  "file": "/home/sergio/vscode/VSMN-Player/src/network/http_init.cpp"
+},
+{
+  "directory": "/home/sergio/vscode/VSMN-Player/build/Debug",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/sergio/vscode/VSMN-Player/include -isystem /home/developer/.conan2/p/b/spdloa5da8257a6bb4/p/include -isystem /home/developer/.conan2/p/b/fmt767ef94699343/p/include -isystem /home/developer/.conan2/p/b/libcu9e6114361c2eb/p/include -m64 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -std=c++20 -o CMakeFiles/iptv_player.dir/src/main.cpp.o -c /home/sergio/vscode/VSMN-Player/src/main.cpp",
+  "file": "/home/sergio/vscode/VSMN-Player/src/main.cpp"
+},
+{
+  "directory": "/home/sergio/vscode/VSMN-Player/build/Debug/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/sergio/vscode/VSMN-Player/include -isystem /home/developer/.conan2/p/b/gtest4da129cba9ca4/p/include -isystem /home/developer/.conan2/p/b/spdloa5da8257a6bb4/p/include -isystem /home/developer/.conan2/p/b/fmt767ef94699343/p/include -isystem /home/developer/.conan2/p/b/libcu9e6114361c2eb/p/include -isystem /home/developer/.conan2/p/cpp-h591e0ac7159de/p/include -isystem /home/developer/.conan2/p/cpp-h591e0ac7159de/p/include/httplib -m64 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -std=c++20 -o CMakeFiles/unit_tests.dir/unit/test_sanity.cpp.o -c /home/sergio/vscode/VSMN-Player/tests/unit/test_sanity.cpp",
+  "file": "/home/sergio/vscode/VSMN-Player/tests/unit/test_sanity.cpp"
+},
+{
+  "directory": "/home/sergio/vscode/VSMN-Player/build/Debug/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/sergio/vscode/VSMN-Player/include -isystem /home/developer/.conan2/p/b/gtest4da129cba9ca4/p/include -isystem /home/developer/.conan2/p/b/spdloa5da8257a6bb4/p/include -isystem /home/developer/.conan2/p/b/fmt767ef94699343/p/include -isystem /home/developer/.conan2/p/b/libcu9e6114361c2eb/p/include -isystem /home/developer/.conan2/p/cpp-h591e0ac7159de/p/include -isystem /home/developer/.conan2/p/cpp-h591e0ac7159de/p/include/httplib -m64 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -std=c++20 -o CMakeFiles/unit_tests.dir/unit/network/test_http_response.cpp.o -c /home/sergio/vscode/VSMN-Player/tests/unit/network/test_http_response.cpp",
+  "file": "/home/sergio/vscode/VSMN-Player/tests/unit/network/test_http_response.cpp"
+},
+{
+  "directory": "/home/sergio/vscode/VSMN-Player/build/Debug/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/sergio/vscode/VSMN-Player/include -isystem /home/developer/.conan2/p/b/gtest4da129cba9ca4/p/include -isystem /home/developer/.conan2/p/b/spdloa5da8257a6bb4/p/include -isystem /home/developer/.conan2/p/b/fmt767ef94699343/p/include -isystem /home/developer/.conan2/p/b/libcu9e6114361c2eb/p/include -isystem /home/developer/.conan2/p/cpp-h591e0ac7159de/p/include -isystem /home/developer/.conan2/p/cpp-h591e0ac7159de/p/include/httplib -m64 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -std=c++20 -o CMakeFiles/unit_tests.dir/unit/network/test_retry_policy.cpp.o -c /home/sergio/vscode/VSMN-Player/tests/unit/network/test_retry_policy.cpp",
+  "file": "/home/sergio/vscode/VSMN-Player/tests/unit/network/test_retry_policy.cpp"
+},
+{
+  "directory": "/home/sergio/vscode/VSMN-Player/build/Debug/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/sergio/vscode/VSMN-Player/include -isystem /home/developer/.conan2/p/b/gtest4da129cba9ca4/p/include -isystem /home/developer/.conan2/p/b/spdloa5da8257a6bb4/p/include -isystem /home/developer/.conan2/p/b/fmt767ef94699343/p/include -isystem /home/developer/.conan2/p/b/libcu9e6114361c2eb/p/include -isystem /home/developer/.conan2/p/cpp-h591e0ac7159de/p/include -isystem /home/developer/.conan2/p/cpp-h591e0ac7159de/p/include/httplib -m64 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -std=c++20 -o CMakeFiles/unit_tests.dir/unit/network/test_i_http_client.cpp.o -c /home/sergio/vscode/VSMN-Player/tests/unit/network/test_i_http_client.cpp",
+  "file": "/home/sergio/vscode/VSMN-Player/tests/unit/network/test_i_http_client.cpp"
+},
+{
+  "directory": "/home/sergio/vscode/VSMN-Player/build/Debug/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/sergio/vscode/VSMN-Player/include -isystem /home/developer/.conan2/p/b/gtest4da129cba9ca4/p/include -isystem /home/developer/.conan2/p/b/spdloa5da8257a6bb4/p/include -isystem /home/developer/.conan2/p/b/fmt767ef94699343/p/include -isystem /home/developer/.conan2/p/b/libcu9e6114361c2eb/p/include -isystem /home/developer/.conan2/p/cpp-h591e0ac7159de/p/include -isystem /home/developer/.conan2/p/cpp-h591e0ac7159de/p/include/httplib -m64 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -std=c++20 -o CMakeFiles/unit_tests.dir/unit/network/test_http_client_advanced.cpp.o -c /home/sergio/vscode/VSMN-Player/tests/unit/network/test_http_client_advanced.cpp",
+  "file": "/home/sergio/vscode/VSMN-Player/tests/unit/network/test_http_client_advanced.cpp"
+},
+{
+  "directory": "/home/sergio/vscode/VSMN-Player/build/Debug/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -I/home/sergio/vscode/VSMN-Player/include -isystem /home/developer/.conan2/p/b/gtest4da129cba9ca4/p/include -isystem /home/developer/.conan2/p/b/spdloa5da8257a6bb4/p/include -isystem /home/developer/.conan2/p/b/fmt767ef94699343/p/include -isystem /home/developer/.conan2/p/b/libcu9e6114361c2eb/p/include -isystem /home/developer/.conan2/p/cpp-h591e0ac7159de/p/include -isystem /home/developer/.conan2/p/cpp-h591e0ac7159de/p/include/httplib -m64 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -std=c++20 -o CMakeFiles/unit_tests.dir/unit/network/test_http_client_errors.cpp.o -c /home/sergio/vscode/VSMN-Player/tests/unit/network/test_http_client_errors.cpp",
+  "file": "/home/sergio/vscode/VSMN-Player/tests/unit/network/test_http_client_errors.cpp"
+}
+]
