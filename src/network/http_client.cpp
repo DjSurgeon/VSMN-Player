@@ -1,5 +1,4 @@
 #include "iptv/network/http_client.hpp"
-#include "iptv/network/http_curl_callbacks.hpp"
 
 #include <curl/curl.h>
 
@@ -7,18 +6,22 @@
 #include <stdexcept>
 #include <thread>
 
+#include "iptv/network/http_curl_callbacks.hpp"
+
 namespace iptv::network {
 
 namespace {
 
-[[nodiscard]] bool isTransientError(CURLcode res, HttpStatusCode status) noexcept {
+[[nodiscard]] bool isTransientError(CURLcode res,
+                                    HttpStatusCode status) noexcept {
   const auto code = static_cast<long>(status);
   return (res == CURLE_OPERATION_TIMEDOUT || res == CURLE_COULDNT_CONNECT ||
           res == CURLE_COULDNT_RESOLVE_HOST) ||
          (code >= 500 && code < 600) || (code == 429);
 }
 
-void applyBackoffDelay(BackoffStrategy strategy, std::chrono::milliseconds& current_delay,
+void applyBackoffDelay(BackoffStrategy strategy,
+                       std::chrono::milliseconds& current_delay,
                        std::chrono::milliseconds max_delay) {
   if (strategy == BackoffStrategy::None) return;
 
@@ -53,7 +56,8 @@ class HttpClient::Impl {
     }
   }
 
-  // Rule of 5: Prohibit copy/move for Impl to ensure strict lifecycle of raw handle
+  // Rule of 5: Prohibit copy/move for Impl to ensure strict lifecycle of raw
+  // handle
   Impl(const Impl&) = delete;
   Impl& operator=(const Impl&) = delete;
   Impl(Impl&&) = delete;
@@ -61,10 +65,12 @@ class HttpClient::Impl {
 
   [[nodiscard]] CURL* get() const noexcept { return handle_; }
 
-  void prepareHandle(const std::string& url, std::chrono::milliseconds timeout) {
+  void prepareHandle(const std::string& url,
+                     std::chrono::milliseconds timeout) {
     curl_easy_setopt(handle_, CURLOPT_URL, url.c_str());
     if (timeout.count() > 0) {
-      curl_easy_setopt(handle_, CURLOPT_TIMEOUT_MS, static_cast<long>(timeout.count()));
+      curl_easy_setopt(handle_, CURLOPT_TIMEOUT_MS,
+                       static_cast<long>(timeout.count()));
     }
   }
 
@@ -77,11 +83,13 @@ class HttpClient::Impl {
     const auto start_wall_clock = std::chrono::steady_clock::now();
     CURLcode res = curl_easy_perform(handle_);
     const auto end_wall_clock = std::chrono::steady_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::microseconds>(end_wall_clock - start_wall_clock);
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(
+        end_wall_clock - start_wall_clock);
     return res;
   }
 
-  void collectMetrics(CURLcode res, const std::chrono::microseconds& duration, HttpResponse& response) {
+  void collectMetrics(CURLcode res, const std::chrono::microseconds& duration,
+                      HttpResponse& response) {
     auto& metrics = response.getMetricsRef();
     metrics.total_duration = duration;
 
@@ -94,7 +102,8 @@ class HttpClient::Impl {
     }
 
     curl_off_t starttransfer_us = 0;
-    curl_easy_getinfo(handle_, CURLINFO_STARTTRANSFER_TIME_T, &starttransfer_us);
+    curl_easy_getinfo(handle_, CURLINFO_STARTTRANSFER_TIME_T,
+                      &starttransfer_us);
     metrics.ttfb = std::chrono::microseconds(starttransfer_us);
     metrics.bytes_downloaded = response.getBytesDownloaded();
   }
@@ -110,7 +119,8 @@ HttpClient::HttpClient() : pimpl_(std::make_unique<Impl>()) {}
 
 HttpClient::~HttpClient() = default;
 
-HttpClient::HttpClient(HttpClient&& other) noexcept : pimpl_(std::move(other.pimpl_)) {}
+HttpClient::HttpClient(HttpClient&& other) noexcept
+    : pimpl_(std::move(other.pimpl_)) {}
 
 HttpClient& HttpClient::operator=(HttpClient&& other) noexcept {
   if (this != &other) {
@@ -121,7 +131,8 @@ HttpClient& HttpClient::operator=(HttpClient&& other) noexcept {
 
 // Interface implementations (Skeleton for now)
 
-HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseconds timeout) {
+HttpResponse HttpClient::download(const std::string& url,
+                                  std::chrono::milliseconds timeout) {
   pimpl_->prepareHandle(url, timeout);
 
   HttpResponse response(HttpStatusCode::Unknown);
@@ -142,11 +153,13 @@ HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseco
       return response;
     }
 
-    if (!isTransientError(res, response.getStatusCode()) || attempt == retries) {
+    if (!isTransientError(res, response.getStatusCode()) ||
+        attempt == retries) {
       return response;
     }
 
-    applyBackoffDelay(pimpl_->policy_.strategy, current_delay, pimpl_->policy_.max_delay);
+    applyBackoffDelay(pimpl_->policy_.strategy, current_delay,
+                      pimpl_->policy_.max_delay);
   }
 
   return response;
@@ -154,18 +167,24 @@ HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseco
 
 void HttpClient::setNetworkConfig(const NetworkConfig& config) {
   curl_easy_setopt(pimpl_->get(), CURLOPT_USERAGENT, config.user_agent.c_str());
-  curl_easy_setopt(pimpl_->get(), CURLOPT_FOLLOWLOCATION, config.follow_redirects ? 1L : 0L);
-  curl_easy_setopt(pimpl_->get(), CURLOPT_SSL_VERIFYPEER, config.ssl_verify ? 1L : 0L);
-  curl_easy_setopt(pimpl_->get(), CURLOPT_SSL_VERIFYHOST, config.ssl_verify ? 2L : 0L);
+  curl_easy_setopt(pimpl_->get(), CURLOPT_FOLLOWLOCATION,
+                   config.follow_redirects ? 1L : 0L);
+  curl_easy_setopt(pimpl_->get(), CURLOPT_SSL_VERIFYPEER,
+                   config.ssl_verify ? 1L : 0L);
+  curl_easy_setopt(pimpl_->get(), CURLOPT_SSL_VERIFYHOST,
+                   config.ssl_verify ? 2L : 0L);
 
   // Connection timeout vs general timeout anti-stall
-  curl_easy_setopt(pimpl_->get(), CURLOPT_CONNECTTIMEOUT_MS, static_cast<long>(config.connect_timeout.count()));
+  curl_easy_setopt(pimpl_->get(), CURLOPT_CONNECTTIMEOUT_MS,
+                   static_cast<long>(config.connect_timeout.count()));
 
   // Anti-stall safeguards: abort if < 10KB/s for 3s
   curl_easy_setopt(pimpl_->get(), CURLOPT_LOW_SPEED_LIMIT, 10240L);
   curl_easy_setopt(pimpl_->get(), CURLOPT_LOW_SPEED_TIME, 3L);
 }
 
-void HttpClient::setRetryPolicy(const RetryPolicy& policy) { pimpl_->policy_ = policy; }
+void HttpClient::setRetryPolicy(const RetryPolicy& policy) {
+  pimpl_->policy_ = policy;
+}
 
 }  // namespace iptv::network
