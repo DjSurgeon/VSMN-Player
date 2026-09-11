@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "iptv/network/retry_policy.hpp"
+#include "iptv/network/http_retry_policy.hpp"
 
 using namespace iptv::network;
 

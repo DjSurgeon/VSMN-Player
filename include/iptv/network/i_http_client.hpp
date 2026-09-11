@@ -1,7 +1,7 @@
 #pragma once
 
 #include "iptv/network/http_response.hpp"
-#include "iptv/network/retry_policy.hpp"
+#include "iptv/network/http_retry_policy.hpp"
 #include <chrono>
 #include <string>
 

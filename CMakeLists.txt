@@ -59,6 +59,7 @@ include_directories(include)
 add_library(iptv_core STATIC
     src/pipeline/dummy.cpp
     src/network/http_client.cpp
+    src/network/http_init.cpp
 )
 target_include_directories(iptv_core PUBLIC include)
 target_compile_options(iptv_core PRIVATE ${PROJECT_WARNINGS})
