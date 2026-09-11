@@ -5,13 +5,13 @@
 namespace iptv::network {
 
 // Global Init/Shutdown implementations
-void Initialize() {
+void initialize() {
     if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
         throw std::runtime_error("Failed to initialize libcurl globally.");
     }
 }
 
-void Shutdown() {
+void shutdown() {
     curl_global_cleanup();
 }
 

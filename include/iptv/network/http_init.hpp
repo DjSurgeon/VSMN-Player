@@ -8,7 +8,7 @@ namespace iptv::network {
  * Must be called once at application startup before any HttpClient is created.
  * Wraps libcurl global initialization.
  */
-void Initialize();
+void initialize();
 
 /**
  * @brief Global network cleanup.
@@ -16,6 +16,6 @@ void Initialize();
  * Must be called once at application shutdown after all HttpClients are destroyed.
  * Wraps libcurl global cleanup.
  */
-void Shutdown();
+void shutdown();
 
 } // namespace iptv::network

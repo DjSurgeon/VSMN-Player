@@ -5,8 +5,10 @@
 namespace iptv::network {
 
 // libcurl write callback
-static size_t WriteCallback(char* ptr, size_t size, size_t nmemb, void* userdata) {
-    if (!userdata) return 0;
+static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) {
+    if (userdata == nullptr) {
+        return 0;
+    }
     
     auto* response = static_cast<HttpResponse*>(userdata);
     std::size_t total_size = size * nmemb;
@@ -22,7 +24,7 @@ public:
         if (!handle_) {
             throw std::runtime_error("Failed to initialize curl easy handle.");
         }
-        curl_easy_setopt(handle_, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(handle_, CURLOPT_WRITEFUNCTION, writeCallback);
     }
 
     ~Impl() {
