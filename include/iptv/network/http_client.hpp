@@ -32,12 +32,12 @@ public:
     /**
      * @brief Move constructor. Defined in source file.
      */
-    HttpClient(HttpClient&&) noexcept;
+    HttpClient(HttpClient&& other) noexcept;
 
     /**
      * @brief Move assignment. Defined in source file.
      */
-    HttpClient& operator=(HttpClient&&) noexcept;
+    HttpClient& operator=(HttpClient&& other) noexcept;
 
     // IHttpClient interface implementation
     HttpResponse download(const std::string& url, std::chrono::milliseconds timeout = std::chrono::milliseconds{0}) override;

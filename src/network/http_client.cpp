@@ -12,23 +12,22 @@ static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata
     
     auto* response = static_cast<HttpResponse*>(userdata);
     std::size_t total_size = size * nmemb;
-    response->appendToBody(reinterpret_cast<const uint8_t*>(ptr), total_size);
+    response->appendToBody(static_cast<const uint8_t*>(static_cast<const void*>(ptr)), total_size);
     return total_size;
 }
 
 // Define the hidden implementation class with strict RAII
 class HttpClient::Impl {
 public:
-    Impl() {
-        handle_ = curl_easy_init();
-        if (!handle_) {
+    Impl() : handle_(curl_easy_init()) {
+        if (handle_ == nullptr) {
             throw std::runtime_error("Failed to initialize curl easy handle.");
         }
         curl_easy_setopt(handle_, CURLOPT_WRITEFUNCTION, writeCallback);
     }
 
     ~Impl() {
-        if (handle_) {
+        if (handle_ != nullptr) {
             curl_easy_cleanup(handle_);
             handle_ = nullptr;
         }
@@ -40,7 +39,7 @@ public:
     Impl(Impl&&) = delete;
     Impl& operator=(Impl&&) = delete;
 
-    CURL* get() const noexcept { return handle_; }
+    [[nodiscard]] CURL* get() const noexcept { return handle_; }
 
 private:
     CURL* handle_ = nullptr;
@@ -53,7 +52,7 @@ HttpClient::HttpClient() : pimpl_(std::make_unique<Impl>()) {}
 HttpClient::~HttpClient() = default;
 
 HttpClient::HttpClient(HttpClient&& other) noexcept 
-    : IHttpClient(), pimpl_(std::move(other.pimpl_)) {}
+    : pimpl_(std::move(other.pimpl_)) {}
 
 HttpClient& HttpClient::operator=(HttpClient&& other) noexcept {
     if (this != &other) {
