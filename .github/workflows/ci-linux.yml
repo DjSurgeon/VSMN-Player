@@ -29,7 +29,7 @@ jobs:
       - name: Check code formatting (clang-format)
         run: |
           echo "Checking code format..."
-          find src test -name "*.cpp" -o -name "*.h" | while read file; do
+          find src include tests -name "*.cpp" -o -name "*.hpp" -o -name "*.h" | while read file; do
             if ! clang-format --Werror --dry-run "$file" > /dev/null 2>&1; then
               echo "❌ File needs formatting: $file"
               exit 1
