@@ -42,8 +42,7 @@ class HttpClient final : public IHttpClient {
 
   // IHttpClient interface implementation
   HttpResponse download(const std::string& url,
-                        std::chrono::milliseconds timeout =
-                            std::chrono::milliseconds{0}) override;
+                        std::chrono::milliseconds timeout = std::chrono::milliseconds{0}) override;
 
   void setNetworkConfig(const NetworkConfig& config) override;
 

@@ -41,8 +41,7 @@ class IHttpClient {
    * @param timeout The maximum time allowed for the request.
    * @return HttpResponse The result of the HTTP request.
    */
-  virtual HttpResponse download(const std::string& url,
-                                std::chrono::milliseconds timeout) = 0;
+  virtual HttpResponse download(const std::string& url, std::chrono::milliseconds timeout) = 0;
 
   /**
    * @brief Configures global network options (TLS, User-Agent, redirects).

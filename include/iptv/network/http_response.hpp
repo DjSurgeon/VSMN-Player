@@ -14,10 +14,9 @@ namespace iptv::network {
  * @brief Detailed telemetry of the HTTP transfer.
  */
 struct NetworkMetrics {
-  std::chrono::microseconds ttfb{
-      0};  ///< Pure network transport latency (DNS + TLS + TTFB)
+  std::chrono::microseconds ttfb{0};  ///< Pure network transport latency (DNS + TLS + TTFB)
   std::chrono::microseconds total_duration{
-      0};  ///< End-to-end wall clock duration (including buffer copies)
+      0};                      ///< End-to-end wall clock duration (including buffer copies)
   size_t bytes_downloaded{0};  ///< Total payload bytes received
 
   /**
@@ -29,8 +28,7 @@ struct NetworkMetrics {
     if (total_duration.count() <= 0 || bytes_downloaded == 0) {
       return 0.0;
     }
-    const double seconds =
-        std::chrono::duration<double>(total_duration).count();
+    const double seconds = std::chrono::duration<double>(total_duration).count();
     const double bits = static_cast<double>(bytes_downloaded) * 8.0;
     return (bits / seconds) / 1'000'000.0;
   }
@@ -53,9 +51,8 @@ class HttpResponse {
    * @param expected_body_size Pre-allocation size for the payload vector.
    * @param latency Request latency.
    */
-  explicit HttpResponse(
-      HttpStatusCode code, std::size_t expected_body_size = 0,
-      std::chrono::milliseconds latency = std::chrono::milliseconds{0})
+  explicit HttpResponse(HttpStatusCode code, std::size_t expected_body_size = 0,
+                        std::chrono::milliseconds latency = std::chrono::milliseconds{0})
       : status_code_(code), latency_(latency) {
     if (expected_body_size > 0) {
       body_.reserve(expected_body_size);
@@ -77,7 +74,9 @@ class HttpResponse {
    * @param size Number of bytes to append.
    */
   void appendToBody(const uint8_t* src, std::size_t size) noexcept {
-    if (src == nullptr || size == 0) return;
+    if (src == nullptr || size == 0) {
+      return;
+    }
     const size_t current_size = body_.size();
     body_.resize(current_size + size);
     std::memcpy(body_.data() + current_size, src, size);
@@ -107,9 +106,7 @@ class HttpResponse {
    * @brief Retrieves the HTTP status code of the response.
    * @return HttpStatusCode The HTTP status code.
    */
-  [[nodiscard]] HttpStatusCode getStatusCode() const noexcept {
-    return status_code_;
-  }
+  [[nodiscard]] HttpStatusCode getStatusCode() const noexcept { return status_code_; }
 
   /**
    * @brief Checks if the HTTP request was successful (2xx status code).
@@ -124,33 +121,25 @@ class HttpResponse {
    * @brief Retrieves the raw binary body of the response.
    * @return const std::vector<uint8_t>& The response body.
    */
-  [[nodiscard]] const std::vector<uint8_t>& getBody() const noexcept {
-    return body_;
-  }
+  [[nodiscard]] const std::vector<uint8_t>& getBody() const noexcept { return body_; }
 
   /**
    * @brief Retrieves the total number of bytes downloaded.
    * @return std::size_t Number of bytes in the body.
    */
-  [[nodiscard]] std::size_t getBytesDownloaded() const noexcept {
-    return body_.size();
-  }
+  [[nodiscard]] std::size_t getBytesDownloaded() const noexcept { return body_.size(); }
 
   /**
    * @brief Retrieves the total latency of the request.
    * @return std::chrono::milliseconds The latency.
    */
-  [[nodiscard]] std::chrono::milliseconds getLatency() const noexcept {
-    return latency_;
-  }
+  [[nodiscard]] std::chrono::milliseconds getLatency() const noexcept { return latency_; }
 
   /**
    * @brief Retrieves detailed network metrics for the request.
    * @return const NetworkMetrics& The network metrics.
    */
-  [[nodiscard]] const NetworkMetrics& getMetrics() const noexcept {
-    return metrics_;
-  }
+  [[nodiscard]] const NetworkMetrics& getMetrics() const noexcept { return metrics_; }
 
   /**
    * @brief Retrieves mutable network metrics for internal tracking.
