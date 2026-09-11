@@ -5,7 +5,7 @@
 
 #include "iptv/network/http_response.hpp"
 #include "iptv/network/http_retry_policy.hpp"
-#include "iptv/network/network_config.hpp"
+#include "iptv/network/http_network_config.hpp"
 
 namespace iptv::network {
 
@@ -44,6 +44,8 @@ class IHttpClient {
 
   /**
    * @brief Configures global network options (TLS, User-Agent, redirects).
+   *
+   * @param config The network configuration to apply.
    */
   virtual void setNetworkConfig(const NetworkConfig& config) = 0;
 

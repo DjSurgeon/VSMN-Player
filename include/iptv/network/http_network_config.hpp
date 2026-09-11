@@ -13,16 +13,24 @@ namespace iptv::network {
  * adjustments for potentially broken streams.
  */
 struct NetworkConfig {
-  /// The user agent string sent in HTTP requests. Hybrid by default.
+  /**
+   * @brief The user agent string sent in HTTP requests. Hybrid by default.
+   */
   std::string user_agent{"VSMN-Player/0.1 (Compatible; VLC/3.0.18)"};
 
-  /// Whether to perform strict TLS/SSL peer and host verification.
+  /**
+   * @brief Whether to perform strict TLS/SSL peer and host verification.
+   */
   bool ssl_verify{true};
 
-  /// Whether to follow HTTP 3xx redirects automatically.
+  /**
+   * @brief Whether to follow HTTP 3xx redirects automatically.
+   */
   bool follow_redirects{true};
 
-  /// Maximum time allowed for the connection phase.
+  /**
+   * @brief Maximum time allowed for the connection phase.
+   */
   std::chrono::milliseconds timeout{5000};
 };
 

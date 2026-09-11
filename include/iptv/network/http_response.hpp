@@ -20,6 +20,7 @@ struct NetworkMetrics {
 
   /**
    * @brief Calcula el throughput real percibido en Megabits por segundo (Mbps).
+   * @return double The calculated throughput in Mbps.
    */
   [[nodiscard]] double throughputMbps() const noexcept {
     if (total_duration.count() <= 0 || bytes_downloaded == 0) {
@@ -76,26 +77,55 @@ class HttpResponse {
     body_.insert(body_.end(), data, data + size);
   }
 
-  // Accessors - const-correctness enforced
-
+  /**
+   * @brief Retrieves the HTTP status code of the response.
+   * @return HttpStatusCode The HTTP status code.
+   */
   [[nodiscard]] HttpStatusCode getStatusCode() const noexcept { return status_code_; }
 
+  /**
+   * @brief Checks if the HTTP request was successful (2xx status code).
+   * @return true if successful, false otherwise.
+   */
   [[nodiscard]] bool isSuccess() const noexcept {
     const auto code = static_cast<int>(status_code_);
     return code >= 200 && code < 300;
   }
 
+  /**
+   * @brief Retrieves the raw binary body of the response.
+   * @return const std::vector<uint8_t>& The response body.
+   */
   [[nodiscard]] const std::vector<uint8_t>& getBody() const noexcept { return body_; }
 
+  /**
+   * @brief Retrieves the total number of bytes downloaded.
+   * @return std::size_t Number of bytes in the body.
+   */
   [[nodiscard]] std::size_t getBytesDownloaded() const noexcept { return body_.size(); }
 
+  /**
+   * @brief Retrieves the total latency of the request.
+   * @return std::chrono::milliseconds The latency.
+   */
   [[nodiscard]] std::chrono::milliseconds getLatency() const noexcept { return latency_; }
 
+  /**
+   * @brief Retrieves detailed network metrics for the request.
+   * @return const NetworkMetrics& The network metrics.
+   */
   [[nodiscard]] const NetworkMetrics& getMetrics() const noexcept { return metrics_; }
 
-  // Mutable access for the HTTP client during construction
+  /**
+   * @brief Retrieves mutable network metrics for internal tracking.
+   * @return NetworkMetrics& The mutable network metrics.
+   */
   NetworkMetrics& getMetricsRef() noexcept { return metrics_; }
 
+  /**
+   * @brief Updates the HTTP status code.
+   * @param code The new HTTP status code.
+   */
   void setStatusCode(HttpStatusCode code) noexcept { status_code_ = code; }
 
  private:
