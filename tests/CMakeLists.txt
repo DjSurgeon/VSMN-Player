@@ -17,6 +17,7 @@ add_executable(unit_tests
     unit/network/test_http_client_advanced.cpp
     unit/network/test_http_client_errors.cpp
     unit/manifest/test_playlist_parse_result.cpp
+    unit/manifest/test_playlist_m3u8_parser.cpp
 )
 target_link_libraries(unit_tests PRIVATE GTest::gmock GTest::gtest_main iptv_core httplib::httplib)
 target_compile_options(unit_tests PRIVATE ${PROJECT_WARNINGS})
