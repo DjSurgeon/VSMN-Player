@@ -71,6 +71,80 @@ class LineReader {
 };
 
 /**
+ * @brief Represents a single key-value attribute pair from an HLS tag.
+ */
+struct AttributePair {
+  std::string_view key;
+  std::string_view value;
+};
+
+/**
+ * @brief Lexical scanner for parsing HLS attribute lists (e.g. BANDWIDTH=800,CODECS="...").
+ *
+ * Safely handles quoted strings containing commas.
+ */
+class AttributeScanner {
+ public:
+  /**
+   * @brief Constructs a scanner over the attribute list string.
+   */
+  explicit AttributeScanner(std::string_view attrs) noexcept : attrs_(attrs) {}
+
+  /**
+   * @brief Advances to and returns the next attribute pair.
+   */
+  std::optional<AttributePair> next() noexcept {
+    if (cursor_ >= attrs_.size()) {
+      return std::nullopt;
+    }
+
+    // Read KEY
+    const size_t eq_pos = attrs_.find('=', cursor_);
+    if (eq_pos == std::string_view::npos) {
+      cursor_ = attrs_.size();  // Malformed, abort scanning
+      return std::nullopt;
+    }
+
+    std::string_view key = attrs_.substr(cursor_, eq_pos - cursor_);
+    cursor_ = eq_pos + 1;
+
+    // Read VALUE (quote-aware lexer)
+    bool in_quotes = false;
+    size_t val_start = cursor_;
+    size_t val_end = cursor_;
+
+    while (cursor_ < attrs_.size()) {
+      if (attrs_[cursor_] == '"') {
+        in_quotes = !in_quotes;
+      } else if (attrs_[cursor_] == ',' && !in_quotes) {
+        break;
+      }
+      cursor_++;
+      val_end = cursor_;
+    }
+
+    std::string_view val = attrs_.substr(val_start, val_end - val_start);
+
+    // Remove quotes if present
+    if (val.size() >= 2 && val.front() == '"' && val.back() == '"') {
+      val.remove_prefix(1);
+      val.remove_suffix(1);
+    }
+
+    // Skip comma for next iteration
+    if (cursor_ < attrs_.size() && attrs_[cursor_] == ',') {
+      cursor_++;
+    }
+
+    return AttributePair{key, val};
+  }
+
+ private:
+  std::string_view attrs_;
+  size_t cursor_{0};
+};
+
+/**
  * @brief Ephemeral state for building segments across multiple lines.
  */
 struct SegmentBuilder {
@@ -210,76 +284,60 @@ void parseMediaSequence(std::string_view line, Playlist& playlist) noexcept {
   }
 }
 
+/**
+ * @brief Semantic handler for parsing BANDWIDTH attributes.
+ */
+void parseBandwidth(std::string_view val, PendingVariant& builder) noexcept {
+  uint32_t bandwidth = 0;
+  if (auto [p, ec] = std::from_chars(val.data(), val.data() + val.size(), bandwidth);
+      ec == std::errc{}) {
+    builder.variant.bandwidth = bandwidth;
+  }
+}
+
+/**
+ * @brief Semantic handler for parsing RESOLUTION attributes.
+ */
+void parseResolution(std::string_view val, PendingVariant& builder) noexcept {
+  const size_t x_pos = val.find('x');
+  if (x_pos != std::string_view::npos) {
+    auto w_str = val.substr(0, x_pos);
+    auto h_str = val.substr(x_pos + 1);
+    uint32_t w = 0;
+    uint32_t h = 0;
+    auto [pw, ecw] = std::from_chars(w_str.data(), w_str.data() + w_str.size(), w);
+    auto [ph, ech] = std::from_chars(h_str.data(), h_str.data() + h_str.size(), h);
+    if (ecw == std::errc{} && ech == std::errc{}) {
+      builder.variant.resolution = {w, h};
+    }
+  }
+}
+
+/**
+ * @brief Semantic handler for parsing FRAME-RATE attributes.
+ */
+void parseFrameRate(std::string_view val, PendingVariant& builder) noexcept {
+  double fps = 0.0;
+  if (auto [p, ec] = std::from_chars(val.data(), val.data() + val.size(), fps); ec == std::errc{}) {
+    builder.variant.frame_rate = fps;
+  }
+}
+
 std::optional<ParseError> parseStreamInf(std::string_view line, uint32_t /*line_num*/,
                                          PendingVariant& builder) {
   auto attrs_str = line.substr(18);
   builder.active = true;
 
-  size_t cursor = 0;
-  while (cursor < attrs_str.size()) {
-    // Read KEY
-    const size_t eq_pos = attrs_str.find('=', cursor);
-    if (eq_pos == std::string_view::npos) {
-      break;
-    }
-    std::string_view key = attrs_str.substr(cursor, eq_pos - cursor);
-    cursor = eq_pos + 1;
-
-    // Read VALUE (quote-aware lexer)
-    bool in_quotes = false;
-    size_t val_start = cursor;
-    size_t val_end = cursor;
-
-    while (cursor < attrs_str.size()) {
-      if (attrs_str[cursor] == '"') {
-        in_quotes = !in_quotes;
-      } else if (attrs_str[cursor] == ',' && !in_quotes) {
-        break;
-      }
-      cursor++;
-      val_end = cursor;
-    }
-
-    std::string_view val = attrs_str.substr(val_start, val_end - val_start);
-
-    // Remove quotes if present
-    if (val.size() >= 2 && val.front() == '"' && val.back() == '"') {
-      val.remove_prefix(1);
-      val.remove_suffix(1);
-    }
-
-    if (key == "BANDWIDTH") {
-      uint32_t bandwidth = 0;
-      if (auto [p, ec] = std::from_chars(val.data(), val.data() + val.size(), bandwidth);
-          ec == std::errc{}) {
-        builder.variant.bandwidth = bandwidth;
-      }
-    } else if (key == "RESOLUTION") {
-      const size_t x_pos = val.find('x');
-      if (x_pos != std::string_view::npos) {
-        auto w_str = val.substr(0, x_pos);
-        auto h_str = val.substr(x_pos + 1);
-        uint32_t w = 0;
-        uint32_t h = 0;
-        auto [pw, ecw] = std::from_chars(w_str.data(), w_str.data() + w_str.size(), w);
-        auto [ph, ech] = std::from_chars(h_str.data(), h_str.data() + h_str.size(), h);
-        if (ecw == std::errc{} && ech == std::errc{}) {
-          builder.variant.resolution = {w, h};
-        }
-      }
-    } else if (key == "FRAME-RATE") {
-      double fps = 0.0;
-      if (auto [p, ec] = std::from_chars(val.data(), val.data() + val.size(), fps);
-          ec == std::errc{}) {
-        builder.variant.frame_rate = fps;
-      }
-    } else if (key == "CODECS") {
-      builder.variant.codecs = std::string(val);
-    }
-
-    // Skip comma for next iteration
-    if (cursor < attrs_str.size() && attrs_str[cursor] == ',') {
-      cursor++;
+  AttributeScanner scanner(attrs_str);
+  while (const auto attr = scanner.next()) {
+    if (attr->key == "BANDWIDTH") {
+      parseBandwidth(attr->value, builder);
+    } else if (attr->key == "RESOLUTION") {
+      parseResolution(attr->value, builder);
+    } else if (attr->key == "FRAME-RATE") {
+      parseFrameRate(attr->value, builder);
+    } else if (attr->key == "CODECS") {
+      builder.variant.codecs = std::string(attr->value);
     }
   }
 
@@ -385,8 +443,9 @@ ParseResult M3u8Parser::parse(std::string_view content, std::string_view base_ur
     playlist.type = PlaylistType::Master;
 
     // Sort variants ascending by bandwidth (Fast Start strategy standard)
-    std::sort(playlist.variants.begin(), playlist.variants.end(),
-              [](const auto& a, const auto& b) { return a.bandwidth < b.bandwidth; });
+    std::sort(playlist.variants.begin(), playlist.variants.end(), [](const auto& left, const auto& right) {
+      return left.bandwidth < right.bandwidth;
+    });
   } else if (!playlist.has_endlist) {
     playlist.type = PlaylistType::MediaLive;
   }
