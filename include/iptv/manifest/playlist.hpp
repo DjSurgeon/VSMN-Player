@@ -34,7 +34,7 @@ struct Resolution {
  * @brief Individual media segment parsed from a media playlist.
  */
 struct MediaSegmentRef {
-  std::string uri;                ///< URL of the segment (.ts / .m4s).
+  std::string uri{};                ///< URL of the segment (.ts / .m4s).
   FloatingSeconds duration{0.0};  ///< Precise duration from #EXTINF.
   uint64_t sequence_index{0};     ///< Absolute media sequence index.
   bool is_discontinuity{false};   ///< Timestamp jump marker (#EXT-X-DISCONTINUITY).
@@ -46,11 +46,11 @@ struct MediaSegmentRef {
  * @brief Quality variant stream within a master playlist (#EXT-X-STREAM-INF).
  */
 struct VariantStreamRef {
-  std::string uri;          ///< URI of the media playlist.
+  std::string uri{};          ///< URI of the media playlist.
   uint32_t bandwidth{0};    ///< Bitrate in bits/second.
   Resolution resolution{};  ///< Video width and height.
   double frame_rate{0.0};   ///< Frames per second (optional).
-  std::string codecs;       ///< RFC 6381 identifiers (e.g., "avc1.64002a,mp4a.40.2").
+  std::string codecs{};       ///< RFC 6381 identifiers (e.g., "avc1.64002a,mp4a.40.2").
 };
 
 /**
@@ -62,8 +62,8 @@ struct Playlist {
   uint64_t media_sequence{0};               ///< Initial base sequence (#EXT-X-MEDIA-SEQUENCE).
   bool has_endlist{false};                  ///< True if finalized with #EXT-X-ENDLIST.
 
-  std::vector<MediaSegmentRef> segments;   ///< Populated if type is MediaVOD or MediaLive.
-  std::vector<VariantStreamRef> variants;  ///< Populated if type is Master.
+  std::vector<MediaSegmentRef> segments{};   ///< Populated if type is MediaVOD or MediaLive.
+  std::vector<VariantStreamRef> variants{};  ///< Populated if type is Master.
 };
 
 }  // namespace iptv::manifest
