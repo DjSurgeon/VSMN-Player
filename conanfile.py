@@ -9,7 +9,7 @@ class IptvPlayerConan(ConanFile):
     
     # We want ImGui to come with its official bindings for our backend
     # This prevents us from having to copy imgui_impl_sdl2.cpp manually
-    options = {
+    default_options = {
         "imgui/*:shared": False,
         "sdl/*:pulse": False,
         "ffmpeg/*:with_pulse": False,
