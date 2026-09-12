@@ -98,7 +98,9 @@ jobs:
       - name: Conan install
         run: |
           cd $GITHUB_WORKSPACE
-          conan install . --build=missing -s build_type=Debug
+          conan install . --build=missing -s build_type=Debug \
+            -c tools.system.package_manager:mode=install \
+            -c tools.system.package_manager:sudo=True
       
       - name: CMake configure (Coverage)
         run: |
@@ -191,7 +193,9 @@ jobs:
       - name: Conan install
         run: |
           cd $GITHUB_WORKSPACE
-          conan install . --build=missing -s build_type=Debug
+          conan install . --build=missing -s build_type=Debug \
+            -c tools.system.package_manager:mode=install \
+            -c tools.system.package_manager:sudo=True
       
       - name: CMake configure (Debug with sanitizers)
         run: |
@@ -246,7 +250,9 @@ jobs:
       - name: Conan install
         run: |
           cd $GITHUB_WORKSPACE
-          conan install . --build=missing -s build_type=Debug
+          conan install . --build=missing -s build_type=Debug \
+            -c tools.system.package_manager:mode=install \
+            -c tools.system.package_manager:sudo=True
       
       - name: CMake configure (TSan)
         run: |
@@ -295,7 +301,9 @@ jobs:
       - name: Conan install
         run: |
           cd $GITHUB_WORKSPACE
-          conan install . --build=missing -s build_type=Release
+          conan install . --build=missing -s build_type=Release \
+            -c tools.system.package_manager:mode=install \
+            -c tools.system.package_manager:sudo=True
       
       - name: CMake configure (Release)
         run: |
