@@ -1,5 +1,6 @@
 #include "iptv/manifest/playlist_m3u8_parser.hpp"
 
+#include <algorithm>
 #include <array>
 #include <charconv>
 #include <optional>
@@ -87,11 +88,28 @@ struct SegmentBuilder {
 };
 
 /**
+ * @brief Ephemeral state for building variants across multiple lines.
+ */
+struct PendingVariant {
+  bool active{false};
+  VariantStreamRef variant{};
+
+  /**
+   * @brief Resets the builder state after committing a variant.
+   */
+  void reset() noexcept {
+    active = false;
+    variant = VariantStreamRef{};
+  }
+};
+
+/**
  * @brief Mutable context shared among handlers during parsing.
  */
 struct ParseContext {
   Playlist& playlist;
-  SegmentBuilder& builder;
+  SegmentBuilder& segment_builder;
+  PendingVariant& variant_builder;
   uint32_t line_num{0};
   std::string_view base_url;
 };
@@ -162,6 +180,20 @@ std::optional<ParseError> commitSegment(std::string_view uri, std::string_view b
   return std::nullopt;
 }
 
+std::optional<ParseError> commitVariant(std::string_view uri, std::string_view base_url,
+                                        uint32_t line_num, PendingVariant& builder,
+                                        Playlist& playlist) {
+  if (!builder.active) {
+    return ParseError{ParseErrorCode::MissingMandatoryTags, line_num,
+                      "Variant URI without preceding #EXT-X-STREAM-INF"};
+  }
+
+  builder.variant.uri = resolveUri(uri, base_url);
+  playlist.variants.push_back(std::move(builder.variant));
+  builder.reset();
+  return std::nullopt;
+}
+
 void parseTargetDuration(std::string_view line, Playlist& playlist) noexcept {
   const auto val = line.substr(22);
   uint32_t sec = 0;
@@ -176,6 +208,82 @@ void parseMediaSequence(std::string_view line, Playlist& playlist) noexcept {
   if (auto [p, ec] = std::from_chars(val.data(), val.data() + val.size(), seq); ec == std::errc{}) {
     playlist.media_sequence = seq;
   }
+}
+
+std::optional<ParseError> parseStreamInf(std::string_view line, uint32_t /*line_num*/,
+                                         PendingVariant& builder) {
+  auto attrs_str = line.substr(18);
+  builder.active = true;
+
+  size_t cursor = 0;
+  while (cursor < attrs_str.size()) {
+    // Read KEY
+    const size_t eq_pos = attrs_str.find('=', cursor);
+    if (eq_pos == std::string_view::npos) {
+      break;
+    }
+    std::string_view key = attrs_str.substr(cursor, eq_pos - cursor);
+    cursor = eq_pos + 1;
+
+    // Read VALUE (quote-aware lexer)
+    bool in_quotes = false;
+    size_t val_start = cursor;
+    size_t val_end = cursor;
+
+    while (cursor < attrs_str.size()) {
+      if (attrs_str[cursor] == '"') {
+        in_quotes = !in_quotes;
+      } else if (attrs_str[cursor] == ',' && !in_quotes) {
+        break;
+      }
+      cursor++;
+      val_end = cursor;
+    }
+
+    std::string_view val = attrs_str.substr(val_start, val_end - val_start);
+
+    // Remove quotes if present
+    if (val.size() >= 2 && val.front() == '"' && val.back() == '"') {
+      val.remove_prefix(1);
+      val.remove_suffix(1);
+    }
+
+    if (key == "BANDWIDTH") {
+      uint32_t bandwidth = 0;
+      if (auto [p, ec] = std::from_chars(val.data(), val.data() + val.size(), bandwidth);
+          ec == std::errc{}) {
+        builder.variant.bandwidth = bandwidth;
+      }
+    } else if (key == "RESOLUTION") {
+      const size_t x_pos = val.find('x');
+      if (x_pos != std::string_view::npos) {
+        auto w_str = val.substr(0, x_pos);
+        auto h_str = val.substr(x_pos + 1);
+        uint32_t w = 0;
+        uint32_t h = 0;
+        auto [pw, ecw] = std::from_chars(w_str.data(), w_str.data() + w_str.size(), w);
+        auto [ph, ech] = std::from_chars(h_str.data(), h_str.data() + h_str.size(), h);
+        if (ecw == std::errc{} && ech == std::errc{}) {
+          builder.variant.resolution = {w, h};
+        }
+      }
+    } else if (key == "FRAME-RATE") {
+      double fps = 0.0;
+      if (auto [p, ec] = std::from_chars(val.data(), val.data() + val.size(), fps);
+          ec == std::errc{}) {
+        builder.variant.frame_rate = fps;
+      }
+    } else if (key == "CODECS") {
+      builder.variant.codecs = std::string(val);
+    }
+
+    // Skip comma for next iteration
+    if (cursor < attrs_str.size() && attrs_str[cursor] == ',') {
+      cursor++;
+    }
+  }
+
+  return std::nullopt;
 }
 
 // Canonical signature for an HLS tag handler
@@ -203,21 +311,26 @@ std::optional<ParseError> handleEndList(std::string_view /*line*/, ParseContext&
 }
 
 std::optional<ParseError> handleDiscontinuity(std::string_view /*line*/, ParseContext& ctx) {
-  ctx.builder.discontinuity = true;
+  ctx.segment_builder.discontinuity = true;
   return std::nullopt;
 }
 
 std::optional<ParseError> handleExtInf(std::string_view line, ParseContext& ctx) {
-  return parseExtInf(line, ctx.line_num, ctx.builder);
+  return parseExtInf(line, ctx.line_num, ctx.segment_builder);
+}
+
+std::optional<ParseError> handleStreamInf(std::string_view line, ParseContext& ctx) {
+  return parseStreamInf(line, ctx.line_num, ctx.variant_builder);
 }
 
 // Static dispatch table residing in read-only data segment
-constexpr std::array<TagDispatchEntry, 5> k_tag_dispatch_table{{
+constexpr std::array<TagDispatchEntry, 6> k_tag_dispatch_table{{
     {"#EXTINF:", &handleExtInf},
     {"#EXT-X-TARGETDURATION:", &handleTargetDuration},
     {"#EXT-X-MEDIA-SEQUENCE:", &handleMediaSequence},
     {"#EXT-X-ENDLIST", &handleEndList},
     {"#EXT-X-DISCONTINUITY", &handleDiscontinuity},
+    {"#EXT-X-STREAM-INF:", &handleStreamInf},
 }};
 
 }  // namespace
@@ -236,16 +349,23 @@ ParseResult M3u8Parser::parse(std::string_view content, std::string_view base_ur
   }
 
   Playlist playlist;
-  SegmentBuilder builder;
+  SegmentBuilder segment_builder;
+  PendingVariant variant_builder;
 
   while (const auto entry = reader.next()) {
     const auto [line, line_num] = *entry;
-    ParseContext ctx{playlist, builder, line_num, base_url};
+    ParseContext ctx{playlist, segment_builder, variant_builder, line_num, base_url};
 
-    // 1. Multimedia segment URI line (doesn't start with '#')
+    // 1. Multimedia segment or variant URI line (doesn't start with '#')
     if (!line.starts_with('#')) {
-      if (auto err = commitSegment(line, base_url, line_num, builder, playlist)) {
-        return *err;
+      if (variant_builder.active) {
+        if (auto err = commitVariant(line, base_url, line_num, variant_builder, playlist)) {
+          return *err;
+        }
+      } else {
+        if (auto err = commitSegment(line, base_url, line_num, segment_builder, playlist)) {
+          return *err;
+        }
       }
       continue;
     }
@@ -261,7 +381,13 @@ ParseResult M3u8Parser::parse(std::string_view content, std::string_view base_ur
     }
   }
 
-  if (!playlist.has_endlist) {
+  if (!playlist.variants.empty()) {
+    playlist.type = PlaylistType::Master;
+
+    // Sort variants ascending by bandwidth (Fast Start strategy standard)
+    std::sort(playlist.variants.begin(), playlist.variants.end(),
+              [](const auto& a, const auto& b) { return a.bandwidth < b.bandwidth; });
+  } else if (!playlist.has_endlist) {
     playlist.type = PlaylistType::MediaLive;
   }
 
