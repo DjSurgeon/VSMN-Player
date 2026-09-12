@@ -85,6 +85,19 @@ TEST_F(M3u8ParserTest, HandlesWindowsLineEndings) {
   EXPECT_EQ(playlist.segments[1].uri, "http://example.com/seg2.ts");
 }
 
+TEST_F(M3u8ParserTest, HandlesUtf8Bom) {
+  std::string_view content =
+      "\xEF\xBB\xBF#EXTM3U\n"
+      "#EXTINF:10.0,\n"
+      "seg1.ts\n";
+
+  auto result = parser.parse(content, "http://example.com/");
+  ASSERT_TRUE(result.hasValue());
+  auto playlist = std::move(result).value();
+  ASSERT_EQ(playlist.segments.size(), 1);
+  EXPECT_EQ(playlist.segments[0].uri, "http://example.com/seg1.ts");
+}
+
 TEST_F(M3u8ParserTest, ResolvesUrlsCorrectly) {
   // 7 distinct path types
   std::string_view content =
@@ -224,4 +237,23 @@ TEST_F(M3u8ParserTest, ParsesMasterPlaylist) {
   EXPECT_EQ(playlist.variants[4].uri, "http://example.com/1080p.m3u8");
   EXPECT_EQ(playlist.variants[4].resolution.width, 1920);
   EXPECT_EQ(playlist.variants[4].codecs, "avc1.64002a");
+}
+
+TEST_F(M3u8ParserTest, ParsesGiantManifest) {
+  // Construct a massive 1 Million segment manifest programmatically
+  // Note: Building the string will consume memory (heap), but parsing it
+  // shouldn't consume anything beyond the vector capacity of MediaSegmentRef.
+  std::string giant_manifest;
+  size_t count = 1000000;
+  giant_manifest.reserve(count * 30 + 50); // Roughly 30MB string
+  
+  giant_manifest.append("#EXTM3U\n#EXT-X-TARGETDURATION:10\n");
+  for (size_t i = 0; i < count; ++i) {
+      giant_manifest.append("#EXTINF:10.0,\nseg.ts\n");
+  }
+  
+  auto result = parser.parse(giant_manifest, "http://example.com/");
+  ASSERT_TRUE(result.hasValue());
+  auto playlist = std::move(result).value();
+  EXPECT_EQ(playlist.segments.size(), count);
 }

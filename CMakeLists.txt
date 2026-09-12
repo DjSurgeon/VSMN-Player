@@ -11,6 +11,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(ENABLE_WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
 option(ENABLE_SANITIZERS "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(ENABLE_TSAN "Enable ThreadSanitizer" OFF)
+option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
+option(ENABLE_FUZZER "Enable libFuzzer target" OFF)
 option(BUILD_TESTS "Build unit test suite" ON)
 
 # Strict warnings flags
@@ -48,6 +50,13 @@ if(ENABLE_TSAN)
     add_link_options(-fsanitize=thread)
 endif()
 
+# Coverage configuration
+if(ENABLE_COVERAGE)
+    message(STATUS "Code Coverage enabled")
+    add_compile_options(--coverage -O0 -g)
+    add_link_options(--coverage)
+endif()
+
 # Locate dependencies managed by Conan 2
 find_package(spdlog REQUIRED)
 find_package(CURL REQUIRED)
@@ -77,4 +86,13 @@ if(BUILD_TESTS)
     enable_testing()
     find_package(GTest REQUIRED)
     add_subdirectory(tests)
+endif()
+
+# Fuzzer target
+if(ENABLE_FUZZER)
+    add_executable(iptv_fuzzer tests/fuzz/fuzzer.cpp)
+    target_include_directories(iptv_fuzzer PRIVATE include)
+    target_compile_options(iptv_fuzzer PRIVATE -fsanitize=address,undefined -g -O1)
+    target_link_options(iptv_fuzzer PRIVATE -fsanitize=address,undefined)
+    target_link_libraries(iptv_fuzzer PRIVATE iptv_core)
 endif()

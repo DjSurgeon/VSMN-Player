@@ -395,6 +395,10 @@ constexpr std::array<TagDispatchEntry, 6> k_tag_dispatch_table{{
 
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 ParseResult M3u8Parser::parse(std::string_view content, std::string_view base_url) const {
+  if (content.starts_with("\xEF\xBB\xBF")) {
+    content.remove_prefix(3);
+  }
+
   if (content.empty()) {
     return ParseError{ParseErrorCode::EmptyContent, 0, "Manifest content is empty"};
   }
