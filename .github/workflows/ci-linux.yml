@@ -88,6 +88,7 @@ jobs:
             libavcodec-dev libavformat-dev libavutil-dev \
             libswscale-dev libswresample-dev \
             libsdl2-dev libgl1-mesa-dev \
+            libva-dev libvdpau-dev \
             gcovr lcov
           
           pip3 install --no-cache-dir conan
@@ -185,7 +186,8 @@ jobs:
             libcurl4-openssl-dev libssl-dev \
             libavcodec-dev libavformat-dev libavutil-dev \
             libswscale-dev libswresample-dev \
-            libsdl2-dev libgl1-mesa-dev
+            libsdl2-dev libgl1-mesa-dev \
+            libva-dev libvdpau-dev
           
           pip3 install --no-cache-dir conan
           conan profile detect --force
@@ -242,7 +244,8 @@ jobs:
             libcurl4-openssl-dev libssl-dev \
             libavcodec-dev libavformat-dev libavutil-dev \
             libswscale-dev libswresample-dev \
-            libsdl2-dev libgl1-mesa-dev
+            libsdl2-dev libgl1-mesa-dev \
+            libva-dev libvdpau-dev
           
           pip3 install --no-cache-dir conan
           conan profile detect --force
@@ -293,7 +296,8 @@ jobs:
             libcurl4-openssl-dev libssl-dev \
             libavcodec-dev libavformat-dev libavutil-dev \
             libswscale-dev libswresample-dev \
-            libsdl2-dev libgl1-mesa-dev
+            libsdl2-dev libgl1-mesa-dev \
+            libva-dev libvdpau-dev
           
           pip3 install --no-cache-dir conan
           conan profile detect --force

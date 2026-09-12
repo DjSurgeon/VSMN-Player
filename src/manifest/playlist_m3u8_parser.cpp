@@ -7,6 +7,8 @@
 #include <string_view>
 #include <system_error>
 
+#include "iptv/manifest/playlist_attribute_scanner.hpp"
+
 namespace iptv::manifest {
 namespace {
 
@@ -68,80 +70,6 @@ class LineReader {
   std::string_view content_;
   size_t cursor_{0};
   uint32_t current_line_{0};
-};
-
-/**
- * @brief Represents a single key-value attribute pair from an HLS tag.
- */
-struct AttributePair {
-  std::string_view key;
-  std::string_view value;
-};
-
-/**
- * @brief Lexical scanner for parsing HLS attribute lists (e.g. BANDWIDTH=800,CODECS="...").
- *
- * Safely handles quoted strings containing commas.
- */
-class AttributeScanner {
- public:
-  /**
-   * @brief Constructs a scanner over the attribute list string.
-   */
-  explicit AttributeScanner(std::string_view attrs) noexcept : attrs_(attrs) {}
-
-  /**
-   * @brief Advances to and returns the next attribute pair.
-   */
-  std::optional<AttributePair> next() noexcept {
-    if (cursor_ >= attrs_.size()) {
-      return std::nullopt;
-    }
-
-    // Read KEY
-    const size_t eq_pos = attrs_.find('=', cursor_);
-    if (eq_pos == std::string_view::npos) {
-      cursor_ = attrs_.size();  // Malformed, abort scanning
-      return std::nullopt;
-    }
-
-    std::string_view key = attrs_.substr(cursor_, eq_pos - cursor_);
-    cursor_ = eq_pos + 1;
-
-    // Read VALUE (quote-aware lexer)
-    bool in_quotes = false;
-    size_t val_start = cursor_;
-    size_t val_end = cursor_;
-
-    while (cursor_ < attrs_.size()) {
-      if (attrs_[cursor_] == '"') {
-        in_quotes = !in_quotes;
-      } else if (attrs_[cursor_] == ',' && !in_quotes) {
-        break;
-      }
-      cursor_++;
-      val_end = cursor_;
-    }
-
-    std::string_view val = attrs_.substr(val_start, val_end - val_start);
-
-    // Remove quotes if present
-    if (val.size() >= 2 && val.front() == '"' && val.back() == '"') {
-      val.remove_prefix(1);
-      val.remove_suffix(1);
-    }
-
-    // Skip comma for next iteration
-    if (cursor_ < attrs_.size() && attrs_[cursor_] == ',') {
-      cursor_++;
-    }
-
-    return AttributePair{key, val};
-  }
-
- private:
-  std::string_view attrs_;
-  size_t cursor_{0};
 };
 
 /**
@@ -274,12 +202,12 @@ void parseResolution(std::string_view val, PendingVariant& builder) noexcept {
   if (x_pos != std::string_view::npos) {
     auto w_str = val.substr(0, x_pos);
     auto h_str = val.substr(x_pos + 1);
-    uint32_t w = 0;
-    uint32_t h = 0;
-    auto [pw, ecw] = std::from_chars(w_str.data(), w_str.data() + w_str.size(), w);
-    auto [ph, ech] = std::from_chars(h_str.data(), h_str.data() + h_str.size(), h);
+    uint32_t width = 0;
+    uint32_t height = 0;
+    auto [pw, ecw] = std::from_chars(w_str.data(), w_str.data() + w_str.size(), width);
+    auto [ph, ech] = std::from_chars(h_str.data(), h_str.data() + h_str.size(), height);
     if (ecw == std::errc{} && ech == std::errc{}) {
-      builder.variant.resolution = {w, h};
+      builder.variant.resolution = {width, height};
     }
   }
 }
@@ -299,8 +227,9 @@ std::optional<ParseError> parseStreamInf(std::string_view line, uint32_t /*line_
   auto attrs_str = line.substr(18);
   builder.active = true;
 
-  AttributeScanner scanner(attrs_str);
+  auto scanner = AttributeScanner{attrs_str};
   while (const auto attr = scanner.next()) {
+    // NOLINTNEXTLINE(bugprone-branch-clone)
     if (attr->key == "BANDWIDTH") {
       parseBandwidth(attr->value, builder);
     } else if (attr->key == "RESOLUTION") {
@@ -391,6 +320,7 @@ ParseResult M3u8Parser::parse(std::string_view content, std::string_view /*base_
 
     // 1. Multimedia segment or variant URI line (doesn't start with '#')
     if (!line.starts_with('#')) {
+      // NOLINTNEXTLINE(bugprone-branch-clone)
       if (variant_builder.active) {
         if (auto err = commitVariant(line, line_num, variant_builder, playlist)) {
           return *err;
