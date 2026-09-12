@@ -17,3 +17,4 @@ class IptvPlayerConan(ConanFile):
 
     def build_requirements(self):
         self.test_requires("cpp-httplib/0.15.3")
+        self.test_requires("benchmark/1.8.3")

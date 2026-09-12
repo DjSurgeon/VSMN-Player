@@ -14,6 +14,7 @@ option(ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
 option(ENABLE_FUZZER "Enable libFuzzer target" OFF)
 option(BUILD_TESTS "Build unit test suite" ON)
+option(ENABLE_BENCHMARKS "Enable Google Benchmark suite" OFF)
 
 # Strict warnings flags
 set(PROJECT_WARNINGS
@@ -95,4 +96,10 @@ if(ENABLE_FUZZER)
     target_compile_options(iptv_fuzzer PRIVATE -fsanitize=address,undefined -g -O1)
     target_link_options(iptv_fuzzer PRIVATE -fsanitize=address,undefined)
     target_link_libraries(iptv_fuzzer PRIVATE iptv_core)
+endif()
+
+# Benchmarks
+if(ENABLE_BENCHMARKS)
+    find_package(benchmark REQUIRED)
+    add_subdirectory(benchmarks)
 endif()

@@ -81,8 +81,8 @@ TEST_F(M3u8ParserTest, HandlesWindowsLineEndings) {
   auto playlist = std::move(result).value();
   ASSERT_EQ(playlist.segments.size(), 2);
   // Ensure '\r' was trimmed
-  EXPECT_EQ(playlist.segments[0].uri, "http://example.com/seg1.ts");
-  EXPECT_EQ(playlist.segments[1].uri, "http://example.com/seg2.ts");
+  EXPECT_EQ(playlist.segments[0].uri, "seg1.ts");
+  EXPECT_EQ(playlist.segments[1].uri, "seg2.ts");
 }
 
 TEST_F(M3u8ParserTest, HandlesUtf8Bom) {
@@ -95,7 +95,7 @@ TEST_F(M3u8ParserTest, HandlesUtf8Bom) {
   ASSERT_TRUE(result.hasValue());
   auto playlist = std::move(result).value();
   ASSERT_EQ(playlist.segments.size(), 1);
-  EXPECT_EQ(playlist.segments[0].uri, "http://example.com/seg1.ts");
+  EXPECT_EQ(playlist.segments[0].uri, "seg1.ts");
 }
 
 TEST_F(M3u8ParserTest, ResolvesUrlsCorrectly) {
@@ -122,13 +122,13 @@ TEST_F(M3u8ParserTest, ResolvesUrlsCorrectly) {
   auto playlist = std::move(result).value();
 
   ASSERT_EQ(playlist.segments.size(), 7);
-  EXPECT_EQ(playlist.segments[0].uri, "http://example.com/path/seg1.ts");
-  EXPECT_EQ(playlist.segments[1].uri, "http://example.com/root/seg2.ts");
+  EXPECT_EQ(playlist.segments[0].uri, "seg1.ts");
+  EXPECT_EQ(playlist.segments[1].uri, "/root/seg2.ts");
   EXPECT_EQ(playlist.segments[2].uri, "https://other.com/seg3.ts");
   EXPECT_EQ(playlist.segments[3].uri, "http://other.com/seg4.ts");
-  EXPECT_EQ(playlist.segments[4].uri, "http://example.com/path/chunks/seg5.ts");
-  EXPECT_EQ(playlist.segments[5].uri, "http://example.com/path/seg6.ts?token=123");
-  EXPECT_EQ(playlist.segments[6].uri, "http://example.com/path/dir.with.dots/seg7.ts");
+  EXPECT_EQ(playlist.segments[4].uri, "chunks/seg5.ts");
+  EXPECT_EQ(playlist.segments[5].uri, "seg6.ts?token=123");
+  EXPECT_EQ(playlist.segments[6].uri, "dir.with.dots/seg7.ts");
 }
 
 TEST_F(M3u8ParserTest, RejectsOrphanSegmentUri) {
@@ -209,32 +209,32 @@ TEST_F(M3u8ParserTest, ParsesMasterPlaylist) {
 
   // 1: 128 Kbps (Audio only)
   EXPECT_EQ(playlist.variants[0].bandwidth, 128000);
-  EXPECT_EQ(playlist.variants[0].uri, "http://example.com/audio_only.m3u8");
+  EXPECT_EQ(playlist.variants[0].uri, "audio_only.m3u8");
   EXPECT_FALSE(playlist.variants[0].resolution.isValid());
   EXPECT_EQ(playlist.variants[0].codecs, "mp4a.40.2");
 
   // 2: 800 Kbps (360p)
   EXPECT_EQ(playlist.variants[1].bandwidth, 800000);
-  EXPECT_EQ(playlist.variants[1].uri, "http://example.com/360p.m3u8");
+  EXPECT_EQ(playlist.variants[1].uri, "360p.m3u8");
   EXPECT_EQ(playlist.variants[1].resolution.width, 640);
   EXPECT_EQ(playlist.variants[1].resolution.height, 360);
 
   // 3: 3 Mbps (720p)
   EXPECT_EQ(playlist.variants[2].bandwidth, 3000000);
-  EXPECT_EQ(playlist.variants[2].uri, "http://example.com/720p.m3u8");
+  EXPECT_EQ(playlist.variants[2].uri, "720p.m3u8");
   EXPECT_EQ(playlist.variants[2].frame_rate, 60.0);
   EXPECT_EQ(playlist.variants[2].codecs, "avc1.4d401f,mp4a.40.2");
 
   // 4: 4 Mbps (weird custom)
   EXPECT_EQ(playlist.variants[3].bandwidth, 4000000);
-  EXPECT_EQ(playlist.variants[3].uri, "http://example.com/custom.m3u8");
+  EXPECT_EQ(playlist.variants[3].uri, "custom.m3u8");
   EXPECT_EQ(playlist.variants[3].frame_rate, 30.0);
   EXPECT_FALSE(
       playlist.variants[3].resolution.isValid());  // 'weird_res' parse should fail silently
 
   // 5: 6 Mbps (1080p)
   EXPECT_EQ(playlist.variants[4].bandwidth, 6000000);
-  EXPECT_EQ(playlist.variants[4].uri, "http://example.com/1080p.m3u8");
+  EXPECT_EQ(playlist.variants[4].uri, "1080p.m3u8");
   EXPECT_EQ(playlist.variants[4].resolution.width, 1920);
   EXPECT_EQ(playlist.variants[4].codecs, "avc1.64002a");
 }

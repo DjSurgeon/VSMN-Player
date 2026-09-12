@@ -32,7 +32,7 @@ TEST(PlaylistParseResultTest, ConstructsWithError) {
 TEST(PlaylistParseResultTest, MoveSemanticsArePreserved) {
   Playlist pl;
   pl.segments.push_back(
-      MediaSegmentRef{"http://test.ts", FloatingSeconds(2.0), 1, false, std::nullopt});
+      MediaSegmentRef{"http://test.ts", std::nullopt, FloatingSeconds(2.0), 1, false});
 
   ParseResult result(std::move(pl));
   EXPECT_TRUE(result.hasValue());

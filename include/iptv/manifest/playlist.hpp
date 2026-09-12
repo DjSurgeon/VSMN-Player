@@ -3,7 +3,7 @@
 #include <chrono>
 #include <cstdint>
 #include <optional>
-#include <string>
+#include <string_view>
 #include <vector>
 
 namespace iptv::manifest {
@@ -34,23 +34,23 @@ struct Resolution {
  * @brief Individual media segment parsed from a media playlist.
  */
 struct MediaSegmentRef {
-  std::string uri{};                ///< URL of the segment (.ts / .m4s).
-  FloatingSeconds duration{0.0};  ///< Precise duration from #EXTINF.
-  uint64_t sequence_index{0};     ///< Absolute media sequence index.
-  bool is_discontinuity{false};   ///< Timestamp jump marker (#EXT-X-DISCONTINUITY).
-  std::optional<std::string>
-      init_segment_uri;  ///< Initialization segment (#EXT-X-MAP) for CMAF/fMP4.
+  std::string_view uri{};           ///< URL of the segment (.ts / .m4s).
+  std::optional<std::string_view>
+      init_segment_uri;             ///< Initialization segment (#EXT-X-MAP) for CMAF/fMP4.
+  FloatingSeconds duration{0.0};    ///< Precise duration from #EXTINF.
+  uint64_t sequence_index{0};       ///< Absolute media sequence index.
+  bool is_discontinuity{false};     ///< Timestamp jump marker (#EXT-X-DISCONTINUITY).
 };
 
 /**
  * @brief Quality variant stream within a master playlist (#EXT-X-STREAM-INF).
  */
 struct VariantStreamRef {
-  std::string uri{};          ///< URI of the media playlist.
-  uint32_t bandwidth{0};    ///< Bitrate in bits/second.
-  Resolution resolution{};  ///< Video width and height.
-  double frame_rate{0.0};   ///< Frames per second (optional).
-  std::string codecs{};       ///< RFC 6381 identifiers (e.g., "avc1.64002a,mp4a.40.2").
+  std::string_view uri{};     ///< URI of the media playlist.
+  std::string_view codecs{};  ///< RFC 6381 identifiers (e.g., "avc1.64002a,mp4a.40.2").
+  uint32_t bandwidth{0};      ///< Bitrate in bits/second.
+  Resolution resolution{};    ///< Video width and height.
+  double frame_rate{0.0};     ///< Frames per second (optional).
 };
 
 /**

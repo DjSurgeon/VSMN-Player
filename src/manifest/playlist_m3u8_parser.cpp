@@ -185,36 +185,9 @@ struct ParseContext {
   SegmentBuilder& segment_builder;
   PendingVariant& variant_builder;
   uint32_t line_num{0};
-  std::string_view base_url;
 };
 
-/**
- * @brief Resolve relative URIs defensively without overengineering.
- */
-[[nodiscard]] std::string resolveUri(std::string_view uri, std::string_view base_url) {
-  if (uri.starts_with("http://") || uri.starts_with("https://")) {
-    return std::string(uri);
-  }
-
-  if (uri.starts_with("/")) {
-    // Relative to host root
-    const auto scheme_end = base_url.find("://");
-    if (scheme_end != std::string_view::npos) {
-      const auto host_end = base_url.find('/', scheme_end + 3);
-      const auto root =
-          (host_end != std::string_view::npos) ? base_url.substr(0, host_end) : base_url;
-      return std::string(root).append(uri);
-    }
-  }
-
-  // Relative to current directory of base_url
-  const auto last_slash = base_url.rfind('/');
-  if (last_slash != std::string_view::npos) {
-    return std::string(base_url.substr(0, last_slash + 1)).append(uri);
-  }
-
-  return std::string(base_url).append("/").append(uri);
-}
+// resolveUri is removed. It's the network layer's responsibility to resolve relative URLs.
 
 std::optional<ParseError> parseExtInf(std::string_view line, uint32_t line_num,
                                       SegmentBuilder& builder) {
@@ -235,7 +208,7 @@ std::optional<ParseError> parseExtInf(std::string_view line, uint32_t line_num,
   return std::nullopt;
 }
 
-std::optional<ParseError> commitSegment(std::string_view uri, std::string_view base_url,
+std::optional<ParseError> commitSegment(std::string_view uri,
                                         uint32_t line_num, SegmentBuilder& builder,
                                         Playlist& playlist) {
   if (!builder.active) {
@@ -244,7 +217,7 @@ std::optional<ParseError> commitSegment(std::string_view uri, std::string_view b
   }
 
   MediaSegmentRef segment;
-  segment.uri = resolveUri(uri, base_url);
+  segment.uri = uri;
   segment.duration = builder.duration;
   segment.sequence_index = playlist.media_sequence + playlist.segments.size();
   segment.is_discontinuity = builder.discontinuity;
@@ -254,7 +227,7 @@ std::optional<ParseError> commitSegment(std::string_view uri, std::string_view b
   return std::nullopt;
 }
 
-std::optional<ParseError> commitVariant(std::string_view uri, std::string_view base_url,
+std::optional<ParseError> commitVariant(std::string_view uri,
                                         uint32_t line_num, PendingVariant& builder,
                                         Playlist& playlist) {
   if (!builder.active) {
@@ -262,7 +235,7 @@ std::optional<ParseError> commitVariant(std::string_view uri, std::string_view b
                       "Variant URI without preceding #EXT-X-STREAM-INF"};
   }
 
-  builder.variant.uri = resolveUri(uri, base_url);
+  builder.variant.uri = uri;
   playlist.variants.push_back(std::move(builder.variant));
   builder.reset();
   return std::nullopt;
@@ -337,7 +310,7 @@ std::optional<ParseError> parseStreamInf(std::string_view line, uint32_t /*line_
     } else if (attr->key == "FRAME-RATE") {
       parseFrameRate(attr->value, builder);
     } else if (attr->key == "CODECS") {
-      builder.variant.codecs = std::string(attr->value);
+      builder.variant.codecs = attr->value;
     }
   }
 
@@ -394,7 +367,7 @@ constexpr std::array<TagDispatchEntry, 6> k_tag_dispatch_table{{
 }  // namespace
 
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-ParseResult M3u8Parser::parse(std::string_view content, std::string_view base_url) const {
+ParseResult M3u8Parser::parse(std::string_view content, std::string_view /*base_url*/) const {
   if (content.starts_with("\xEF\xBB\xBF")) {
     content.remove_prefix(3);
   }
@@ -416,16 +389,16 @@ ParseResult M3u8Parser::parse(std::string_view content, std::string_view base_ur
 
   while (const auto entry = reader.next()) {
     const auto [line, line_num] = *entry;
-    ParseContext ctx{playlist, segment_builder, variant_builder, line_num, base_url};
+    ParseContext ctx{playlist, segment_builder, variant_builder, line_num};
 
     // 1. Multimedia segment or variant URI line (doesn't start with '#')
     if (!line.starts_with('#')) {
       if (variant_builder.active) {
-        if (auto err = commitVariant(line, base_url, line_num, variant_builder, playlist)) {
+        if (auto err = commitVariant(line, line_num, variant_builder, playlist)) {
           return *err;
         }
       } else {
-        if (auto err = commitSegment(line, base_url, line_num, segment_builder, playlist)) {
+        if (auto err = commitSegment(line, line_num, segment_builder, playlist)) {
           return *err;
         }
       }
