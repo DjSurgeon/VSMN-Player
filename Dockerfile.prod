@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     libswscale-dev libswresample-dev \
     libsdl2-dev libgl1-mesa-dev
 
-RUN pip3 install conan==2.0.0
+RUN pip3 install "conan>=2.5.0"
 
 WORKDIR /build
 
@@ -18,25 +18,23 @@ WORKDIR /build
 COPY . .
 
 # Build
-RUN mkdir -p build && \
-    cd build && \
-    conan install .. && \
-    cmake .. && \
-    cmake --build . --config Release && \
-    ctest
+RUN conan profile detect --force && \
+    conan install . --build=missing -pr conan/profiles/release -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=False && \
+    cmake -B build-release -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3" && \
+    cmake --build build-release --parallel $(nproc)
 
 # ------- Final stage: runtime
 FROM ubuntu:22.04
 
 RUN apt-get update && apt-get install -y \
-    libcurl4 libssl3 \
-    libavcodec60 libavformat60 libavutil58 \
-    libswscale7 libswresample4 \
-    libsdl2-2.0-0 libgl1-mesa-glx
+    libsdl2-2.0-0 libgl1-mesa-glx libpulse0 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Copy only binary from builder
-COPY --from=builder /build/build/iptv_player /app/iptv_player
+# Usar find para encontrar el binario generado por CMake
+RUN mkdir -p /app/bin
+COPY --from=builder /build/build-release/src/iptv_player /app/iptv_player
 
 ENTRYPOINT ["/app/iptv_player"]

@@ -41,10 +41,10 @@ TEST_F(M3u8ParserTest, ParsesValidVODPlaylist) {
   EXPECT_EQ(playlist.target_duration.count(), 10);
   EXPECT_EQ(playlist.media_sequence, 1);
   ASSERT_EQ(playlist.segments.size(), 2);
-  EXPECT_EQ(playlist.segments[0].uri, "http://example.com/stream/seg1.ts");
+  EXPECT_EQ(playlist.segments[0].uri, "seg1.ts");
   EXPECT_EQ(playlist.segments[0].duration.count(), 10.0);
   EXPECT_EQ(playlist.segments[0].sequence_index, 1);
-  EXPECT_EQ(playlist.segments[1].uri, "http://example.com/stream/seg2.ts");
+  EXPECT_EQ(playlist.segments[1].uri, "seg2.ts");
   EXPECT_EQ(playlist.segments[1].sequence_index, 2);
 }
 

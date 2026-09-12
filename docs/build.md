@@ -21,6 +21,26 @@ We provide a zero-friction developer experience via Docker DevContainers. The co
 docker-compose exec dev bash -c "cmake --build build/Debug -j4"
 ```
 
+### Build Configurations (`CMAKE_BUILD_TYPE`)
+
+CMake supports different profiles out of the box. You should specify one during configuration:
+
+* **`Debug`**: (Default for development). Uses `-O0` (no optimization) and `-g` (full debug symbols).
+* **`Release`**: (For production). Uses `-O3` (maximum optimization) and strips debug symbols for maximum performance.
+* **`RelWithDebInfo`**: (For profiling). Uses `-O2` (high optimization) but keeps `-g` (debug symbols). Ideal for running Google Benchmark.
+
+### Build Variables (Options)
+
+Our `CMakeLists.txt` exposes several variables to toggle features on or off. Pass them during configuration using `-D<VARIABLE>=ON|OFF`.
+
+* `ENABLE_WARNINGS_AS_ERRORS`: Treats all compiler warnings as fatal errors. (Default: `OFF`)
+* `ENABLE_SANITIZERS`: Compiles with AddressSanitizer and UBSan. (Default: `OFF`)
+* `ENABLE_TSAN`: Compiles with ThreadSanitizer. Mutually exclusive with `ENABLE_SANITIZERS`. (Default: `OFF`)
+* `ENABLE_COVERAGE`: Injects coverage flags for `gcov`/`lcov`. (Default: `OFF`)
+* `BUILD_TESTS`: Compiles the `tests/` directory (GTest). (Default: `ON`)
+* `ENABLE_FUZZER`: Compiles the libFuzzer targets. (Default: `OFF`)
+* `ENABLE_BENCHMARKS`: Compiles the `benchmarks/` directory (Google Benchmark). (Default: `OFF`)
+
 ---
 
 ## 🛡️ Static Analysis (Linting)

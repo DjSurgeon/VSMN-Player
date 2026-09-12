@@ -1,0 +1,8 @@
+include(default)
+
+[settings]
+build_type=Debug
+
+[conf]
+tools.build:cxxflags=["-O0", "-g"]
+tools.build:cflags=["-O0", "-g"]

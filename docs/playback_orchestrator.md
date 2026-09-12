@@ -30,13 +30,14 @@ Minimizar el impacto de la latencia (RTT) en el establecimiento de conexiones TC
 
 Supervivencia bajo condiciones de red extremas (ej. 2G / túneles).
 
-- **Estrategia:** Cuando la red es insuficiente incluso para el nivel más bajo de vídeo (ej. 144p), el orquestador descarta los *frames* de vídeo y canaliza exclusivamente los de audio hacia el decodificador. 
+- **Estrategia:** Cuando la red es insuficiente incluso para el nivel más bajo de vídeo (ej. 144p), el orquestador descarta los *frames* de vídeo y canaliza exclusivamente los de audio hacia el decodificador.
 - **Experiencia de usuario:** Se prefiere imagen congelada con audio continuo antes que un "loading" silencioso.
 - **Consideración:** El Demuxer (FFmpeg) deberá tolerar "agujeros" (gaps) masivos en los timestamps del stream de vídeo sin desincronizar la pista de audio principal, logrando reenganchar limpiamente cuando el vídeo vuelva a estar disponible.
 
 ## Integración C++20 Propuesta
 
 Para aislar esta complejidad y no contaminar la capa de red ni la del parser:
+
 1. **Hilo de Ingesta (Productor):** Dedicado exclusivamente a las peticiones HTTP y evaluación ABR.
 2. **Hilo de Reproducción (Consumidor):** Interacciona con el decodificador.
 3. **Comunicación Concurrent Lock-Free:** Mediante colas seguras para transferir bloques de memoria sin bloqueos indeseados.

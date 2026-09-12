@@ -27,12 +27,12 @@ TOTAL: 12 SEMANAS (15h/week part-time) o 8 SEMANAS (full-time)
 
 #### **Monday (8 hours)**
 
-- [ ] Finalizar arquitectura general (DONE: IPTV_PLAYER_ARQUITECTURA.md)
-- [ ] Finalizar data structures design (DONE: IPTV_PLAYER_DATA_DESIGN.md)
-- [ ] Crear decision log (este documento)
-- [ ] Setup GitHub repo (private → public after phase 1)
-- [ ] GitHub Pages skeleton (for docs)
-- [ ] Definir conventions (code style, naming, folder structure)
+- [x] Finalizar arquitectura general (DONE: IPTV_PLAYER_ARQUITECTURA.md)
+- [x] Finalizar data structures design (DONE: IPTV_PLAYER_DATA_DESIGN.md)
+- [x] Crear decision log (este documento)
+- [x] Setup GitHub repo (private → public after phase 1)
+- [x] GitHub Pages skeleton (for docs)
+- [x] Definir conventions (code style, naming, folder structure)
 
 **Decision Log Entry:**
 
@@ -48,12 +48,12 @@ DECISION #1: Repository Visibility
 
 #### **Tuesday (8 hours)**
 
-- [ ] Crear estructura de carpetas (folder tree)
-- [ ] Crear CMakeLists.txt skeleton (compila pero no hace nada)
-- [ ] Crear conanfile.txt con todas las deps
-- [ ] Crear .github/workflows skeleton (builds, tests, coverage)
-- [ ] Setup Dockerfile & docker-compose.yml
-- [ ] Documentar setup instructions (BUILD.md)
+- [x] Crear estructura de carpetas (folder tree)
+- [x] Crear CMakeLists.txt skeleton (compila pero no hace nada)
+- [x] Crear conanfile.txt con todas las deps
+- [x] Crear .github/workflows skeleton (builds, tests, coverage)
+- [x] Setup Dockerfile & docker-compose.yml
+- [x] Documentar setup instructions (BUILD.md)
 
 **Decision Log Entry:**
 
@@ -71,15 +71,15 @@ DECISION #2: Build System & Package Manager
 
 #### **Wednesday (8 hours)**
 
-- [ ] Diseñar headers principales (sin .cpp)
-  - [ ] network/network_subsystem.h
-  - [ ] decoder/decoder_subsystem.h
-  - [ ] render/render_subsystem.h
-  - [ ] controller/controller.h
-  - [ ] gui/gui_manager.h
-  - [ ] common/types.h (all shared types)
-  - [ ] common/queue.h (thread-safe queue)
-  - [ ] common/logging.h
+- [x] Diseñar headers principales (sin .cpp)
+  - [x] network/network_subsystem.h
+  - [x] decoder/decoder_subsystem.h
+  - [x] render/render_subsystem.h
+  - [x] controller/controller.h
+  - [x] gui/gui_manager.h
+  - [x] common/types.h (all shared types)
+  - [x] common/queue.h (thread-safe queue)
+  - [x] common/logging.h
 
 **Decision Log Entry:**
 
@@ -99,15 +99,15 @@ DECISION #3: Thread-Safe Queue Implementation
 
 #### **Thursday (8 hours)**
 
-- [ ] Diseñar types principales (common/types.h)
-  - [ ] ByteBuffer
-  - [ ] VideoFrame
-  - [ ] AudioFrame
-  - [ ] Channel
-  - [ ] PlaybackState enum
-  - [ ] Structs para Network/Decoder/Render stats
-- [ ] Crear stubs para funciones principales (declarations only)
-- [ ] Documentar invariants y pre/post-conditions
+- [x] Diseñar types principales (common/types.h)
+  - [x] ByteBuffer
+  - [x] VideoFrame
+  - [x] AudioFrame
+  - [x] Channel
+  - [x] PlaybackState enum
+  - [x] Structs para Network/Decoder/Render stats
+- [x] Crear stubs para funciones principales (declarations only)
+- [x] Documentar invariants y pre/post-conditions
 
 **Decision Log Entry:**
 
@@ -130,15 +130,15 @@ DECISION #4: Memory Management Strategy
 
 #### **Friday (8 hours)**
 
-- [ ] Crear test skeleton (tests/CMakeLists.txt)
-- [ ] Setup GTest framework
-- [ ] Crear dummy unit tests (empty, just compile)
-- [ ] Crear CI/CD workflows (GitHub Actions)
-  - [ ] build.yml (build on push)
-  - [ ] test.yml (ctest on push)
-  - [ ] sanitizers.yml (ASan/TSan)
-  - [ ] coverage.yml (code coverage)
-- [ ] Documentar testing strategy (TESTING.md)
+- [x] Crear test skeleton (tests/CMakeLists.txt)
+- [x] Setup GTest framework
+- [x] Crear dummy unit tests (empty, just compile)
+- [x] Crear CI/CD workflows (GitHub Actions)
+  - [x] build.yml (build on push)
+  - [x] test.yml (ctest on push)
+  - [x] sanitizers.yml (ASan/TSan)
+  - [x] coverage.yml (code coverage)
+- [x] Documentar testing strategy (TESTING.md)
 
 **Decision Log Entry:**
 
@@ -155,49 +155,49 @@ DECISION #5: Testing Framework
 
 #### **Monday (8 hours)**
 
-- [ ] Setup local development environment
-  - [ ] Docker dev container (optional but recommended)
-  - [ ] Documentation: env setup instructions
-  - [ ] VSCode dev container config (.devcontainer)
-- [ ] Create DEVELOPMENT.md with:
-  - [ ] How to clone and build
-  - [ ] How to run tests locally
-  - [ ] How to debug
-  - [ ] IDE setup (VSCode, CLion, etc)
-- [ ] Setup git workflow
-  - [ ] main (stable, PR only)
-  - [ ] develop (integration branch)
-  - [ ] feature/* (feature branches)
-  - [ ] Branch protection rules
+- [x] Setup local development environment
+  - [x] Docker dev container (optional but recommended)
+  - [x] Documentation: env setup instructions
+  - [x] VSCode dev container config (.devcontainer)
+- [x] Create DEVELOPMENT.md with:
+  - [x] How to clone and build
+  - [x] How to run tests locally
+  - [x] How to debug
+  - [x] IDE setup (VSCode, CLion, etc)
+- [x] Setup git workflow
+  - [x] main (stable, PR only)
+  - [x] develop (integration branch)
+  - [x] feature/* (feature branches)
+  - [x] Branch protection rules
 
 ---
 
 #### **Tuesday (8 hours)**
 
-- [ ] Create initial CI/CD pipeline
-  - [ ] Push to develop → runs build + tests
-  - [ ] PR to main → runs all checks
-  - [ ] Merging to main → creates GitHub release
-- [ ] Setup code quality tools
-  - [ ] clang-format (code formatting)
-  - [ ] clang-tidy (static analysis)
-  - [ ] cppcheck (additional analysis)
-- [ ] Create pre-commit hooks (optional)
+- [x] Create initial CI/CD pipeline
+  - [x] Push to develop → runs build + tests
+  - [x] PR to main → runs all checks
+  - [x] Merging to main → creates GitHub release
+- [x] Setup code quality tools
+  - [x] clang-format (code formatting)
+  - [x] clang-tidy (static analysis)
+  - [x] cppcheck (additional analysis)
+- [x] Create pre-commit hooks (optional)
 
 ---
 
 #### **Wednesday (8 hours)**
 
-- [ ] Design CMake structure
-  - [ ] Root CMakeLists.txt
-  - [ ] src/CMakeLists.txt
-  - [ ] tests/CMakeLists.txt
-  - [ ] Separate builds: main app, tests, tools
-- [ ] Create build configurations
-  - [ ] Debug (with symbols, no optimization)
-  - [ ] Release (optimized, stripped)
-  - [ ] RelWithDebInfo (optimized + symbols)
-- [ ] Document build variables
+- [x] Design CMake structure
+  - [x] Root CMakeLists.txt
+  - [x] src/CMakeLists.txt
+  - [x] tests/CMakeLists.txt
+  - [x] Separate builds: main app, tests, tools
+- [x] Create build configurations
+  - [x] Debug (with symbols, no optimization)
+  - [x] Release (optimized, stripped)
+  - [x] RelWithDebInfo (optimized + symbols)
+- [x] Document build variables
 
 **Decision Log Entry:**
 
@@ -214,12 +214,12 @@ DECISION #6: Compiler & C++ Version
 
 #### **Thursday (8 hours)**
 
-- [ ] Setup Conan configuration
-  - [ ] Define all dependencies (FFmpeg, SDL2, OpenGL, spdlog, GTest, ImGui)
-  - [ ] Version pinning (reproducible builds)
-  - [ ] Platform-specific variants
-- [ ] Create conan profiles (Debug, Release, Sanitizer)
-- [ ] Document dependency management
+- [x] Setup Conan configuration
+  - [x] Define all dependencies (FFmpeg, SDL2, OpenGL, spdlog, GTest, ImGui)
+  - [x] Version pinning (reproducible builds)
+  - [x] Platform-specific variants
+- [x] Create conan profiles (Debug, Release, Sanitizer)
+- [x] Document dependency management
 
 **Decision Log Entry:**
 
@@ -237,13 +237,13 @@ DECISION #7: GUI Framework (ImGui vs Qt)
 
 #### **Friday (8 hours)**
 
-- [ ] Create Docker configuration
-  - [ ] Dockerfile (multi-stage)
-  - [ ] docker-compose.yml (dev environment)
-  - [ ] Documentation (DOCKER.md)
-- [ ] Test Docker build end-to-end
-- [ ] Create .dockerignore (optimize image)
-- [ ] Final README.md skeleton (pre-phase 1)
+- [x] Create Docker configuration
+  - [x] Dockerfile (multi-stage)
+  - [x] docker-compose.yml (dev environment)
+  - [x] Documentation (DOCKER.md)
+- [x] Test Docker build end-to-end
+- [x] Create .dockerignore (optimize image)
+- [x] Final README.md skeleton (pre-phase 1)
 
 ---
 

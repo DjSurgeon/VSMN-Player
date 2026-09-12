@@ -65,22 +65,8 @@ find_package(CURL REQUIRED)
 # Include public headers
 include_directories(include)
 
-# Core library definition
-add_library(iptv_core STATIC
-    src/pipeline/dummy.cpp
-    src/network/http_curl_callbacks.cpp
-    src/network/http_client.cpp
-    src/network/http_init.cpp
-    src/manifest/playlist_m3u8_parser.cpp
-)
-target_include_directories(iptv_core PUBLIC include)
-target_compile_options(iptv_core PRIVATE ${PROJECT_WARNINGS})
-target_link_libraries(iptv_core PUBLIC spdlog::spdlog CURL::libcurl)
-
-# Main executable
-add_executable(iptv_player src/main.cpp)
-target_compile_options(iptv_player PRIVATE ${PROJECT_WARNINGS})
-target_link_libraries(iptv_player PRIVATE iptv_core)
+# Include source directories
+add_subdirectory(src)
 
 # Unit tests
 if(BUILD_TESTS)

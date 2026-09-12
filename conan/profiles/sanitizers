@@ -1,0 +1,10 @@
+include(default)
+
+[settings]
+build_type=Debug
+
+[conf]
+tools.build:cxxflags=["-O0", "-g", "-fsanitize=address,undefined", "-fno-omit-frame-pointer"]
+tools.build:cflags=["-O0", "-g", "-fsanitize=address,undefined", "-fno-omit-frame-pointer"]
+tools.build:sharedlinkflags=["-fsanitize=address,undefined"]
+tools.build:exelinkflags=["-fsanitize=address,undefined"]

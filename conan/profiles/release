@@ -1,0 +1,8 @@
+include(default)
+
+[settings]
+build_type=Release
+
+[conf]
+tools.build:cxxflags=["-O3", "-march=native"]
+tools.build:cflags=["-O3", "-march=native"]
