@@ -208,9 +208,8 @@ std::optional<ParseError> parseExtInf(std::string_view line, uint32_t line_num,
   return std::nullopt;
 }
 
-std::optional<ParseError> commitSegment(std::string_view uri,
-                                        uint32_t line_num, SegmentBuilder& builder,
-                                        Playlist& playlist) {
+std::optional<ParseError> commitSegment(std::string_view uri, uint32_t line_num,
+                                        SegmentBuilder& builder, Playlist& playlist) {
   if (!builder.active) {
     return ParseError{ParseErrorCode::MissingMandatoryTags, line_num,
                       "Segment URI without preceding #EXTINF"};
@@ -227,9 +226,8 @@ std::optional<ParseError> commitSegment(std::string_view uri,
   return std::nullopt;
 }
 
-std::optional<ParseError> commitVariant(std::string_view uri,
-                                        uint32_t line_num, PendingVariant& builder,
-                                        Playlist& playlist) {
+std::optional<ParseError> commitVariant(std::string_view uri, uint32_t line_num,
+                                        PendingVariant& builder, Playlist& playlist) {
   if (!builder.active) {
     return ParseError{ParseErrorCode::MissingMandatoryTags, line_num,
                       "Variant URI without preceding #EXT-X-STREAM-INF"};
@@ -420,9 +418,8 @@ ParseResult M3u8Parser::parse(std::string_view content, std::string_view /*base_
     playlist.type = PlaylistType::Master;
 
     // Sort variants ascending by bandwidth (Fast Start strategy standard)
-    std::sort(playlist.variants.begin(), playlist.variants.end(), [](const auto& left, const auto& right) {
-      return left.bandwidth < right.bandwidth;
-    });
+    std::sort(playlist.variants.begin(), playlist.variants.end(),
+              [](const auto& left, const auto& right) { return left.bandwidth < right.bandwidth; });
   } else if (!playlist.has_endlist) {
     playlist.type = PlaylistType::MediaLive;
   }

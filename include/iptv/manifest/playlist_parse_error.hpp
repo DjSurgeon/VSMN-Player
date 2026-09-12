@@ -24,7 +24,7 @@ enum class ParseErrorCode : uint8_t {
 struct ParseError {
   ParseErrorCode code{ParseErrorCode::None};
   uint32_t line_number{0};  ///< 1-based line where failure was encountered.
-  std::string message{};      ///< Human-readable diagnostic message.
+  std::string message{};    ///< Human-readable diagnostic message.
 };
 
 }  // namespace iptv::manifest

@@ -245,13 +245,13 @@ TEST_F(M3u8ParserTest, ParsesGiantManifest) {
   // shouldn't consume anything beyond the vector capacity of MediaSegmentRef.
   std::string giant_manifest;
   size_t count = 1000000;
-  giant_manifest.reserve(count * 30 + 50); // Roughly 30MB string
-  
+  giant_manifest.reserve(count * 30 + 50);  // Roughly 30MB string
+
   giant_manifest.append("#EXTM3U\n#EXT-X-TARGETDURATION:10\n");
   for (size_t i = 0; i < count; ++i) {
-      giant_manifest.append("#EXTINF:10.0,\nseg.ts\n");
+    giant_manifest.append("#EXTINF:10.0,\nseg.ts\n");
   }
-  
+
   auto result = parser.parse(giant_manifest, "http://example.com/");
   ASSERT_TRUE(result.hasValue());
   auto playlist = std::move(result).value();
