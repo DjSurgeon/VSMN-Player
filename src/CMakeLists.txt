@@ -3,6 +3,7 @@ add_library(iptv_core STATIC
     network/http_curl_callbacks.cpp
     network/http_client.cpp
     network/http_init.cpp
+    network/network_component.cpp
     manifest/playlist_attribute_scanner.cpp
     manifest/playlist_m3u8_parser.cpp
 )

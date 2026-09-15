@@ -165,9 +165,10 @@ TEST_F(ConcurrentQueueTest, TSanStressTest) {
     std::this_thread::yield();
   }
 
-  // Tell consumers to exit
+  // Tell consumers to exit and wait for them to finish processing
   for (auto& c : consumers) {
     c.request_stop();
+    c.join();
   }
 
   EXPECT_EQ(total_consumed.load(), num_producers * items_per_producer);

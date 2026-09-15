@@ -20,6 +20,7 @@ add_executable(unit_tests
     unit/manifest/test_playlist_attribute_scanner.cpp
     unit/manifest/test_playlist_m3u8_parser.cpp
     unit/common/test_concurrent_queue.cpp
+    unit/network/test_network_component.cpp
 )
 target_link_libraries(unit_tests PRIVATE GTest::gmock GTest::gtest_main iptv_core httplib::httplib)
 target_compile_options(unit_tests PRIVATE ${PROJECT_WARNINGS})
