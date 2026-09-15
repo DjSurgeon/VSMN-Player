@@ -149,7 +149,7 @@ std::optional<ParseError> commitSegment(std::string_view uri, uint32_t line_num,
   segment.sequence_index = playlist.media_sequence + playlist.segments.size();
   segment.is_discontinuity = builder.discontinuity;
 
-  playlist.segments.push_back(std::move(segment));
+  playlist.segments.push_back(segment);
   builder.reset();
   return std::nullopt;
 }
@@ -162,7 +162,7 @@ std::optional<ParseError> commitVariant(std::string_view uri, uint32_t line_num,
   }
 
   builder.variant.uri = uri;
-  playlist.variants.push_back(std::move(builder.variant));
+  playlist.variants.push_back(builder.variant);
   builder.reset();
   return std::nullopt;
 }
@@ -294,6 +294,7 @@ constexpr std::array<TagDispatchEntry, 6> k_tag_dispatch_table{{
 }  // namespace
 
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 ParseResult M3u8Parser::parse(std::string_view content, std::string_view /*base_url*/) const {
   if (content.starts_with("\xEF\xBB\xBF")) {
     content.remove_prefix(3);

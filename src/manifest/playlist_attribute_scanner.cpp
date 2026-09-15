@@ -46,7 +46,7 @@ std::string_view AttributeScanner::readValue() noexcept {
   return attrs_.substr(val_start, cursor_ - val_start);
 }
 
-std::string_view AttributeScanner::stripQuotes(std::string_view val) const noexcept {
+std::string_view AttributeScanner::stripQuotes(std::string_view val) noexcept {
   if (val.size() >= 2 && val.front() == '"' && val.back() == '"') {
     val.remove_prefix(1);
     val.remove_suffix(1);

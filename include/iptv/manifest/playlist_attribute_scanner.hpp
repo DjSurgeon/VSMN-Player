@@ -45,15 +45,17 @@ class AttributeScanner {
   /**
    * @brief Removes surrounding double quotes if present.
    */
-  [[nodiscard]] std::string_view stripQuotes(std::string_view val) const noexcept;
+  [[nodiscard]] static std::string_view stripQuotes(std::string_view val) noexcept;
 
   /**
    * @brief Advances the cursor past the comma separator if present.
    */
   void skipComma() noexcept;
 
+  // NOLINTBEGIN(cppcoreguidelines-non-private-member-variables-in-classes)
   std::string_view attrs_;
   size_t cursor_{0};
+  // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
 };
 
 }  // namespace iptv::manifest

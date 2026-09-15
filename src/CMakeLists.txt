@@ -1,6 +1,5 @@
 # Core library definition
 add_library(iptv_core STATIC
-    pipeline/dummy.cpp
     network/http_curl_callbacks.cpp
     network/http_client.cpp
     network/http_init.cpp
