@@ -17,6 +17,7 @@ Siguiendo los principios **YAGNI (You Aren't Gonna Need It)** y **Data-Oriented 
 - `include/iptv/render/render_subsystem.hpp`: Interfaz `IRenderSubsystem`.
 - `include/iptv/network/network_subsystem.hpp`: Interfaz `INetworkSubsystem`.
 - `include/iptv/gui/gui_manager.hpp`: Interfaz `IGuiManager`.
+- `include/iptv/manifest/i_playlist_parser.hpp`: Interfaz con 1 sola implementación y 0 consumidores polimórficos (`M3u8Parser` se instancia directamente).
 
 ### 2. Tipos y Logging No Utilizados
 

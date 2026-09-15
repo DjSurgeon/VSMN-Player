@@ -1,6 +1,8 @@
 #pragma once
 
-#include "iptv/manifest/i_playlist_parser.hpp"
+#include <string_view>
+
+#include "iptv/manifest/playlist_parse_result.hpp"
 
 namespace iptv::manifest {
 
@@ -9,7 +11,7 @@ namespace iptv::manifest {
  *
  * Implements a zero-copy line iteration approach to process M3U8 tags.
  */
-class M3u8Parser final : public IPlaylistParser {
+class M3u8Parser final {
  public:
   /**
    * @brief Default constructor.
@@ -19,7 +21,7 @@ class M3u8Parser final : public IPlaylistParser {
   /**
    * @brief Virtual destructor.
    */
-  ~M3u8Parser() override = default;
+  ~M3u8Parser() = default;
 
   // Rule of 5: Moveable, non-copyable parser
   M3u8Parser(const M3u8Parser&) = delete;
@@ -34,8 +36,7 @@ class M3u8Parser final : public IPlaylistParser {
    * @param base_url Absolute URL of the playlist used to resolve relative segment URIs.
    * @return ParseResult Encapsulating either a valid Playlist or a diagnostic ParseError.
    */
-  [[nodiscard]] ParseResult parse(std::string_view content,
-                                  std::string_view base_url) const override;
+  [[nodiscard]] ParseResult parse(std::string_view content, std::string_view base_url) const;
 };
 
 }  // namespace iptv::manifest
