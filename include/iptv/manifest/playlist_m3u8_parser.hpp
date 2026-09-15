@@ -15,35 +15,18 @@ struct ParseOptions {
 };
 
 /**
- * @brief Concrete parser for HLS Media Playlists (VOD & Live).
- *
- * Implements a zero-copy line iteration approach to process M3U8 tags.
+ * @brief Namespace for parsing HLS M3U8 playlists (Master and Media).
  */
-class M3u8Parser final {
- public:
-  /**
-   * @brief Default constructor.
-   */
-  M3u8Parser() = default;
+namespace M3u8Parser {
 
-  /**
-   * @brief Virtual destructor.
-   */
-  ~M3u8Parser() = default;
+/**
+ * @brief Parses the M3U8 media playlist.
+ *
+ * @param options The struct containing the content string_view and base_url.
+ * @return ParseResult Encapsulating either a valid Playlist or a diagnostic ParseError.
+ */
+[[nodiscard]] ParseResult parse(const ParseOptions& options);
 
-  // Rule of 5: Moveable, non-copyable parser
-  M3u8Parser(const M3u8Parser&) = delete;
-  M3u8Parser& operator=(const M3u8Parser&) = delete;
-  M3u8Parser(M3u8Parser&&) noexcept = default;
-  M3u8Parser& operator=(M3u8Parser&&) noexcept = default;
-
-  /**
-   * @brief Parses the M3U8 media playlist.
-   *
-   * @param options The struct containing the content string_view and base_url.
-   * @return ParseResult Encapsulating either a valid Playlist or a diagnostic ParseError.
-   */
-  [[nodiscard]] static ParseResult parse(const ParseOptions& options);
-};
+}  // namespace M3u8Parser
 
 }  // namespace iptv::manifest

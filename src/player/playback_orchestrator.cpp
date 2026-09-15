@@ -35,9 +35,10 @@ void PlaybackOrchestrator::start(const std::string& master_playlist_url) {
   stop();
 
   // Start the background thread
-  worker_thread_ = std::jthread([this, url = master_playlist_url](std::stop_token stop_token) {
-    downloadLoop(stop_token, url);
-  });
+  worker_thread_ =
+      std::jthread([this, url = master_playlist_url](const std::stop_token& stop_token) {
+        downloadLoop(stop_token, url);
+      });
 }
 
 void PlaybackOrchestrator::stop() {

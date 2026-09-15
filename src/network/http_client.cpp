@@ -41,7 +41,7 @@ void applyBackoffDelay(BackoffStrategy strategy, std::chrono::milliseconds& curr
 struct TransferContext {
   HttpResponse* response{nullptr};
   const std::stop_token* stop_token{nullptr};
-  size_t max_payload_bytes{0};
+
   bool aborted_by_user{false};
 };
 
@@ -57,7 +57,7 @@ size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) {
   }
 
   std::size_t total_size = size * nmemb;
-  // TODO: max_payload_bytes check could go here
+
 
   ctx->response->appendToBody(static_cast<const uint8_t*>(static_cast<const void*>(ptr)),
                               total_size);
@@ -222,7 +222,7 @@ HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseco
 
   TransferContext ctx{.response = &response,
                       .stop_token = &stop_token,
-                      .max_payload_bytes = 0,  // Unused for now
+
                       .aborted_by_user = false};
 
   pimpl_->bindResponseBuffers(ctx);

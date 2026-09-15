@@ -30,7 +30,6 @@ int main(int argc, char** argv) {
   std::uniform_int_distribution<int> char_dist(0, 255);
   std::uniform_int_distribution<int> mut_dist(1, 10);
 
-  M3u8Parser parser;
 
   for (size_t i = 0; i < iterations; ++i) {
     std::string mutated = base_manifest;

@@ -3,7 +3,6 @@
 #include <chrono>
 #include <cstdint>
 #include <cstring>
-#include <string>
 #include <vector>
 
 #include "iptv/network/http_status_code.hpp"

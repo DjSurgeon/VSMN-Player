@@ -49,14 +49,13 @@ static std::string generate_mock_manifest(size_t lines) {
 static void BM_ParseLargePlaylist(benchmark::State& state) {
   // Generate outside the timing loop
   std::string large_manifest = generate_mock_manifest(state.range(0));
-  iptv::manifest::M3u8Parser parser;
 
   for (auto _ : state) {
     // Start tracking allocations specifically during the parse phase
     g_allocations.store(0, std::memory_order_relaxed);
     g_track_allocations.store(true, std::memory_order_relaxed);
 
-    auto result = parser.parse({large_manifest, "http://cdn.example.com/"});
+    auto result = iptv::manifest::M3u8Parser::parse({large_manifest, "http://cdn.example.com/"});
 
     g_track_allocations.store(false, std::memory_order_relaxed);
 

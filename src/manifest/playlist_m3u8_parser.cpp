@@ -291,31 +291,6 @@ constexpr std::array<TagDispatchEntry, 6> k_tag_dispatch_table{{
     {"#EXT-X-STREAM-INF:", &handleStreamInf},
 }};
 
-
-std::optional<ParseError> validateManifestStart(std::string_view& content,
-                                                uint32_t& first_line_num) {
-  if (content.starts_with("\xEF\xBB\xBF")) {
-    content.remove_prefix(3);
-  }
-
-  if (content.empty()) {
-    return ParseError{ParseErrorCode::EmptyContent, 0, "Manifest content is empty"};
-  }
-
-  LineReader reader(content);
-  const auto first_line = reader.next();
-  if (!first_line || first_line->text != "#EXTM3U") {
-    first_line_num = first_line ? first_line->number : 0;
-    return ParseError{ParseErrorCode::InvalidHeader, first_line_num, "Missing #EXTM3U tag"};
-  }
-  first_line_num = first_line->number;
-
-  // Advance content past the first line so parseLines starts correctly
-  // LineReader doesn't have a way to extract the rest of the content,
-  // but we can just use the same reader inside parse.
-  return std::nullopt;
-}
-
 void preallocatePlaylist(std::string_view content, Playlist& playlist) {
   // Pre-allocation heuristic to achieve exact 1 allocation per playlist
   const bool is_master = content.find("#EXT-X-STREAM-INF:") != std::string_view::npos;
@@ -376,7 +351,9 @@ void finalizePlaylist(Playlist& playlist) {
 
 }  // namespace
 
-ParseResult M3u8Parser::parse(const ParseOptions& options) {
+namespace M3u8Parser {
+
+ParseResult parse(const ParseOptions& options) {
   std::string_view content = options.content;
   uint32_t first_line_num = 0;
 
@@ -406,5 +383,6 @@ ParseResult M3u8Parser::parse(const ParseOptions& options) {
 
   return playlist;
 }
+}  // namespace M3u8Parser
 
 }  // namespace iptv::manifest
