@@ -51,9 +51,8 @@ class HttpResponse {
    * @param expected_body_size Pre-allocation size for the payload vector.
    * @param latency Request latency.
    */
-  explicit HttpResponse(HttpStatusCode code, std::size_t expected_body_size = 0,
-                        std::chrono::milliseconds latency = std::chrono::milliseconds{0})
-      : status_code_(code), latency_(latency) {
+  explicit HttpResponse(HttpStatusCode code, std::size_t expected_body_size = 0)
+      : status_code_(code) {
     if (expected_body_size > 0) {
       body_.reserve(expected_body_size);
     }
@@ -89,7 +88,6 @@ class HttpResponse {
     body_.clear();
     status_code_ = HttpStatusCode::Unknown;
     metrics_ = NetworkMetrics{};
-    latency_ = std::chrono::milliseconds{0};
   }
 
   /**
@@ -129,11 +127,6 @@ class HttpResponse {
    */
   [[nodiscard]] std::size_t getBytesDownloaded() const noexcept { return body_.size(); }
 
-  /**
-   * @brief Retrieves the total latency of the request.
-   * @return std::chrono::milliseconds The latency.
-   */
-  [[nodiscard]] std::chrono::milliseconds getLatency() const noexcept { return latency_; }
 
   /**
    * @brief Retrieves detailed network metrics for the request.
@@ -156,7 +149,6 @@ class HttpResponse {
  private:
   HttpStatusCode status_code_;
   std::vector<uint8_t> body_;
-  std::chrono::milliseconds latency_;
   NetworkMetrics metrics_{};
 };
 
