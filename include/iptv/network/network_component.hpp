@@ -101,7 +101,7 @@ class NetworkComponent {
    * @param stop_token Token for fast cancellation from the ABR orchestrator.
    * @return A variant containing either the successfully downloaded bundle or an error.
    */
-  SegmentDownloadResult downloadSegment(const manifest::MediaSegmentRef& segment,
+  SegmentDownloadResult downloadSegment(const std::string& absolute_url,
                                         const std::stop_token& stop_token = {});
 
  private:

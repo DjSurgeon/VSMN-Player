@@ -12,6 +12,17 @@
 namespace iptv::player {
 
 /**
+ * @brief Encapsulates the mutable and immutable state of the background playback loop.
+ */
+struct PlaybackContext {
+  const std::string& master_url;
+  const manifest::Playlist& master_playlist;
+  std::string current_variant_uri;
+  uint64_t next_sequence_index{0};
+  double current_throughput{0.0};
+};
+
+/**
  * @brief Main orchestrator bridging the network layer with the playback queue.
  *
  * Manages the background download loop, ABR (Adaptive Bitrate) decision making,
@@ -72,39 +83,26 @@ class PlaybackOrchestrator {
   /**
    * @brief Manages the infinite loop for fetching variant playlists and segments.
    * @param stop_token Cooperative cancellation token.
-   * @param master_playlist The validated master playlist.
-   * @param initial_variant_uri The URI of the variant selected for the first attempt.
+   * @param ctx The active playback context state.
    */
-  void processVariantLoop(const std::stop_token& stop_token,
-                          const manifest::Playlist& master_playlist,
-                          const std::string& initial_variant_uri);
+  void processVariantLoop(const std::stop_token& stop_token, PlaybackContext& ctx);
 
   /**
    * @brief Iterates and downloads segments for the current variant.
    * @param stop_token Cooperative cancellation token.
-   * @param master_playlist The master playlist for ABR context.
+   * @param ctx The active playback context state.
    * @param variant_playlist The active variant playlist containing the segments.
-   * @param current_variant_uri [in, out] The URI of the active variant. May be updated if ABR
-   * switches.
-   * @param next_sequence_index [in, out] The index of the next segment to download.
-   * @param current_throughput [in, out] The measured throughput.
    * @return true if the loop should continue, false if a hard error occurred.
    */
-  bool downloadSegments(const std::stop_token& stop_token,
-                        const manifest::Playlist& master_playlist,
-                        const manifest::Playlist& variant_playlist,
-                        std::string& current_variant_uri, uint64_t& next_sequence_index,
-                        double& current_throughput);
+  bool downloadSegments(const std::stop_token& stop_token, PlaybackContext& ctx,
+                        const manifest::Playlist& variant_playlist);
 
   /**
    * @brief Evaluates if an ABR switch is necessary based on recent throughput.
-   * @param master_playlist The master playlist containing all variant options.
-   * @param current_variant_uri [in, out] The URI of the currently active variant.
-   * @param throughput The latest measured throughput in Mbps.
+   * @param ctx The active playback context state.
    * @return true if the variant switched, false otherwise.
    */
-  bool evaluateAbrSwitch(const manifest::Playlist& master_playlist,
-                         std::string& current_variant_uri, double throughput);
+  bool evaluateAbrSwitch(PlaybackContext& ctx);
 
   std::unique_ptr<network::NetworkComponent> network_;
   abr::AbrManager abr_manager_;

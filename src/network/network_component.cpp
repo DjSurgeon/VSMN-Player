@@ -66,11 +66,11 @@ PlaylistDownloadResult NetworkComponent::downloadPlaylist(const std::string& url
 /**
  * @brief Downloads a single media segment and encapsulates it with network metrics.
  */
-SegmentDownloadResult NetworkComponent::downloadSegment(const manifest::MediaSegmentRef& segment,
+SegmentDownloadResult NetworkComponent::downloadSegment(const std::string& absolute_url,
                                                         const std::stop_token& stop_token) {
   // Use a reasonable 30s timeout for media segments
   HttpResponse response =
-      http_client_->download(std::string(segment.uri), std::chrono::seconds(30), stop_token);
+      http_client_->download(absolute_url, std::chrono::seconds(30), stop_token);
 
   if (!response.isSuccess()) {
     if (stop_token.stop_requested()) {

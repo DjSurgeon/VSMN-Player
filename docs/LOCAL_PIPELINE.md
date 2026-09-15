@@ -387,7 +387,11 @@ cd build/Debug && find . -name '*.gcda' -delete && ctest --output-on-failure \
   && cd ../..
 
 echo "📝 [7/7] Markdown Lint..."
-npx -y markdownlint-cli "*.md" "docs/**/*.md" --config .markdownlint.json
+if command -v npx &> /dev/null; then
+  npx -y markdownlint-cli "*.md" "docs/**/*.md" --config .markdownlint.json
+else
+  echo "⚠️ npx no instalado, saltando lint de markdown."
+fi
 
 echo ""
 echo "🎉 ¡PIPELINE COMPLETO! Todo verde."
@@ -402,6 +406,10 @@ Guarda esto como `scripts/local-pipeline.sh`, dale permisos (`chmod +x scripts/l
 ### "command not found: clang-format"
 
 Estás fuera del contenedor Docker. Entra con `docker-compose exec dev bash`.
+
+### "npx: command not found" al ejecutar Markdown Lint
+
+El contenedor de C++ no incluye Node.js por defecto. El script moderno de `local-pipeline.sh` lo ignora de forma segura usando `command -v npx`. Si usas una versión vieja del script, añade esa comprobación o ignora el error.
 
 ### "compile_commands.json not found"
 

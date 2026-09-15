@@ -16,7 +16,7 @@ namespace {
   const auto code = static_cast<long>(status);
   return (res == CURLE_OPERATION_TIMEDOUT || res == CURLE_COULDNT_CONNECT ||
           res == CURLE_COULDNT_RESOLVE_HOST) ||
-         (code >= 500 && code < 600) || (code == 429);
+         (code >= 500 && code < 600) || status == HttpStatusCode::TooManyRequests;
 }
 
 void applyBackoffDelay(BackoffStrategy strategy, std::chrono::milliseconds& current_delay,

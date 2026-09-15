@@ -23,17 +23,21 @@ graph TD
     
     subgraph Pipeline
         HR --> |M3U8 Data| HLS[HLS Parser]
-        HLS --> |MPEG-TS Segments| DEC[Decoder]
+        HLS --> |Parsed Playlist| ORC[Playback Orchestrator]
+        ORC --> |MPEG-TS Segments| CQ[ConcurrentQueue]
+        CQ --> |Pop| DEC[Demuxer / Decoder]
     end
     
     subgraph Core Features
         Jitter[Jitter & Backoff] -.-> HC
-        SIMD[SIMD Memory Copy] -.-> HR
+        ABR[ABR Manager] -.-> ORC
     end
 
     style HC fill:#3f51b5,stroke:#fff,stroke-width:2px,color:#fff
     style HR fill:#3f51b5,stroke:#fff,stroke-width:2px,color:#fff
     style HLS fill:#009688,stroke:#fff,stroke-width:2px,color:#fff
+    style ORC fill:#ff9800,stroke:#fff,stroke-width:2px,color:#fff
+    style CQ fill:#9c27b0,stroke:#fff,stroke-width:2px,color:#fff
     style DEC fill:#e91e63,stroke:#fff,stroke-width:2px,color:#fff
 ```
 

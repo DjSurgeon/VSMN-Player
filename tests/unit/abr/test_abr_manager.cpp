@@ -24,7 +24,7 @@ class AbrManagerTest : public ::testing::Test {
 TEST_F(AbrManagerTest, EmptyVariantsThrowsException) {
   AbrManager abr;
   std::vector<VariantStreamRef> empty_variants;
-  EXPECT_THROW(abr.selectVariant(empty_variants, 10.0), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(abr.selectVariant(empty_variants, 10.0)), std::invalid_argument);
 }
 
 TEST_F(AbrManagerTest, InitialSelectionRespectsSafetyMargin) {
@@ -40,7 +40,7 @@ TEST_F(AbrManagerTest, EwmaIgnoresTransientDrops) {
   AbrManager abr(0.3);  // alpha = 0.3
 
   // First very fast download at 20 Mbps -> selects 1080p (8 Mbps)
-  abr.selectVariant(variants_, 20.0);
+  auto variant1 = abr.selectVariant(variants_, 20.0);
   EXPECT_EQ(abr.getCurrentVariantIndex(), 2);
 
   // Micro-drop: segment drops to 5 Mbps average.
@@ -57,7 +57,7 @@ TEST_F(AbrManagerTest, HysteresisBlocksPrematureUpgrades) {
   AbrManager abr(0.3);
 
   // Start low (3 Mbps). 80% = 2.4 Mbps -> Selects 360p (2 Mbps)
-  abr.selectVariant(variants_, 3.0);
+  auto variant1 = abr.selectVariant(variants_, 3.0);
   EXPECT_EQ(abr.getCurrentVariantIndex(), 0);
 
   // Massive network improvement to 20 Mbps.
@@ -65,11 +65,11 @@ TEST_F(AbrManagerTest, HysteresisBlocksPrematureUpgrades) {
   // 8.1 * 0.8 = 6.48 Mbps -> Ideal index is 1 (720p at 5Mbps).
 
   // Favorable segment 1: Hysteresis blocks upgrade
-  abr.selectVariant(variants_, 20.0);
+  auto variant2 = abr.selectVariant(variants_, 20.0);
   EXPECT_EQ(abr.getCurrentVariantIndex(), 0);
 
   // Favorable segment 2: Hysteresis blocks upgrade
-  abr.selectVariant(variants_, 20.0);
+  auto variant3 = abr.selectVariant(variants_, 20.0);
   EXPECT_EQ(abr.getCurrentVariantIndex(), 0);
 
   // Favorable segment 3: Hysteresis yields and upgrades! EWMA converged to >11Mbps,

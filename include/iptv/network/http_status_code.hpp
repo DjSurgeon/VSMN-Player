@@ -16,10 +16,13 @@ enum class HttpStatusCode : std::int16_t {
   // 4xx Client Error
   Forbidden = 403,
   NotFound = 404,
+  TooManyRequests = 429,
 
   // 5xx Server Error
   InternalServerError = 500,
+  BadGateway = 502,
   ServiceUnavailable = 503,
+  GatewayTimeout = 504,
 
   // Custom internal codes
   Unknown = -1

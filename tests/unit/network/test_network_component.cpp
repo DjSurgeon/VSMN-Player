@@ -68,11 +68,7 @@ TEST(NetworkComponentTest, DownloadSegmentSuccess) {
 
   NetworkComponent component(std::move(fake_client));
 
-  manifest::MediaSegmentRef segment;
-  segment.uri = "http://example.com/seg1.ts";
-  segment.duration = std::chrono::duration<double>(10.0);
-
-  auto result = component.downloadSegment(segment);
+  auto result = component.downloadSegment("http://example.com/seg1.ts");
   ASSERT_TRUE(std::holds_alternative<MediaSegmentBundle>(result));
 
   auto bundle = std::get<MediaSegmentBundle>(std::move(result));
@@ -88,13 +84,10 @@ TEST(NetworkComponentTest, DownloadSegmentCancellation) {
 
   NetworkComponent component(std::move(fake_client));
 
-  manifest::MediaSegmentRef segment;
-  segment.uri = "http://example.com/seg1.ts";
-
   std::stop_source stop_source;
   stop_source.request_stop();  // Instantly cancel
 
-  auto result = component.downloadSegment(segment, stop_source.get_token());
+  auto result = component.downloadSegment("http://example.com/seg1.ts", stop_source.get_token());
   ASSERT_TRUE(std::holds_alternative<NetworkError>(result));
 
   auto error = std::get<NetworkError>(std::move(result));

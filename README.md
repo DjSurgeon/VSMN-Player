@@ -30,7 +30,7 @@ Engineered with a **Zero-Copy Memory Architecture** and heavily influenced by **
   - **Package Management:** Conan 2.0 orchestrating heavy dependencies (FFmpeg, SDL2, Dear ImGui) with absolute version pinning for reproducible builds.
 - **Zero-Friction Dev Environment:** 100% Plug & Play development using VSCode DevContainers. Your host machine stays clean.
 
-## 🏗️ Architecture Overview (Phase 2: Core Engine & Orchestrator Completed)
+## 🏗️ Architecture Overview (Phase 4: Zero-Copy & Context Architecture Completed)
 
 The system strictly adheres to the **Feature-Sliced Design (FSD)**, keeping domains decoupled and testable.
 *Note: We employ strict **YAGNI** (You Aren't Gonna Need It). Speculative architecture (GUI, Audio, Video Decoders) has been aggressively purged from the build system until the Core Network and Orchestrator layers are fully tested and functional.*

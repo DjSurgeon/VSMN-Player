@@ -27,5 +27,12 @@ add_executable(unit_tests
 target_link_libraries(unit_tests PRIVATE GTest::gmock GTest::gtest_main iptv_core httplib::httplib)
 target_compile_options(unit_tests PRIVATE ${PROJECT_WARNINGS})
 
+add_executable(integration_tests
+    integration/test_network_subsystem.cpp
+)
+target_link_libraries(integration_tests PRIVATE GTest::gmock GTest::gtest_main iptv_core httplib::httplib)
+target_compile_options(integration_tests PRIVATE ${PROJECT_WARNINGS})
+
 include(GoogleTest)
 gtest_discover_tests(unit_tests)
+gtest_discover_tests(integration_tests)

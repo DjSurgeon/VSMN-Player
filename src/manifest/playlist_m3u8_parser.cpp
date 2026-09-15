@@ -336,7 +336,6 @@ std::optional<ParseError> parseLines(LineReader& reader, Playlist& playlist) {
     const auto [line, line_num] = *entry;
     ParseContext ctx{playlist, segment_builder, variant_builder, line_num};
 
-    // 1. Multimedia segment or variant URI line (doesn't start with '#')
     if (!line.starts_with('#')) {
       if (variant_builder.active) {
         if (auto err = commitVariant(line, line_num, variant_builder, playlist)) {
