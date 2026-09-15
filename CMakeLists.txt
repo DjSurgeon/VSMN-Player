@@ -59,7 +59,6 @@ if(ENABLE_COVERAGE)
 endif()
 
 # Locate dependencies managed by Conan 2
-find_package(spdlog REQUIRED)
 find_package(CURL REQUIRED)
 
 # Include public headers

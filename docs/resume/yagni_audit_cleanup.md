@@ -24,7 +24,12 @@ Siguiendo los principios **YAGNI (You Aren't Gonna Need It)** y **Data-Oriented 
 - `include/iptv/common/types.hpp`: 12 tipos base (`PlaybackState`, `Packet`, `VideoFrame`, `AudioFrame`, etc.) que no se utilizaban en la base de código actual.
 - `include/iptv/common/logging.hpp`: Wrappers de `spdlog` que nunca fueron invocados.
 
-### 3. Placeholders y Scaffolding
+### 3. Dependencias Fantasma (Conan & CMake)
+
+- **Multimedia & GUI (`ffmpeg`, `sdl2`, `opengl`, `imgui`)**: Declaradas en `conanfile.py` preparándose para el Decoder y el Render, pero purgadas para acelerar la compilación y reducir el consumo de disco hasta que realmente se implemente el flujo de vídeo.
+- **Logging (`spdlog`)**: Linkeado globalmente pero sin ningún `logger` activo ni uso real en el código.
+
+### 4. Placeholders y Scaffolding
 
 - `src/pipeline/dummy.cpp`: Placeholder vacío.
 - Directorios vacíos en `src/` y `include/iptv/`.
