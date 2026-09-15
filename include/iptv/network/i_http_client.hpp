@@ -44,7 +44,7 @@ class IHttpClient {
    * @return HttpResponse The result of the HTTP request.
    */
   virtual HttpResponse download(const std::string& url, std::chrono::milliseconds timeout,
-                                std::stop_token stop_token = {}) = 0;
+                                const std::stop_token& stop_token = {}) = 0;
 
   /**
    * @brief Configures global network options (TLS, User-Agent, redirects).

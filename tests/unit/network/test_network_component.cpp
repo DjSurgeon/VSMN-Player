@@ -15,7 +15,7 @@ class FakeHttpClient : public IHttpClient {
   HttpResponse fake_response{HttpStatusCode::Ok};
 
   HttpResponse download(const std::string& /*url*/, std::chrono::milliseconds /*timeout_ms*/,
-                        std::stop_token /*stop_token*/ = {}) override {
+                        const std::stop_token& /*stop_token*/ = {}) override {
     return std::move(fake_response);
   }
 

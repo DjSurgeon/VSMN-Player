@@ -291,13 +291,96 @@ constexpr std::array<TagDispatchEntry, 6> k_tag_dispatch_table{{
     {"#EXT-X-STREAM-INF:", &handleStreamInf},
 }};
 
+
+std::optional<ParseError> validateManifestStart(std::string_view& content,
+                                                uint32_t& first_line_num) {
+  if (content.starts_with("\xEF\xBB\xBF")) {
+    content.remove_prefix(3);
+  }
+
+  if (content.empty()) {
+    return ParseError{ParseErrorCode::EmptyContent, 0, "Manifest content is empty"};
+  }
+
+  LineReader reader(content);
+  const auto first_line = reader.next();
+  if (!first_line || first_line->text != "#EXTM3U") {
+    first_line_num = first_line ? first_line->number : 0;
+    return ParseError{ParseErrorCode::InvalidHeader, first_line_num, "Missing #EXTM3U tag"};
+  }
+  first_line_num = first_line->number;
+
+  // Advance content past the first line so parseLines starts correctly
+  // LineReader doesn't have a way to extract the rest of the content,
+  // but we can just use the same reader inside parse.
+  return std::nullopt;
+}
+
+void preallocatePlaylist(std::string_view content, Playlist& playlist) {
+  // Pre-allocation heuristic to achieve exact 1 allocation per playlist
+  const bool is_master = content.find("#EXT-X-STREAM-INF:") != std::string_view::npos;
+  const size_t estimated_elements = content.size() / 48;
+
+  if (is_master) {
+    playlist.variants.reserve(estimated_elements);
+  } else {
+    playlist.segments.reserve(estimated_elements);
+  }
+}
+
+std::optional<ParseError> parseLines(LineReader& reader, Playlist& playlist) {
+  SegmentBuilder segment_builder;
+  PendingVariant variant_builder;
+
+  while (const auto entry = reader.next()) {
+    const auto [line, line_num] = *entry;
+    ParseContext ctx{playlist, segment_builder, variant_builder, line_num};
+
+    // 1. Multimedia segment or variant URI line (doesn't start with '#')
+    if (!line.starts_with('#')) {
+      if (variant_builder.active) {
+        if (auto err = commitVariant(line, line_num, variant_builder, playlist)) {
+          return err;
+        }
+      } else {
+        if (auto err = commitSegment(line, line_num, segment_builder, playlist)) {
+          return err;
+        }
+      }
+      continue;
+    }
+
+    // 2. Dispatch through the static tag table
+    for (const auto& dispatch_entry : k_tag_dispatch_table) {
+      if (line.starts_with(dispatch_entry.prefix)) {
+        if (auto err = dispatch_entry.handler(line, ctx)) {
+          return err;
+        }
+        break;
+      }
+    }
+  }
+  return std::nullopt;
+}
+
+void finalizePlaylist(Playlist& playlist) {
+  if (!playlist.variants.empty()) {
+    playlist.type = PlaylistType::Master;
+
+    // Sort variants ascending by bandwidth (Fast Start strategy standard)
+    std::sort(playlist.variants.begin(), playlist.variants.end(),
+              [](const auto& left, const auto& right) { return left.bandwidth < right.bandwidth; });
+  } else if (!playlist.has_endlist) {
+    playlist.type = PlaylistType::MediaLive;
+  }
+}
+
 }  // namespace
 
-// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
-// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-ParseResult M3u8Parser::parse(std::string_view content, std::string_view /*base_url*/)
-    const {  // NOLINT(readability-function-cognitive-complexity)
+ParseResult M3u8Parser::parse(const ParseOptions& options) {
+  std::string_view content = options.content;
+  uint32_t first_line_num = 0;
+
   if (content.starts_with("\xEF\xBB\xBF")) {
     content.remove_prefix(3);
   }
@@ -314,58 +397,13 @@ ParseResult M3u8Parser::parse(std::string_view content, std::string_view /*base_
   }
 
   Playlist playlist;
-  SegmentBuilder segment_builder;
-  PendingVariant variant_builder;
+  preallocatePlaylist(options.content, playlist);
 
-  // Pre-allocation heuristic to achieve exact 1 allocation per playlist
-  const bool is_master = content.find("#EXT-X-STREAM-INF:") != std::string_view::npos;
-  const size_t estimated_elements = content.size() / 48;
-
-  if (is_master) {
-    playlist.variants.reserve(estimated_elements);
-  } else {
-    playlist.segments.reserve(estimated_elements);
+  if (auto err = parseLines(reader, playlist)) {
+    return *err;
   }
 
-  while (const auto entry = reader.next()) {
-    const auto [line, line_num] = *entry;
-    ParseContext ctx{playlist, segment_builder, variant_builder, line_num};
-
-    // 1. Multimedia segment or variant URI line (doesn't start with '#')
-    if (!line.starts_with('#')) {
-      // NOLINTNEXTLINE(bugprone-branch-clone)
-      if (variant_builder.active) {
-        if (auto err = commitVariant(line, line_num, variant_builder, playlist)) {
-          return *err;
-        }
-      } else {
-        if (auto err = commitSegment(line, line_num, segment_builder, playlist)) {
-          return *err;
-        }
-      }
-      continue;
-    }
-
-    // 2. Dispatch through the static tag table
-    for (const auto& dispatch_entry : k_tag_dispatch_table) {
-      if (line.starts_with(dispatch_entry.prefix)) {
-        if (auto err = dispatch_entry.handler(line, ctx)) {
-          return *err;
-        }
-        break;
-      }
-    }
-  }
-
-  if (!playlist.variants.empty()) {
-    playlist.type = PlaylistType::Master;
-
-    // Sort variants ascending by bandwidth (Fast Start strategy standard)
-    std::sort(playlist.variants.begin(), playlist.variants.end(),
-              [](const auto& left, const auto& right) { return left.bandwidth < right.bandwidth; });
-  } else if (!playlist.has_endlist) {
-    playlist.type = PlaylistType::MediaLive;
-  }
+  finalizePlaylist(playlist);
 
   return playlist;
 }

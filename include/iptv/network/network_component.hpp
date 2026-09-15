@@ -57,9 +57,23 @@ struct MediaSegmentBundle {
 
 using SegmentDownloadResult = std::variant<MediaSegmentBundle, NetworkError>;
 
+/**
+ * @brief High-level component responsible for coordinating network downloads and parsing.
+ *
+ * Encapsulates the HTTP client, handles memory transitions safely (zero-copy),
+ * and validates responses.
+ */
 class NetworkComponent {
  public:
+  /**
+   * @brief Constructs a new Network Component.
+   * @param http_client Unique pointer to the underlying HTTP client implementation.
+   */
   explicit NetworkComponent(std::unique_ptr<IHttpClient> http_client);
+
+  /**
+   * @brief Destroys the Network Component.
+   */
   ~NetworkComponent() = default;
 
   // Prevent copies
@@ -88,11 +102,36 @@ class NetworkComponent {
    * @return A variant containing either the successfully downloaded bundle or an error.
    */
   SegmentDownloadResult downloadSegment(const manifest::MediaSegmentRef& segment,
-                                        std::stop_token stop_token = {});
+                                        const std::stop_token& stop_token = {});
 
  private:
+  /**
+   * @brief Validates the HTTP response for errors.
+   * @param response The HTTP response received from the client.
+   * @return A NetworkError if the response failed, otherwise nullopt.
+   */
+  [[nodiscard]] static std::optional<NetworkError> validateHttpResponse(
+      const HttpResponse& response) noexcept;
+
+  /**
+   * @brief Parses the raw HTTP response body into a manifest playlist.
+   * @param response The HTTP response containing the raw manifest bytes.
+   * @param url The absolute URL of the manifest for relative URI resolution.
+   * @return A ParseResult containing either the parsed playlist or an error.
+   */
+  [[nodiscard]] static manifest::ParseResult parseManifest(const HttpResponse& response,
+                                                           const std::string& url);
+
+  /**
+   * @brief Assembles the raw memory and parsed playlist into a secure, zero-copy bundle.
+   * @param response The rvalue HTTP response to extract the memory buffer from.
+   * @param playlist The rvalue parsed playlist.
+   * @return The fully assembled ParsedPlaylistBundle.
+   */
+  [[nodiscard]] static ParsedPlaylistBundle assembleBundle(HttpResponse&& response,
+                                                           manifest::Playlist&& playlist) noexcept;
+
   std::unique_ptr<IHttpClient> http_client_;
-  manifest::M3u8Parser parser_;
 };
 
 }  // namespace iptv::network

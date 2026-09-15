@@ -184,12 +184,24 @@ class HttpClient::Impl {
 
 // Lifecycle methods for HttpClient
 
+/**
+ * @brief Constructs the HTTP client and its hidden implementation (Pimpl).
+ */
 HttpClient::HttpClient() : pimpl_(std::make_unique<Impl>()) {}
 
+/**
+ * @brief Destroys the HTTP client and cleans up the underlying curl handle.
+ */
 HttpClient::~HttpClient() = default;
 
+/**
+ * @brief Move constructor.
+ */
 HttpClient::HttpClient(HttpClient&& other) noexcept : pimpl_(std::move(other.pimpl_)) {}
 
+/**
+ * @brief Move assignment operator.
+ */
 HttpClient& HttpClient::operator=(HttpClient&& other) noexcept {
   if (this != &other) {
     pimpl_ = std::move(other.pimpl_);
@@ -199,8 +211,11 @@ HttpClient& HttpClient::operator=(HttpClient&& other) noexcept {
 
 // Interface implementations (Skeleton for now)
 
+/**
+ * @brief Executes a synchronous HTTP GET request with retries and timeout support.
+ */
 HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseconds timeout,
-                                  std::stop_token stop_token) {
+                                  const std::stop_token& stop_token) {
   pimpl_->prepareHandle(url, timeout);
 
   HttpResponse response(HttpStatusCode::Unknown);
@@ -242,6 +257,9 @@ HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseco
   return response;
 }
 
+/**
+ * @brief Sets global configurations for the curl handle (TLS, User-Agent, Timeouts).
+ */
 void HttpClient::setNetworkConfig(const NetworkConfig& config) {
   curl_easy_setopt(pimpl_->get(), CURLOPT_USERAGENT, config.user_agent.c_str());
   curl_easy_setopt(pimpl_->get(), CURLOPT_FOLLOWLOCATION, config.follow_redirects ? 1L : 0L);
@@ -257,6 +275,9 @@ void HttpClient::setNetworkConfig(const NetworkConfig& config) {
   curl_easy_setopt(pimpl_->get(), CURLOPT_LOW_SPEED_TIME, 3L);
 }
 
+/**
+ * @brief Updates the backoff and retry policy for network requests.
+ */
 void HttpClient::setRetryPolicy(const RetryPolicy& policy) { pimpl_->policy_ = policy; }
 
 }  // namespace iptv::network

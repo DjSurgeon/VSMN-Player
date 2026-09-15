@@ -2,43 +2,72 @@
 
 namespace iptv::network {
 
+/**
+ * @brief Constructs the NetworkComponent with a specific HTTP client instance.
+ */
 NetworkComponent::NetworkComponent(std::unique_ptr<IHttpClient> http_client)
     : http_client_(std::move(http_client)) {}
 
-PlaylistDownloadResult NetworkComponent::downloadPlaylist(const std::string& url,
-                                                          std::chrono::milliseconds timeout_ms) {
-  // 1. Download
-  HttpResponse response = http_client_->download(url, timeout_ms);
-
+/**
+ * @brief Validates the HTTP response status code.
+ */
+std::optional<NetworkError> NetworkComponent::validateHttpResponse(
+    const HttpResponse& response) noexcept {
   if (!response.isSuccess()) {
     return NetworkError{"HTTP Request failed with status " +
                         std::to_string(static_cast<int>(response.getStatusCode()))};
   }
+  return std::nullopt;
+}
 
-  // 2. Parse (Zero-Copy)
+/**
+ * @brief Parses the manifest bytes into a Playlist structure without copying memory.
+ */
+manifest::ParseResult NetworkComponent::parseManifest(const HttpResponse& response,
+                                                      const std::string& url) {
   const auto& body_ref = response.getBody();
-  std::string_view content(
-      reinterpret_cast<const char*>(
-          body_ref.data()),  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-      body_ref.size());
+  std::string_view content(static_cast<const char*>(static_cast<const void*>(body_ref.data())),
+                           body_ref.size());
 
-  manifest::ParseResult parse_result = parser_.parse(content, url);
+  return manifest::M3u8Parser::parse({content, url});
+}
+
+/**
+ * @brief Assembles the ParsedPlaylistBundle by moving the raw buffer and the playlist.
+ */
+ParsedPlaylistBundle NetworkComponent::assembleBundle(HttpResponse&& response,
+                                                      manifest::Playlist&& playlist) noexcept {
+  ParsedPlaylistBundle bundle;
+  bundle.raw_buffer = response.extractBody();
+  bundle.playlist = std::move(playlist);
+  return bundle;
+}
+
+/**
+ * @brief High-level pipeline that downloads, validates, parses, and assembles a playlist.
+ */
+PlaylistDownloadResult NetworkComponent::downloadPlaylist(const std::string& url,
+                                                          std::chrono::milliseconds timeout_ms) {
+  HttpResponse response = http_client_->download(url, timeout_ms);
+
+  if (auto error = validateHttpResponse(response)) {
+    return *error;
+  }
+
+  manifest::ParseResult parse_result = parseManifest(response, url);
 
   if (!parse_result.hasValue()) {
     return parse_result.error();
   }
 
-  // 3. Assemble the Bundle
-  ParsedPlaylistBundle bundle;
-  bundle.raw_buffer = response.extractBody();
-  bundle.playlist = std::move(parse_result).value();
-
-  return bundle;
+  return assembleBundle(std::move(response), std::move(parse_result).value());
 }
 
-SegmentDownloadResult NetworkComponent::downloadSegment(
-    const manifest::MediaSegmentRef& segment,
-    std::stop_token stop_token) {  // NOLINT(performance-unnecessary-value-param)
+/**
+ * @brief Downloads a single media segment and encapsulates it with network metrics.
+ */
+SegmentDownloadResult NetworkComponent::downloadSegment(const manifest::MediaSegmentRef& segment,
+                                                        const std::stop_token& stop_token) {
   // Use a reasonable 30s timeout for media segments
   HttpResponse response =
       http_client_->download(std::string(segment.uri), std::chrono::seconds(30), stop_token);
