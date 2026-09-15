@@ -19,6 +19,7 @@ enum class HttpStatusCode : std::int16_t {
 
   // 5xx Server Error
   InternalServerError = 500,
+  ServiceUnavailable = 503,
 
   // Custom internal codes
   Unknown = -1

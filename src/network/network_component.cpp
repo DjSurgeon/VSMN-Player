@@ -17,7 +17,10 @@ PlaylistDownloadResult NetworkComponent::downloadPlaylist(const std::string& url
 
   // 2. Parse (Zero-Copy)
   const auto& body_ref = response.getBody();
-  std::string_view content(reinterpret_cast<const char*>(body_ref.data()), body_ref.size());
+  std::string_view content(
+      reinterpret_cast<const char*>(
+          body_ref.data()),  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+      body_ref.size());
 
   manifest::ParseResult parse_result = parser_.parse(content, url);
 
@@ -33,14 +36,15 @@ PlaylistDownloadResult NetworkComponent::downloadPlaylist(const std::string& url
   return bundle;
 }
 
-SegmentDownloadResult NetworkComponent::downloadSegment(const manifest::MediaSegmentRef& segment,
-                                                        std::stop_token st) {
+SegmentDownloadResult NetworkComponent::downloadSegment(
+    const manifest::MediaSegmentRef& segment,
+    std::stop_token stop_token) {  // NOLINT(performance-unnecessary-value-param)
   // Use a reasonable 30s timeout for media segments
   HttpResponse response =
-      http_client_->download(std::string(segment.uri), std::chrono::seconds(30), st);
+      http_client_->download(std::string(segment.uri), std::chrono::seconds(30), stop_token);
 
   if (!response.isSuccess()) {
-    if (st.stop_requested()) {
+    if (stop_token.stop_requested()) {
       return NetworkError{"Segment download cancelled by orchestrator."};
     }
     return NetworkError{"HTTP Request failed with status " +

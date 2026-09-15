@@ -87,17 +87,22 @@ Durante la configuración de la pipeline en GitHub Actions (`.github/workflows/c
 Durante el desarrollo de los módulos de red (`HttpClient`) y parseo (`M3u8Parser`), se llevó a cabo una auditoría arquitectónica extrema guiada por principios de **Data-Oriented Design (DOD)** y **YAGNI (You Aren't Gonna Need It)**.
 
 ### 1. La Gran Purga (YAGNI)
+
 Se detectó sobreingeniería prematura. Las decisiones clave fueron:
+
 - **Dependencias Fantasma:** Se eliminaron `ffmpeg`, `sdl2`, `imgui`, `opengl` y `spdlog` del `conanfile.py` y `CMakeLists.txt` porque aún no se estaban usando. Esto redujo drásticamente el peso del entorno y el tiempo de CI.
 - **Fiebre de Interfaces:** Se eliminó `IPlaylistParser` ya que solo existía una implementación (`M3u8Parser`) y no se "mockeaba" en los tests. Sin embargo, se mantuvo `IHttpClient` porque era indispensable para simular la red en los tests sin tocar servidores reales.
 - **Métricas Muertas y Códigos HTTP:** Se eliminó el campo `latency_` de `HttpResponse` por no usarse, y se purgaron los códigos de estado HTTP puramente anecdóticos (ej. 418 I'm a teapot), manteniendo solo los nucleares (200, 403, 404, 500) hasta que la política de reintentos avanzada (`RetryPolicy`) requiera otros (ej. 429 para Exponential Backoff).
 
 ### 2. Decisiones de Testing (White-Box vs Black-Box)
+
 - Al testear el `AttributeScanner` (un componente fuertemente encapsulado), optamos por usar herencia protegida (`TestableAttributeScanner`) en los tests.
 - **Justificación:** Aunque en la industria el *Black-Box testing* (testear solo la API pública) es la norma para evitar fragilidad, en componentes de infraestructura críticos de bajo nivel (parsers, códecs), el *White-Box testing* garantiza que los estados internos de la máquina de estados funcionen perfectamente ante bordes lógicos muy complejos, previniendo fallos catastróficos silenciosos.
 
 ### 3. Rendimiento Extremo (Zero-Allocation y Caché L1)
+
 El objetivo de la app es poder parsear manifiestos HLS gigantes en milisegundos y evitar saturar el colector de basura y fragmentar el *Heap* de los dispositivos (móviles, Smart TVs).
+
 - **El Heurístico SIMD:** En lugar de dejar que `std::vector` se redimensione dinámicamente decenas de veces, se inyectó una heurística que escanea el archivo con `content.find()` (acelerado por instrucciones SIMD `memmem`) para pre-reservar la memoria exacta en base al tamaño en bytes.
 - **El Hito (Benchmarks):**
   - Pasamos de **18 allocations** a exactamente **2 allocations** (O(1) constante sin importar el tamaño del manifiesto).
@@ -105,7 +110,35 @@ El objetivo de la app es poder parsear manifiestos HLS gigantes en milisegundos 
   - Un archivo gigante de 5MB y 250.000 líneas se procesa en menos de **7 milisegundos**.
 
 ### 4. Resiliencia de Red (Stress Tests)
+
 Se configuró una batería de tests de estrés integrados en la CI:
+
 - **LowSpeedLimitStall:** Simula conexiones de 1 byte/segundo para verificar que el estrangulamiento interno (`CURLOPT_LOW_SPEED_LIMIT`) aborte y no cuelgue el hilo (Anti-Stall).
 - **ConcurrentDownloads:** Somete al cliente HTTP a descargas masivas multihilo evaluadas bajo *ThreadSanitizer (TSan)* para descartar Race Conditions.
 - **Fuzzer (`iptv_fuzzer`):** Habilitado con libFuzzer y ASan para inyectar basura de red y probar la invulnerabilidad de la memoria del parser.
+
+---
+*Fin del Hito 1. La arquitectura Zero-Copy y DOD ha demostrado ser asombrosamente rápida (O(1) y ~600MB/s).*
+---
+
+## 🧠 Hito 2: Red Inteligente, Orquestador y ABR (Semana 3)
+
+Con los cimientos de red (HTTP) y el parseo (M3U8) construidos, el foco fue dotar al reproductor de "inteligencia artificial" básica para adaptarse a redes hostiles y de concurrencia avanzada.
+
+### 1. El Hilo del Orquestador (`std::jthread`)
+Se ha implementado el **PlaybackOrchestrator**, un cerebro multihilo que desacopla completamente la red de la UI.
+- Uso del `std::jthread` nativo de C++20, garantizando limpieza y uniones (`join`) automáticas al destruirse, eliminando fugas de hilos.
+- **Cancelación Inmediata (Fast-Cancellation):** Se ha propagado `std::stop_token` desde la UI hasta el mismísimo interior de los callbacks C-Style de `libcurl` en el `NetworkComponent`. El cierre de la aplicación aborta las descargas TCP en pleno vuelo sin esperas pasivas ni *timeouts*.
+
+### 2. Memoria Concurrente (Lock-Based)
+Para la entrega de los segmentos de 5MB desde el hilo de red al hilo decodificador, se implementó `ConcurrentQueue<T>`:
+- Abandono de soluciones *Lock-Free* ultra-complejas en favor de robustez industrial con `std::mutex` y `std::condition_variable`.
+- El cuello de botella no está en la transferencia de punteros entre hilos (nanosegundos) sino en la red, por lo que un sistema basado en bloqueos es seguro y 100% *ThreadSanitizer-proof*.
+- Se usa estricta semántica de movimiento (`std::move`) para transferir el `MediaSegmentBundle`, impidiendo copias profundas no deseadas de los bloques MPEG-TS crudos.
+
+### 3. El Algoritmo ABR (Adaptive Bitrate) Matemático
+Se diseñó el `AbrManager` como un motor "Sin Estado" puramente matemático:
+- **Suavizado EWMA ($\alpha = 0.3$):** Previene que el reproductor sobrerreaccione ante picos puntuales de Wi-Fi, estabilizando la percepción del *throughput*.
+- **Histéresis Asimétrica:** Bajar de resolución es instantáneo (para salvar el búfer y evitar cortes), pero subir de resolución requiere confirmación constante (3 segmentos seguidos por encima de la marca), erradicando el temido "efecto acordeón" de calidad.
+
+**Resultado:** El reproductor es completamente Thread-Safe, aborta conexiones al instante y elige el bitrate con prudencia matemática. Los tests de integración con *Gmock* se han cubierto en verde bajo el riguroso escrutinio de TSAN/ASAN.

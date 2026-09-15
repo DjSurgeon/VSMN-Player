@@ -10,7 +10,8 @@ using ::testing::_;
 class MockHttpClient : public IHttpClient {
  public:
   MOCK_METHOD(HttpResponse, download,
-              (const std::string& url, std::chrono::milliseconds timeout, std::stop_token st),
+              (const std::string& url, std::chrono::milliseconds timeout,
+               std::stop_token stop_token),
               (override));
   MOCK_METHOD(void, setNetworkConfig, (const NetworkConfig& config), (override));
   MOCK_METHOD(void, setRetryPolicy, (const RetryPolicy& policy), (override));

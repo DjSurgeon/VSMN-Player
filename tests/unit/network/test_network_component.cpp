@@ -15,7 +15,7 @@ class FakeHttpClient : public IHttpClient {
   HttpResponse fake_response{HttpStatusCode::Ok};
 
   HttpResponse download(const std::string& /*url*/, std::chrono::milliseconds /*timeout_ms*/,
-                        std::stop_token /*st*/ = {}) override {
+                        std::stop_token /*stop_token*/ = {}) override {
     return std::move(fake_response);
   }
 
@@ -84,7 +84,7 @@ TEST(NetworkComponentTest, DownloadSegmentSuccess) {
 TEST(NetworkComponentTest, DownloadSegmentCancellation) {
   auto fake_client = std::make_unique<FakeHttpClient>();
   // Return an error to trigger the cancellation logic
-  fake_client->fake_response.setStatusCode(HttpStatusCode::InternalServerError);
+  fake_client->fake_response.setStatusCode(HttpStatusCode::ServiceUnavailable);
 
   NetworkComponent component(std::move(fake_client));
 

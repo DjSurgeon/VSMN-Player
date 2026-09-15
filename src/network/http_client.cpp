@@ -2,11 +2,11 @@
 
 #include <curl/curl.h>
 
+#include <charconv>
 #include <random>
 #include <stdexcept>
+#include <string_view>
 #include <thread>
-
-#include "iptv/network/http_curl_callbacks.hpp"
 
 namespace iptv::network {
 
@@ -34,6 +34,75 @@ void applyBackoffDelay(BackoffStrategy strategy, std::chrono::milliseconds& curr
   }
 }
 
+/**
+ * @brief Contexto unificado de la transferencia HTTP actual.
+ * Agrupa todo lo que los callbacks necesitan conocer sin contaminar la API.
+ */
+struct TransferContext {
+  HttpResponse* response{nullptr};
+  const std::stop_token* stop_token{nullptr};
+  size_t max_payload_bytes{0};
+  bool aborted_by_user{false};
+};
+
+size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) {
+  if (userdata == nullptr) {
+    return 0;
+  }
+  auto* ctx = static_cast<TransferContext*>(userdata);
+
+  if (ctx->stop_token != nullptr && ctx->stop_token->stop_requested()) {
+    ctx->aborted_by_user = true;
+    return 0;  // abort
+  }
+
+  std::size_t total_size = size * nmemb;
+  // TODO: max_payload_bytes check could go here
+
+  ctx->response->appendToBody(static_cast<const uint8_t*>(static_cast<const void*>(ptr)),
+                              total_size);
+  return total_size;
+}
+
+size_t headerCallback(char* buffer, size_t size, size_t nitems, void* userdata) {
+  if (userdata == nullptr) {
+    return size * nitems;
+  }
+  size_t total = size * nitems;
+  std::string_view line(buffer, total);
+
+  if (line.starts_with("Content-Length:") || line.starts_with("content-length:")) {
+    size_t pos = line.find(':');
+    if (pos != std::string_view::npos) {
+      std::string_view val = line.substr(pos + 1);
+      auto first = val.find_first_not_of(" \t\r\n");
+      if (first != std::string_view::npos) {
+        val = val.substr(first);
+        size_t content_length = 0;
+        auto [p, ec] = std::from_chars(val.data(), val.data() + val.size(), content_length);
+        if (ec == std::errc{}) {
+          auto* ctx = static_cast<TransferContext*>(userdata);
+          ctx->response->reserveBody(content_length);
+        }
+      }
+    }
+  }
+  return total;
+}
+
+int progressCallback(void* clientp, long long /*dltotal*/, long long /*dlnow*/,
+                     long long /*ultotal*/, long long /*ulnow*/) {
+  if (clientp == nullptr) {
+    return 0;
+  }
+  auto* ctx = static_cast<TransferContext*>(clientp);
+  if (ctx->stop_token != nullptr && ctx->stop_token->stop_requested()) {
+    ctx->aborted_by_user = true;
+    return 1;  // Return non-zero to trigger CURLE_ABORTED_BY_CALLBACK
+  }
+  return 0;
+}
+
 }  // namespace
 
 // Define the hidden implementation class with strict RAII
@@ -45,9 +114,9 @@ class HttpClient::Impl {
     if (handle_ == nullptr) {
       throw std::runtime_error("Failed to initialize curl easy handle.");
     }
-    curl_easy_setopt(handle_, CURLOPT_WRITEFUNCTION, detail::writeCallback);
-    curl_easy_setopt(handle_, CURLOPT_HEADERFUNCTION, detail::headerCallback);
-    curl_easy_setopt(handle_, CURLOPT_XFERINFOFUNCTION, detail::progressCallback);
+    curl_easy_setopt(handle_, CURLOPT_WRITEFUNCTION, writeCallback);
+    curl_easy_setopt(handle_, CURLOPT_HEADERFUNCTION, headerCallback);
+    curl_easy_setopt(handle_, CURLOPT_XFERINFOFUNCTION, progressCallback);
     curl_easy_setopt(handle_, CURLOPT_NOPROGRESS, 0L);
   }
 
@@ -74,13 +143,10 @@ class HttpClient::Impl {
     }
   }
 
-  void bindResponseBuffers(HttpResponse& response, const std::stop_token& st) {
-    curl_easy_setopt(handle_, CURLOPT_WRITEDATA, &response);
-    curl_easy_setopt(handle_, CURLOPT_HEADERDATA, &response);
-
-    // We cast away const to void*, the callback casts it back to const std::stop_token*
-    curl_easy_setopt(handle_, CURLOPT_XFERINFODATA,
-                     const_cast<void*>(static_cast<const void*>(&st)));
+  void bindResponseBuffers(TransferContext& ctx) {
+    curl_easy_setopt(handle_, CURLOPT_WRITEDATA, &ctx);
+    curl_easy_setopt(handle_, CURLOPT_HEADERDATA, &ctx);
+    curl_easy_setopt(handle_, CURLOPT_XFERINFODATA, &ctx);
   }
 
   CURLcode executeTransfer(std::chrono::microseconds& duration) {
@@ -134,11 +200,17 @@ HttpClient& HttpClient::operator=(HttpClient&& other) noexcept {
 // Interface implementations (Skeleton for now)
 
 HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseconds timeout,
-                                  std::stop_token st) {
+                                  std::stop_token stop_token) {
   pimpl_->prepareHandle(url, timeout);
 
   HttpResponse response(HttpStatusCode::Unknown);
-  pimpl_->bindResponseBuffers(response, st);
+
+  TransferContext ctx{.response = &response,
+                      .stop_token = &stop_token,
+                      .max_payload_bytes = 0,  // Unused for now
+                      .aborted_by_user = false};
+
+  pimpl_->bindResponseBuffers(ctx);
 
   const auto retries = pimpl_->policy_.max_retries;
   auto current_delay = pimpl_->policy_.initial_delay;
@@ -156,7 +228,7 @@ HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseco
     }
 
     // Do not retry if the operation was aborted by the user
-    if (res == CURLE_ABORTED_BY_CALLBACK || st.stop_requested()) {
+    if (res == CURLE_ABORTED_BY_CALLBACK || ctx.aborted_by_user || stop_token.stop_requested()) {
       return response;
     }
 

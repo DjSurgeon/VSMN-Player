@@ -26,6 +26,10 @@ class ConcurrentQueue {
   ConcurrentQueue(const ConcurrentQueue&) = delete;
   ConcurrentQueue& operator=(const ConcurrentQueue&) = delete;
 
+  // Delete move semantics (mutexes are generally not movable)
+  ConcurrentQueue(ConcurrentQueue&&) = delete;
+  ConcurrentQueue& operator=(ConcurrentQueue&&) = delete;
+
   /**
    * @brief Pushes an item into the queue and notifies one waiting thread.
    */
@@ -41,11 +45,11 @@ class ConcurrentQueue {
    * @param st Token to safely abort the block if the thread needs to shutdown.
    * @return std::optional<T> containing the item, or nullopt if cancelled.
    */
-  std::optional<T> pop(std::stop_token st) {
+  std::optional<T> pop(std::stop_token stop_token) {
     std::unique_lock lock(mutex_);
-    cv_.wait(lock, st, [this] { return !queue_.empty(); });
+    cv_.wait(lock, stop_token, [this] { return !queue_.empty(); });
 
-    if (st.stop_requested()) {
+    if (stop_token.stop_requested()) {
       return std::nullopt;
     }
 
@@ -62,7 +66,7 @@ class ConcurrentQueue {
    *
    * @return std::optional<T> containing the item, or nullopt if empty.
    */
-  std::optional<T> try_pop() {
+  std::optional<T> tryPop() {
     std::scoped_lock lock(mutex_);
     if (queue_.empty()) {
       return std::nullopt;

@@ -1,11 +1,12 @@
 # Core library definition
 add_library(iptv_core STATIC
-    network/http_curl_callbacks.cpp
     network/http_client.cpp
     network/http_init.cpp
     network/network_component.cpp
     manifest/playlist_attribute_scanner.cpp
     manifest/playlist_m3u8_parser.cpp
+    abr/abr_manager.cpp
+    player/playback_orchestrator.cpp
 )
 target_include_directories(iptv_core PUBLIC ../include)
 target_compile_options(iptv_core PRIVATE ${PROJECT_WARNINGS})

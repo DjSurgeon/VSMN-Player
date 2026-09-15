@@ -43,7 +43,7 @@ class HttpClient final : public IHttpClient {
   // IHttpClient interface implementation
   HttpResponse download(const std::string& url,
                         std::chrono::milliseconds timeout = std::chrono::milliseconds{0},
-                        std::stop_token st = {}) override;
+                        std::stop_token stop_token = {}) override;
 
   void setNetworkConfig(const NetworkConfig& config) override;
 

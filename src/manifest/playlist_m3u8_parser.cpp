@@ -295,7 +295,9 @@ constexpr std::array<TagDispatchEntry, 6> k_tag_dispatch_table{{
 
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
-ParseResult M3u8Parser::parse(std::string_view content, std::string_view /*base_url*/) const {
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+ParseResult M3u8Parser::parse(std::string_view content, std::string_view /*base_url*/)
+    const {  // NOLINT(readability-function-cognitive-complexity)
   if (content.starts_with("\xEF\xBB\xBF")) {
     content.remove_prefix(3);
   }

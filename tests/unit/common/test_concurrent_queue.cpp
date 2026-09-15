@@ -78,18 +78,18 @@ TEST_F(ConcurrentQueueTest, TryPop) {
   ConcurrentQueue<int> q;
 
   // Empty queue
-  auto val = q.try_pop();
+  auto val = q.tryPop();
   EXPECT_FALSE(val.has_value());
 
   q.push(99);
 
   // Now it has something
-  val = q.try_pop();
+  val = q.tryPop();
   EXPECT_TRUE(val.has_value());
   EXPECT_EQ(*val, 99);
 
   // Empty again
-  val = q.try_pop();
+  val = q.tryPop();
   EXPECT_FALSE(val.has_value());
 }
 

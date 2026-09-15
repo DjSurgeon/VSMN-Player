@@ -84,11 +84,11 @@ class NetworkComponent {
    * @brief Downloads a raw media segment enforcing the retry policy.
    *
    * @param segment The segment reference from the parsed playlist.
-   * @param st Token for fast cancellation from the ABR orchestrator.
+   * @param stop_token Token for fast cancellation from the ABR orchestrator.
    * @return A variant containing either the successfully downloaded bundle or an error.
    */
   SegmentDownloadResult downloadSegment(const manifest::MediaSegmentRef& segment,
-                                        std::stop_token st = {});
+                                        std::stop_token stop_token = {});
 
  private:
   std::unique_ptr<IHttpClient> http_client_;
