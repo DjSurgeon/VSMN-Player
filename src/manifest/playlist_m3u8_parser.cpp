@@ -315,6 +315,16 @@ ParseResult M3u8Parser::parse(std::string_view content, std::string_view /*base_
   SegmentBuilder segment_builder;
   PendingVariant variant_builder;
 
+  // Pre-allocation heuristic to achieve exact 1 allocation per playlist
+  const bool is_master = content.find("#EXT-X-STREAM-INF:") != std::string_view::npos;
+  const size_t estimated_elements = content.size() / 48;
+
+  if (is_master) {
+    playlist.variants.reserve(estimated_elements);
+  } else {
+    playlist.segments.reserve(estimated_elements);
+  }
+
   while (const auto entry = reader.next()) {
     const auto [line, line_num] = *entry;
     ParseContext ctx{playlist, segment_builder, variant_builder, line_num};
