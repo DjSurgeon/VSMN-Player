@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <stop_token>
 #include <string>
 
 #include "iptv/network/http_network_config.hpp"
@@ -39,9 +40,11 @@ class IHttpClient {
    *
    * @param url The endpoint to download from.
    * @param timeout The maximum time allowed for the request.
+   * @param st Optional cancellation token to abort the transfer early.
    * @return HttpResponse The result of the HTTP request.
    */
-  virtual HttpResponse download(const std::string& url, std::chrono::milliseconds timeout) = 0;
+  virtual HttpResponse download(const std::string& url, std::chrono::milliseconds timeout,
+                                std::stop_token st = {}) = 0;
 
   /**
    * @brief Configures global network options (TLS, User-Agent, redirects).

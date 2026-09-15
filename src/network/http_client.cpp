@@ -47,6 +47,8 @@ class HttpClient::Impl {
     }
     curl_easy_setopt(handle_, CURLOPT_WRITEFUNCTION, detail::writeCallback);
     curl_easy_setopt(handle_, CURLOPT_HEADERFUNCTION, detail::headerCallback);
+    curl_easy_setopt(handle_, CURLOPT_XFERINFOFUNCTION, detail::progressCallback);
+    curl_easy_setopt(handle_, CURLOPT_NOPROGRESS, 0L);
   }
 
   ~Impl() {
@@ -72,9 +74,13 @@ class HttpClient::Impl {
     }
   }
 
-  void bindResponseBuffers(HttpResponse& response) {
+  void bindResponseBuffers(HttpResponse& response, const std::stop_token& st) {
     curl_easy_setopt(handle_, CURLOPT_WRITEDATA, &response);
     curl_easy_setopt(handle_, CURLOPT_HEADERDATA, &response);
+
+    // We cast away const to void*, the callback casts it back to const std::stop_token*
+    curl_easy_setopt(handle_, CURLOPT_XFERINFODATA,
+                     const_cast<void*>(static_cast<const void*>(&st)));
   }
 
   CURLcode executeTransfer(std::chrono::microseconds& duration) {
@@ -127,11 +133,12 @@ HttpClient& HttpClient::operator=(HttpClient&& other) noexcept {
 
 // Interface implementations (Skeleton for now)
 
-HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseconds timeout) {
+HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseconds timeout,
+                                  std::stop_token st) {
   pimpl_->prepareHandle(url, timeout);
 
   HttpResponse response(HttpStatusCode::Unknown);
-  pimpl_->bindResponseBuffers(response);
+  pimpl_->bindResponseBuffers(response, st);
 
   const auto retries = pimpl_->policy_.max_retries;
   auto current_delay = pimpl_->policy_.initial_delay;
@@ -145,6 +152,11 @@ HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseco
     pimpl_->collectMetrics(res, duration, response);
 
     if (res == CURLE_OK && response.isSuccess()) {
+      return response;
+    }
+
+    // Do not retry if the operation was aborted by the user
+    if (res == CURLE_ABORTED_BY_CALLBACK || st.stop_requested()) {
       return response;
     }
 

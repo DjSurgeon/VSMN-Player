@@ -33,4 +33,25 @@ PlaylistDownloadResult NetworkComponent::downloadPlaylist(const std::string& url
   return bundle;
 }
 
+SegmentDownloadResult NetworkComponent::downloadSegment(const manifest::MediaSegmentRef& segment,
+                                                        std::stop_token st) {
+  // Use a reasonable 30s timeout for media segments
+  HttpResponse response =
+      http_client_->download(std::string(segment.uri), std::chrono::seconds(30), st);
+
+  if (!response.isSuccess()) {
+    if (st.stop_requested()) {
+      return NetworkError{"Segment download cancelled by orchestrator."};
+    }
+    return NetworkError{"HTTP Request failed with status " +
+                        std::to_string(static_cast<int>(response.getStatusCode()))};
+  }
+
+  MediaSegmentBundle bundle;
+  bundle.metrics = response.getMetrics();
+  bundle.raw_buffer = response.extractBody();
+
+  return bundle;
+}
+
 }  // namespace iptv::network

@@ -1,6 +1,7 @@
 #include "iptv/network/http_curl_callbacks.hpp"
 
 #include <charconv>
+#include <stop_token>
 #include <string_view>
 
 #include "iptv/network/http_response.hpp"
@@ -42,6 +43,18 @@ size_t headerCallback(char* buffer, size_t size, size_t nitems, void* userdata) 
     }
   }
   return total;
+}
+
+int progressCallback(void* clientp, long long /*dltotal*/, long long /*dlnow*/,
+                     long long /*ultotal*/, long long /*ulnow*/) {
+  if (clientp == nullptr) {
+    return 0;
+  }
+  auto* st = static_cast<const std::stop_token*>(clientp);
+  if (st->stop_requested()) {
+    return 1;  // Return non-zero to trigger CURLE_ABORTED_BY_CALLBACK
+  }
+  return 0;
 }
 
 }  // namespace iptv::network::detail

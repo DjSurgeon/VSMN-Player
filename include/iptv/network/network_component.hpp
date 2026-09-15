@@ -38,6 +38,25 @@ struct ParsedPlaylistBundle {
 using PlaylistDownloadResult =
     std::variant<ParsedPlaylistBundle, NetworkError, manifest::ParseError>;
 
+/**
+ * @brief An indivisible bundle of the downloaded segment memory and its network metrics.
+ */
+struct MediaSegmentBundle {
+  std::vector<uint8_t> raw_buffer;
+  NetworkMetrics metrics;
+
+  MediaSegmentBundle() = default;
+  ~MediaSegmentBundle() = default;
+
+  MediaSegmentBundle(const MediaSegmentBundle&) = delete;
+  MediaSegmentBundle& operator=(const MediaSegmentBundle&) = delete;
+
+  MediaSegmentBundle(MediaSegmentBundle&&) noexcept = default;
+  MediaSegmentBundle& operator=(MediaSegmentBundle&&) noexcept = default;
+};
+
+using SegmentDownloadResult = std::variant<MediaSegmentBundle, NetworkError>;
+
 class NetworkComponent {
  public:
   explicit NetworkComponent(std::unique_ptr<IHttpClient> http_client);
@@ -60,6 +79,16 @@ class NetworkComponent {
    */
   PlaylistDownloadResult downloadPlaylist(
       const std::string& url, std::chrono::milliseconds timeout_ms = std::chrono::seconds(10));
+
+  /**
+   * @brief Downloads a raw media segment enforcing the retry policy.
+   *
+   * @param segment The segment reference from the parsed playlist.
+   * @param st Token for fast cancellation from the ABR orchestrator.
+   * @return A variant containing either the successfully downloaded bundle or an error.
+   */
+  SegmentDownloadResult downloadSegment(const manifest::MediaSegmentRef& segment,
+                                        std::stop_token st = {});
 
  private:
   std::unique_ptr<IHttpClient> http_client_;

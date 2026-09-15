@@ -15,4 +15,11 @@ size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata);
  */
 size_t headerCallback(char* buffer, size_t size, size_t nitems, void* userdata);
 
+/**
+ * @brief libcurl progress callback used for fast cancellation.
+ * Returns non-zero to abort the transfer if the stop_token is triggered.
+ */
+int progressCallback(void* clientp, long long dltotal, long long dlnow, long long ultotal,
+                     long long ulnow);
+
 }  // namespace iptv::network::detail
