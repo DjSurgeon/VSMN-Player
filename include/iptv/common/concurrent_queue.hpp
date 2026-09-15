@@ -55,6 +55,24 @@ class ConcurrentQueue {
   }
 
   /**
+   * @brief Non-blocking pop (Polling).
+   *
+   * Useful for consumers that need to perform other tasks (e.g. render a loading spinner)
+   * when the queue is empty.
+   *
+   * @return std::optional<T> containing the item, or nullopt if empty.
+   */
+  std::optional<T> try_pop() {
+    std::scoped_lock lock(mutex_);
+    if (queue_.empty()) {
+      return std::nullopt;
+    }
+    T item = std::move(queue_.front());
+    queue_.pop();
+    return item;
+  }
+
+  /**
    * @brief Non-blocking check for the queue size.
    */
   size_t size() const {
