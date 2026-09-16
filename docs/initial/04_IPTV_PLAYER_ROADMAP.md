@@ -273,11 +273,11 @@ DECISION #7: GUI Framework (ImGui vs Qt)
 
 #### **Monday-Tuesday: HTTP Client Basics**
 
-- [ ] Implement HTTP client (libcurl wrapper)
-- [ ] GET request handler
-- [ ] Response parsing
-- [ ] Error handling (404, 500, timeout)
-- [ ] Unit tests
+- [x] Implement HTTP client (libcurl wrapper)
+- [x] GET request handler
+- [x] Response parsing
+- [x] Error handling (404, 500, timeout)
+- [x] Unit tests
 
 ```cpp
 Interface:
@@ -287,32 +287,32 @@ HTTPResponse: { status, headers, body, latency }
 
 #### **Wednesday: M3U8 Parser**
 
-- [ ] Parse M3U8 format
-- [ ] Extract channels (EXTINF, URL)
-- [ ] Handle variants (adaptive bitrate)
-- [ ] Unit tests
+- [x] Parse M3U8 format
+- [x] Extract channels (EXTINF, URL)
+- [x] Handle variants (adaptive bitrate)
+- [x] Unit tests
 
 #### **Thursday: Segment Download**
 
-- [ ] Implement segment downloader
-- [ ] Sequence-based (download current, next, prefetch)
-- [ ] Retry logic (exponential backoff)
-- [ ] Metrics collection
+- [x] Implement segment downloader
+- [x] Sequence-based (download current, next, prefetch)
+- [x] Retry logic (exponential backoff)
+- [x] Metrics collection
 
 #### **Friday: Network Thread + Integration**
 
-- [ ] Implement NetworkThread main loop
-- [ ] Thread-safe output queue
-- [ ] Controller communication
-- [ ] Integration test (download real m3u8)
+- [x] Implement NetworkThread main loop
+- [x] Thread-safe output queue
+- [x] Controller communication
+- [x] Integration test (download real m3u8)
 
 **Success Criteria:**
 
-- [ ] Can download m3u8 from real IPTV playlist
-- [ ] Can download .ts segments
-- [ ] Unit tests: > 80%
-- [ ] ASan/TSan clean
-- [ ] GCS network stats
+- [x] Can download m3u8 from real IPTV playlist
+- [x] Can download .ts segments
+- [x] Unit tests: > 80%
+- [x] ASan/TSan clean
+- [x] GCS network stats
 
 ---
 
