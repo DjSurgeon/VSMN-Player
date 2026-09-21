@@ -399,7 +399,7 @@ jobs:
     
     steps:
       - name: Download Release Binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: iptv-player-release-linux
           path: .
