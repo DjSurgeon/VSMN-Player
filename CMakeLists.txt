@@ -14,6 +14,7 @@ option(ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
 option(ENABLE_FUZZER "Enable libFuzzer target" OFF)
 option(BUILD_TESTS "Build unit test suite" ON)
+option(ENABLE_STRESS_TESTS "Enable massive stress tests" OFF)
 option(ENABLE_BENCHMARKS "Enable Google Benchmark suite" OFF)
 
 # Strict warnings flags

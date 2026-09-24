@@ -8,6 +8,7 @@ Makefile
 
 .vscode/
 .idea/
+.cache/
 *.swp
 *.swo
 *~

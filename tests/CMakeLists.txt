@@ -24,15 +24,21 @@ add_executable(unit_tests
     unit/network/test_network_component.cpp
     unit/player/test_playback_orchestrator.cpp
 )
-target_link_libraries(unit_tests PRIVATE GTest::gmock GTest::gtest_main iptv_core httplib::httplib)
-target_compile_options(unit_tests PRIVATE ${PROJECT_WARNINGS})
+target_link_libraries(unit_tests PRIVATE GTest::gmock GTest::gtest_main iptv_core project_config httplib::httplib)
 
 add_executable(integration_tests
     integration/test_network_subsystem.cpp
 )
-target_link_libraries(integration_tests PRIVATE GTest::gmock GTest::gtest_main iptv_core httplib::httplib)
-target_compile_options(integration_tests PRIVATE ${PROJECT_WARNINGS})
+target_link_libraries(integration_tests PRIVATE GTest::gmock GTest::gtest_main iptv_core project_config httplib::httplib)
 
 include(GoogleTest)
 gtest_discover_tests(unit_tests)
 gtest_discover_tests(integration_tests)
+
+if(ENABLE_STRESS_TESTS)
+    add_executable(stress_tests
+        stress/network/test_network_stress.cpp
+    )
+    target_link_libraries(stress_tests PRIVATE GTest::gmock GTest::gtest_main iptv_core project_config httplib::httplib)
+    gtest_discover_tests(stress_tests)
+endif()
