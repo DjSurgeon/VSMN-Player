@@ -367,7 +367,7 @@ ParseResult parse(const ParseOptions& options) {
 
   LineReader reader(content);
   const auto first_line = reader.next();
-  if (!first_line || first_line->text != "#EXTM3U") {
+  if (!first_line || !first_line->text.starts_with("#EXTM3U")) {
     return ParseError{ParseErrorCode::InvalidHeader, first_line ? first_line->number : 0,
                       "Missing #EXTM3U tag"};
   }
