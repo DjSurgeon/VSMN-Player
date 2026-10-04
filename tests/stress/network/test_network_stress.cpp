@@ -1,7 +1,9 @@
 #include <gtest/gtest.h>
 #include <httplib.h>
+
 #include <thread>
 #include <vector>
+
 #include "iptv/network/http_client.hpp"
 
 using namespace iptv::network;
@@ -19,7 +21,8 @@ class HttpClientStressTest : public ::testing::Test {
 
   void TearDown() override {
     server_->stop();
-    if (server_thread_.joinable()) server_thread_.join();
+    if (server_thread_.joinable())
+      server_thread_.join();
   }
 
   std::string getUrl() const { return "http://127.0.0.1:" + std::to_string(port_) + "/stress"; }
@@ -45,5 +48,6 @@ TEST_F(HttpClientStressTest, MassiveConcurrency) {
     });
   }
 
-  for (auto& w : workers) w.join();
+  for (auto& w : workers)
+    w.join();
 }
