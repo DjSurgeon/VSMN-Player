@@ -19,7 +19,7 @@ add_executable(unit_tests
     unit/manifest/test_playlist_parse_result.cpp
     unit/manifest/test_playlist_attribute_scanner.cpp
     unit/manifest/test_playlist_m3u8_parser.cpp
-    unit/common/test_concurrent_queue.cpp
+    unit/concurrency/test_concurrent_queue.cpp
     unit/abr/test_abr_manager.cpp
     unit/network/test_network_component.cpp
     unit/player/test_playback_orchestrator.cpp

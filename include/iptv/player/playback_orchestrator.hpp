@@ -6,7 +6,7 @@
 #include <thread>
 
 #include "iptv/abr/abr_manager.hpp"
-#include "iptv/common/concurrent_queue.hpp"
+#include "iptv/concurrency/concurrent_queue.hpp"
 #include "iptv/network/network_component.hpp"
 
 namespace iptv::player {

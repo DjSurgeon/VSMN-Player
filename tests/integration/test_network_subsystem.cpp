@@ -202,7 +202,7 @@ TEST_F(NetworkSubsystemIntegrationTest, EndToEndFlowIntegrity) {
     auto start_time = std::chrono::steady_clock::now();
     bool popped = false;
     while (std::chrono::steady_clock::now() - start_time < std::chrono::seconds(5)) {
-      if (auto item = queue.tryPop()) {
+      if (auto item = queue.try_pop()) {
         bundle = std::move(*item);
         popped = true;
         break;
@@ -299,7 +299,7 @@ TEST_F(NetworkSubsystemIntegrationTest, ChaosMonkey_ThunderingHerd) {
       auto start_time = std::chrono::steady_clock::now();
       bool popped = false;
       while (std::chrono::steady_clock::now() - start_time < std::chrono::seconds(2)) {
-        if (auto item = queue.tryPop()) {
+        if (auto item = queue.try_pop()) {
           bundle = std::move(*item);
           popped = true;
           break;
