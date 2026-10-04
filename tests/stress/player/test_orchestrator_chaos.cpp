@@ -17,7 +17,7 @@
 #include <thread>
 #include <vector>
 
-#include "iptv/common/concurrent_queue.hpp"
+#include "iptv/concurrency/concurrent_queue.hpp"
 #include "iptv/network/network_component.hpp"
 #include "iptv/player/playback_orchestrator.hpp"
 
@@ -395,7 +395,7 @@ std::vector<MediaSegmentBundle> collect(ConcurrentQueue<MediaSegmentBundle>& que
   std::vector<MediaSegmentBundle> bundles;
   bundles.reserve(expected);
   for (std::size_t spins = 0; bundles.size() < expected && spins < kSpinBudget; ++spins) {
-    if (auto item = queue.tryPop()) {
+    if (auto item = queue.try_pop()) {
       bundles.push_back(std::move(*item));
     } else {
       std::this_thread::yield();
