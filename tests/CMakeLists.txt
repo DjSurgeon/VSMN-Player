@@ -38,6 +38,7 @@ gtest_discover_tests(integration_tests)
 if(ENABLE_STRESS_TESTS)
     add_executable(stress_tests
         stress/network/test_network_stress.cpp
+        stress/player/test_orchestrator_chaos.cpp
     )
     target_link_libraries(stress_tests PRIVATE GTest::gmock GTest::gtest_main iptv_core project_config httplib::httplib)
     gtest_discover_tests(stress_tests)
