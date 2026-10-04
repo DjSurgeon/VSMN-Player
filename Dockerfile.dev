@@ -53,7 +53,15 @@ RUN apt-get install -y \
     valgrind \
     gdb \
     clang-format \
-    clang-tidy
+    clang-tidy \
+    ripgrep \
+    jq
+
+# Install Node.js 20.x for opencode-ai (fixes nullish coalescing syntax error)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+RUN npm install -g opencode-ai
 
 # Create non-root user (optional, but recommended)
 ARG USER=developer
@@ -65,9 +73,9 @@ RUN groupadd -g ${GID} ${USER} || true && \
     useradd -m -u ${UID} -g ${GID} -s /bin/bash ${USER} && \
     usermod -aG video,audio ${USER}
 
-# Create Conan directories with proper permissions
-RUN mkdir -p /home/developer/.conan2 && \
-    chown -R ${UID}:${GID} /home/developer/.conan2
+# Create Conan and config directories with proper permissions
+RUN mkdir -p /home/developer/.conan2 /home/developer/.config && \
+    chown -R ${UID}:${GID} /home/developer/.conan2 /home/developer/.config
 
 # Initialize default Conan profile
 RUN conan profile detect --force

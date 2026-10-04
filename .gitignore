@@ -34,3 +34,4 @@ htmlcov/
 
 *.log
 .env
+TASK_SPEC.md
