@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
 
+#include "iptv/manifest/playlist_m3u8_parser.hpp"
 #include "iptv/network/http_client.hpp"
 #include "iptv/network/http_init.hpp"
-#include "iptv/manifest/playlist_m3u8_parser.hpp"
 
 using namespace iptv::network;
 using namespace iptv::manifest;
@@ -49,14 +49,17 @@ int main(int argc, char* argv[]) {
   } else {
     const auto& playlist = result.value();
     std::cout << "✅ Playlist Válida\n";
-    std::cout << "Tipo: " << (playlist.type == PlaylistType::Master ? "Master (Calidades/Canales)" : "Media (Segmentos/Ts)") << "\n";
+    std::cout << "Tipo: "
+              << (playlist.type == PlaylistType::Master ? "Master (Calidades/Canales)"
+                                                        : "Media (Segmentos/Ts)")
+              << "\n";
     std::cout << "Ítems: " << playlist.segments.size() << "\n";
-    
+
     // Imprimir el primer item de ejemplo si hay
     if (!playlist.segments.empty()) {
-        std::cout << "\nEjemplo ítem 1:\n";
-        std::cout << "  URI: " << playlist.segments[0].uri << "\n";
-        std::cout << "  Duración: " << playlist.segments[0].duration.count() << "s\n";
+      std::cout << "\nEjemplo ítem 1:\n";
+      std::cout << "  URI: " << playlist.segments[0].uri << "\n";
+      std::cout << "  Duración: " << playlist.segments[0].duration.count() << "s\n";
     }
   }
 
