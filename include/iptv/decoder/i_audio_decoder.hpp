@@ -1,6 +1,6 @@
 #pragma once
 
-#include <optional>
+#include <span>
 #include <vector>
 
 #include "iptv/decoder/codec_info.hpp"
@@ -25,16 +25,19 @@ class IAudioDecoder {
 
   /**
    * @brief Decodes a compressed audio packet.
-   * @param compressed_data Raw bytes of the compressed packet.
-   * @return DecodedFrame The uncompressed audio frame.
+   * @param compressed_data Raw bytes of the compressed packet. Passed as a span to avoid
+   *                        copying; the caller retains ownership and guarantees the pointed-to
+   *                        bytes outlive the call.
+   * @return std::vector<DecodedFrame> The uncompressed audio frames produced, in output order.
+   *         Empty if the packet produced no frame.
    */
-  virtual DecodedFrame decode(const std::vector<uint8_t>& compressed_data) = 0;
+  virtual std::vector<DecodedFrame> decode(std::span<const uint8_t> compressed_data) = 0;
 
   /**
-   * @brief Flushes internal decoder buffers.
-   * @return std::optional<DecodedFrame> Remaining frame if any.
+   * @brief Flushes internal decoder buffers, draining any delayed frames.
+   * @return std::vector<DecodedFrame> Remaining frames in output order, empty if none remain.
    */
-  virtual std::optional<DecodedFrame> flush() = 0;
+  virtual std::vector<DecodedFrame> flush() = 0;
 
   /**
    * @brief Retrieves active codec information.
