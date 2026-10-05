@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
       mutated[pos_dist(rng)] = '\0';
     }
 
-    auto result = M3u8Parser::parse({mutated, "http://fuzz.example.com/"});
+    auto result = M3u8Parser::parse({mutated});
     (void)result;
   }
 

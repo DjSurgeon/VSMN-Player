@@ -40,7 +40,8 @@ TEST_F(AbrManagerTest, EwmaIgnoresTransientDrops) {
   AbrManager abr(0.3);  // alpha = 0.3
 
   // First very fast download at 20 Mbps -> selects 1080p (8 Mbps)
-  auto variant1 = abr.selectVariant(variants_, 20.0);
+  const auto& initial = abr.selectVariant(variants_, 20.0);
+  EXPECT_EQ(initial.bandwidth, 8'000'000);
   EXPECT_EQ(abr.getCurrentVariantIndex(), 2);
 
   // Micro-drop: segment drops to 5 Mbps average.
@@ -57,7 +58,8 @@ TEST_F(AbrManagerTest, HysteresisBlocksPrematureUpgrades) {
   AbrManager abr(0.3);
 
   // Start low (3 Mbps). 80% = 2.4 Mbps -> Selects 360p (2 Mbps)
-  auto variant1 = abr.selectVariant(variants_, 3.0);
+  const auto& initial = abr.selectVariant(variants_, 3.0);
+  EXPECT_EQ(initial.bandwidth, 2'000'000);
   EXPECT_EQ(abr.getCurrentVariantIndex(), 0);
 
   // Massive network improvement to 20 Mbps.
@@ -65,11 +67,13 @@ TEST_F(AbrManagerTest, HysteresisBlocksPrematureUpgrades) {
   // 8.1 * 0.8 = 6.48 Mbps -> Ideal index is 1 (720p at 5Mbps).
 
   // Favorable segment 1: Hysteresis blocks upgrade
-  auto variant2 = abr.selectVariant(variants_, 20.0);
+  const auto& after_first = abr.selectVariant(variants_, 20.0);
+  EXPECT_EQ(after_first.bandwidth, 2'000'000);
   EXPECT_EQ(abr.getCurrentVariantIndex(), 0);
 
   // Favorable segment 2: Hysteresis blocks upgrade
-  auto variant3 = abr.selectVariant(variants_, 20.0);
+  const auto& after_second = abr.selectVariant(variants_, 20.0);
+  EXPECT_EQ(after_second.bandwidth, 2'000'000);
   EXPECT_EQ(abr.getCurrentVariantIndex(), 0);
 
   // Favorable segment 3: Hysteresis yields and upgrades! EWMA converged to >11Mbps,

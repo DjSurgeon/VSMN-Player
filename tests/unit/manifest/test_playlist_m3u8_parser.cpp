@@ -7,13 +7,13 @@ using namespace iptv::manifest;
 class M3u8ParserTest : public ::testing::Test {};
 
 TEST_F(M3u8ParserTest, ParsesEmptyContent) {
-  auto result = M3u8Parser::parse({"", "http://example.com/"});
+  auto result = M3u8Parser::parse({""});
   EXPECT_FALSE(result.hasValue());
   EXPECT_EQ(result.error().code, ParseErrorCode::EmptyContent);
 }
 
 TEST_F(M3u8ParserTest, ParsesInvalidHeader) {
-  auto result = M3u8Parser::parse({"#EXT-X-VERSION:3\n", "http://example.com/"});
+  auto result = M3u8Parser::parse({"#EXT-X-VERSION:3\n"});
   EXPECT_FALSE(result.hasValue());
   EXPECT_EQ(result.error().code, ParseErrorCode::InvalidHeader);
 }
@@ -29,7 +29,7 @@ TEST_F(M3u8ParserTest, ParsesValidVODPlaylist) {
       "seg2.ts\n"
       "#EXT-X-ENDLIST\n";
 
-  auto result = M3u8Parser::parse({content, "http://example.com/stream/"});
+  auto result = M3u8Parser::parse({content});
   ASSERT_TRUE(result.hasValue());
   auto playlist = std::move(result).value();
 
@@ -55,7 +55,7 @@ TEST_F(M3u8ParserTest, ParsesLivePlaylist) {
       "#EXTINF:10.0,\n"
       "seg101.ts\n";
 
-  auto result = M3u8Parser::parse({content, "http://example.com/stream/"});
+  auto result = M3u8Parser::parse({content});
   ASSERT_TRUE(result.hasValue());
   auto playlist = std::move(result).value();
 
@@ -73,7 +73,7 @@ TEST_F(M3u8ParserTest, HandlesWindowsLineEndings) {
       "#EXTINF:10.0,\r\n"
       "seg2.ts\r\n";
 
-  auto result = M3u8Parser::parse({content, "http://example.com/"});
+  auto result = M3u8Parser::parse({content});
   ASSERT_TRUE(result.hasValue());
   auto playlist = std::move(result).value();
   ASSERT_EQ(playlist.segments.size(), 2);
@@ -88,7 +88,7 @@ TEST_F(M3u8ParserTest, HandlesUtf8Bom) {
       "#EXTINF:10.0,\n"
       "seg1.ts\n";
 
-  auto result = M3u8Parser::parse({content, "http://example.com/"});
+  auto result = M3u8Parser::parse({content});
   ASSERT_TRUE(result.hasValue());
   auto playlist = std::move(result).value();
   ASSERT_EQ(playlist.segments.size(), 1);
@@ -114,7 +114,7 @@ TEST_F(M3u8ParserTest, ResolvesUrlsCorrectly) {
       "#EXTINF:10.0,\n"
       "dir.with.dots/seg7.ts\n";
 
-  auto result = M3u8Parser::parse({content, "http://example.com/path/playlist.m3u8"});
+  auto result = M3u8Parser::parse({content});
   ASSERT_TRUE(result.hasValue());
   auto playlist = std::move(result).value();
 
@@ -134,7 +134,7 @@ TEST_F(M3u8ParserTest, RejectsOrphanSegmentUri) {
       "#EXT-X-TARGETDURATION:10\n"
       "seg1.ts\n";
 
-  auto result = M3u8Parser::parse({content, "http://example.com/"});
+  auto result = M3u8Parser::parse({content});
   EXPECT_FALSE(result.hasValue());
   EXPECT_EQ(result.error().code, ParseErrorCode::MissingMandatoryTags);
   EXPECT_EQ(result.error().line_number, 3);
@@ -146,7 +146,7 @@ TEST_F(M3u8ParserTest, RejectsMalformedExtInf) {
       "#EXTINF:invalid_number,\n"
       "seg1.ts\n";
 
-  auto result = M3u8Parser::parse({content, "http://example.com/"});
+  auto result = M3u8Parser::parse({content});
   EXPECT_FALSE(result.hasValue());
   EXPECT_EQ(result.error().code, ParseErrorCode::InvalidFormat);
   EXPECT_EQ(result.error().line_number, 2);
@@ -163,7 +163,7 @@ TEST_F(M3u8ParserTest, HandlesDiscontinuity) {
       "#EXTINF:10.0,\n"
       "seg3.ts\n";
 
-  auto result = M3u8Parser::parse({content, "http://example.com/"});
+  auto result = M3u8Parser::parse({content});
   ASSERT_TRUE(result.hasValue());
   auto playlist = std::move(result).value();
   ASSERT_EQ(playlist.segments.size(), 3);
@@ -195,7 +195,7 @@ TEST_F(M3u8ParserTest, ParsesMasterPlaylist) {
       "\"yes\"\n"
       "custom.m3u8\n";
 
-  auto result = M3u8Parser::parse({content, "http://example.com/"});
+  auto result = M3u8Parser::parse({content});
   ASSERT_TRUE(result.hasValue());
   auto playlist = std::move(result).value();
 
@@ -249,7 +249,7 @@ TEST_F(M3u8ParserTest, ParsesGiantManifest) {
     giant_manifest.append("#EXTINF:10.0,\nseg.ts\n");
   }
 
-  auto result = M3u8Parser::parse({giant_manifest, "http://example.com/"});
+  auto result = M3u8Parser::parse({giant_manifest});
   ASSERT_TRUE(result.hasValue());
   auto playlist = std::move(result).value();
   EXPECT_EQ(playlist.segments.size(), count);

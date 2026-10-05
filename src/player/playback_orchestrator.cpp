@@ -1,28 +1,11 @@
 #include "iptv/player/playback_orchestrator.hpp"
 
+#include <string>
+#include <utility>
+
+#include "internal/url_resolver.hpp"
+
 namespace iptv::player {
-
-namespace {
-
-std::string resolveUrl(std::string_view base_url, std::string_view uri) {
-  if (uri.starts_with("http://") || uri.starts_with("https://")) {
-    return std::string(uri);
-  }
-  size_t last_slash = base_url.find_last_of('/');
-  if (last_slash == std::string_view::npos) {
-    return std::string(uri);
-  }
-  if (uri.starts_with('/')) {
-    size_t host_end = base_url.find('/', base_url.find("://") + 3);
-    if (host_end == std::string_view::npos) {
-      return std::string(base_url) + std::string(uri);
-    }
-    return std::string(base_url.substr(0, host_end)) + std::string(uri);
-  }
-  return std::string(base_url.substr(0, last_slash + 1)) + std::string(uri);
-}
-
-}  // namespace
 
 PlaybackOrchestrator::PlaybackOrchestrator(
     std::unique_ptr<network::NetworkComponent> network_component)
@@ -51,6 +34,9 @@ void PlaybackOrchestrator::stop() {
 
 /**
  * @brief Main entry point for the background download thread.
+ *
+ * Fetches and validates the master playlist, seeds the context with the first
+ * variant, then hands over to the variant loop.
  */
 void PlaybackOrchestrator::downloadLoop(const std::stop_token& stop_token,
                                         const std::string& master_url) {
@@ -60,13 +46,13 @@ void PlaybackOrchestrator::downloadLoop(const std::stop_token& stop_token,
   }
 
   double current_throughput = 0.0;
-  std::string initial_uri =
-      resolveUrl(master_url,
-                 abr_manager_.selectVariant(master_opt->playlist.variants, current_throughput).uri);
+  const auto& initial_variant =
+      abr_manager_.selectVariant(master_opt->playlist.variants, current_throughput);
+  std::string initial_uri = internal::resolveUrl(master_url, initial_variant.uri);
 
   PlaybackContext ctx{.master_url = master_url,
                       .master_playlist = master_opt->playlist,
-                      .current_variant_uri = initial_uri,
+                      .current_variant_uri = std::move(initial_uri),
                       .next_sequence_index = 0,
                       .current_throughput = 0.0};
 
@@ -116,6 +102,9 @@ void PlaybackOrchestrator::processVariantLoop(const std::stop_token& stop_token,
 
 /**
  * @brief Downloads all pending segments from the current variant.
+ *
+ * Returns early on cancellation or on a hard download failure, and as soon as
+ * the ABR manager asks for a different variant.
  */
 bool PlaybackOrchestrator::downloadSegments(const std::stop_token& stop_token, PlaybackContext& ctx,
                                             const manifest::Playlist& variant_playlist) {
@@ -128,7 +117,7 @@ bool PlaybackOrchestrator::downloadSegments(const std::stop_token& stop_token, P
       continue;
     }
 
-    std::string absolute_uri = resolveUrl(ctx.current_variant_uri, segment.uri);
+    std::string absolute_uri = internal::resolveUrl(ctx.current_variant_uri, segment.uri);
     auto segment_res = network_->downloadSegment(absolute_uri, stop_token);
     if (!std::holds_alternative<network::MediaSegmentBundle>(segment_res)) {
       return false;  // Hard failure
@@ -149,11 +138,14 @@ bool PlaybackOrchestrator::downloadSegments(const std::stop_token& stop_token, P
 
 /**
  * @brief Checks with ABR manager if a quality switch is required.
+ *
+ * Switching drains the queue: segments already downloaded belong to the
+ * outgoing variant and must not be handed to the decoder after the switch.
  */
 bool PlaybackOrchestrator::evaluateAbrSwitch(PlaybackContext& ctx) {
   const auto& ideal_variant =
       abr_manager_.selectVariant(ctx.master_playlist.variants, ctx.current_throughput);
-  std::string next_uri = resolveUrl(ctx.master_url, ideal_variant.uri);
+  std::string next_uri = internal::resolveUrl(ctx.master_url, ideal_variant.uri);
 
   if (next_uri != ctx.current_variant_uri) {
     segment_queue_.clear();

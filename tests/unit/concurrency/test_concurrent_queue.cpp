@@ -1,98 +1,18 @@
 #include <gtest/gtest.h>
 
-#include <atomic>
-#include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <latch>
-#include <memory>
 #include <optional>
-#include <random>
-#include <semaphore>
-#include <string>
 #include <thread>
 #include <utility>
 #include <vector>
 
+#include "concurrency/concurrent_queue_fixture.hpp"
 #include "iptv/concurrency/concurrent_queue.hpp"
 
-using namespace iptv;
-
-namespace {
-
-// Compile-time safety constraint: this type CANNOT be copied, only moved. If ConcurrentQueue
-// ever tried to copy it, the build breaks instead of silently paying for a deep copy.
-struct MoveOnlyBuffer {
-  std::string data;
-  bool corrupt{false};
-
-  MoveOnlyBuffer() = default;
-  explicit MoveOnlyBuffer(std::string d, bool c = false) : data(std::move(d)), corrupt(c) {}
-
-  MoveOnlyBuffer(const MoveOnlyBuffer&) = delete;
-  MoveOnlyBuffer& operator=(const MoveOnlyBuffer&) = delete;
-
-  MoveOnlyBuffer(MoveOnlyBuffer&&) noexcept = default;
-  MoveOnlyBuffer& operator=(MoveOnlyBuffer&&) noexcept = default;
-};
-
-constexpr std::size_t kSegmentBytes = 5u * 1024u * 1024u;  // 5 MB media segment
-constexpr std::size_t kTortureRounds = 400;
-constexpr std::chrono::seconds kTortureDeadline{60};
-
-std::uint8_t payload_byte(std::size_t index) { return static_cast<std::uint8_t>(index * 31u + 7u); }
-
-// The watchdog's completion signal lives at namespace scope, never inside a GTest stack frame.
-// ThreadSanitizer identifies a mutex by its address, and a ProgressWatchdog built in a test
-// frame hands that same address to the next test once the frame is gone; TSan then reads the
-// next lock as a double-lock of a still-held mutex. Static storage keeps one address for the
-// life of the process.
-std::counting_semaphore<1> g_watchdog_done{0};
-
-// Turns a missed wakeup (an unbreakable block) into a deterministic failure with a readable
-// message instead of a test binary that hangs until the CI job timeout kills it. It parks on a
-// timed semaphore rather than polling an atomic on a timer, so it wakes exactly at the
-// deadline: no poll granularity to tune, no spinning while the test makes progress.
-//
-// A semaphore, not a condition_variable, because this toolchain's TSan reports a false
-// "double lock of a mutex" for any *timed* cv wait (reproduced on a 20-line standalone
-// program; untimed cv.wait is clean). try_acquire_for waits on a futex, so TSan has no mutex
-// to mis-track.
-class ProgressWatchdog {
- public:
-  explicit ProgressWatchdog(std::chrono::seconds limit) {
-    // A leftover count from an earlier test would make the very first wait succeed.
-    while (g_watchdog_done.try_acquire()) {
-    }
-    worker_ = std::jthread([limit] {
-      if (!g_watchdog_done.try_acquire_for(limit)) {
-        std::fputs(
-            "\nConcurrentQueueTest: no progress within the deadline. A consumer is still "
-            "blocked in ConcurrentQueue::pop(), so a wakeup was missed (deadlock).\n",
-            stderr);
-        std::fflush(stderr);
-        std::abort();
-      }
-    });
-  }
-
-  ProgressWatchdog(const ProgressWatchdog&) = delete;
-  ProgressWatchdog& operator=(const ProgressWatchdog&) = delete;
-
-  ~ProgressWatchdog() { mark_finished(); }
-
-  void mark_finished() { g_watchdog_done.release(); }
-
- private:
-  // The worker captures nothing, so it cannot outlive this object.
-  std::jthread worker_;
-};
-
-enum class Action { kPush, kStop, kBoth };
-
-}  // namespace
+using iptv::ConcurrentQueue;
+using iptv::test::concurrency::MoveOnlyBuffer;
+using iptv::test::concurrency::payloadByte;
 
 class ConcurrentQueueTest : public ::testing::Test {};
 
@@ -158,183 +78,16 @@ TEST_F(ConcurrentQueueTest, TryPop) {
   EXPECT_FALSE(val.has_value());
 }
 
-// Test 4: Cancellation via std::stop_token
-TEST_F(ConcurrentQueueTest, Cancellation) {
-  ConcurrentQueue<int> q;
-
-  std::atomic<bool> pop_returned_nullopt{false};
-  std::latch in_pop{1};
-
-  std::jthread worker([&](std::stop_token st) {
-    // Signal that we are about to block, then block. request_stop() below is issued after
-    // this latch, so the stop either lands while the consumer is parked in cv_.wait() or is
-    // already visible to it via stop_requested(); both paths must unwind to nullopt. No sleep
-    // is needed to guess whether the thread had parked yet.
-    in_pop.count_down();
-    auto val = q.pop(st);
-    if (!val.has_value()) {
-      pop_returned_nullopt = true;
-    }
-  });
-
-  in_pop.wait();
-
-  // Request stop. This will unblock the cv_.wait() instantly.
-  worker.request_stop();
-  worker.join();
-
-  EXPECT_TRUE(pop_returned_nullopt);
-}
-
-// Test 5: TSan Stress Test (Multi-Producer Multi-Consumer)
-TEST_F(ConcurrentQueueTest, TSanStressTest) {
-  ConcurrentQueue<int> q;
-  const int num_producers = 4;
-  const int num_consumers = 4;
-  const int items_per_producer = 5000;
-
-  std::atomic<int> total_consumed{0};
-
-  std::vector<std::jthread> producers;
-  std::vector<std::jthread> consumers;
-
-  // Start consumers
-  for (int i = 0; i < num_consumers; ++i) {
-    consumers.emplace_back([&](std::stop_token st) {
-      while (!st.stop_requested()) {
-        auto val = q.pop(st);
-        if (val) {
-          total_consumed++;
-        }
-      }
-    });
-  }
-
-  // Start producers
-  for (int i = 0; i < num_producers; ++i) {
-    producers.emplace_back([&]() {
-      for (int j = 0; j < items_per_producer; ++j) {
-        q.push(j);
-      }
-    });
-  }
-
-  // Wait for producers to finish
-  for (auto& p : producers) {
-    p.join();
-  }
-
-  // Allow consumers to drain the queue
-  while (q.size() > 0) {
-    std::this_thread::yield();
-  }
-
-  // Tell consumers to exit and wait for them to finish processing
-  for (auto& c : consumers) {
-    c.request_stop();
-    c.join();
-  }
-
-  EXPECT_EQ(total_consumed.load(), num_producers * items_per_producer);
-}
-
-// Test 6: TSan torture test. Each round spawns a consumer that immediately blocks in pop(),
-// then the main thread races a randomized action against the parking window: a push, a stop
-// request, or both in a random order. Every round must terminate, otherwise a wakeup was
-// missed. run under ThreadSanitizer this also hammers the stop_callback/cv paths hard enough
-// to expose data races that the single-shot Cancellation test cannot reach.
-TEST_F(ConcurrentQueueTest, StopTokenCancellation) {
-  ConcurrentQueue<int> q;
-  std::mt19937 rng{0xC0FFEEu};
-
-  ProgressWatchdog watchdog(kTortureDeadline);
-
-  std::size_t delivered = 0;
-  std::size_t cancelled = 0;
-
-  for (std::size_t round = 0; round < kTortureRounds; ++round) {
-    const int payload = static_cast<int>(round);
-    const auto action = static_cast<Action>(rng() % 3u);
-    const bool stop_first = (rng() % 2u) == 0u;
-    const unsigned spin_budget = rng() % 64u;
-
-    std::optional<int> received;
-    std::atomic<bool> entered{false};
-
-    std::jthread consumer([&](std::stop_token st) {
-      entered.store(true, std::memory_order_release);
-      received = q.pop(st);
-    });
-
-    // Ranging the spin budget lands the action before, during and after the consumer parks.
-    for (unsigned spin = 0; spin < spin_budget && !entered.load(std::memory_order_acquire);
-         ++spin) {
-      std::this_thread::yield();
-    }
-
-    const auto push_payload = [&] { q.push(payload); };
-    const auto request_stop = [&] { consumer.request_stop(); };
-
-    switch (action) {
-      case Action::kPush:
-        push_payload();
-        break;
-      case Action::kStop:
-        request_stop();
-        break;
-      case Action::kBoth:
-        if (stop_first) {
-          request_stop();
-          push_payload();
-        } else {
-          push_payload();
-          request_stop();
-        }
-        break;
-    }
-
-    // Blocks forever if the wakeup was lost. The watchdog converts that hang into a failure.
-    consumer.join();
-
-    if (received.has_value()) {
-      // The item reached the consumer: identical value, and the queue is drained.
-      EXPECT_EQ(*received, payload) << "round " << round;
-      EXPECT_TRUE(q.empty()) << "round " << round;
-      ++delivered;
-    } else {
-      // pop() gives cancellation priority, so the item is still owned by the queue. It must be
-      // recoverable: lost, duplicated or corrupted items break the pipeline contract.
-      auto pending = q.try_pop();
-      if (action == Action::kBoth) {
-        ASSERT_TRUE(pending.has_value()) << "round " << round << ": item vanished after cancel";
-        EXPECT_EQ(*pending, payload) << "round " << round;
-        EXPECT_TRUE(q.empty()) << "round " << round;
-      } else {
-        EXPECT_FALSE(pending.has_value()) << "round " << round;
-      }
-      ++cancelled;
-    }
-
-    EXPECT_TRUE(q.empty()) << "round " << round;
-  }
-
-  EXPECT_EQ(delivered + cancelled, kTortureRounds);
-  EXPECT_GT(delivered, 0u);
-  EXPECT_GT(cancelled, 0u);
-
-  watchdog.mark_finished();
-}
-
-// Test 7: Zero-copy proof for large media buffers. A std::vector<std::uint8_t> payload keeps
+// Test 4: Zero-copy proof for large media buffers. A std::vector<std::uint8_t> payload keeps
 // its heap address across push -> pop and across a second hop, which is only possible if the
 // queue moves the buffer instead of copying its bytes. Any accidental copy (const& overload,
 // by-value push without std::move, extra local round trip) changes the address and fails here.
 TEST_F(ConcurrentQueueTest, ZeroCopyMoveSemantics) {
   ConcurrentQueue<std::vector<std::uint8_t>> q;
 
-  std::vector<std::uint8_t> segment(kSegmentBytes);
+  std::vector<std::uint8_t> segment(iptv::test::concurrency::kSegmentBytes);
   for (std::size_t i = 0; i < segment.size(); ++i) {
-    segment[i] = payload_byte(i);
+    segment[i] = payloadByte(i);
   }
 
   const std::uint8_t* const payload_address = segment.data();
@@ -350,25 +103,25 @@ TEST_F(ConcurrentQueueTest, ZeroCopyMoveSemantics) {
   consumer.join();
 
   ASSERT_TRUE(popped.has_value());
-  EXPECT_EQ(popped->size(), kSegmentBytes);
+  EXPECT_EQ(popped->size(), iptv::test::concurrency::kSegmentBytes);
   EXPECT_EQ(popped->data(), payload_address) << "blocking pop copied the payload";
-  EXPECT_EQ(static_cast<int>((*popped)[0]), static_cast<int>(payload_byte(0)));
-  EXPECT_EQ(static_cast<int>((*popped)[kSegmentBytes - 1]),
-            static_cast<int>(payload_byte(kSegmentBytes - 1)));
+  EXPECT_EQ(static_cast<int>((*popped)[0]), static_cast<int>(payloadByte(0)));
+  EXPECT_EQ(static_cast<int>((*popped)[iptv::test::concurrency::kSegmentBytes - 1]),
+            static_cast<int>(payloadByte(iptv::test::concurrency::kSegmentBytes - 1)));
 
   // Taking ownership from the optional must not reallocate either.
   std::vector<std::uint8_t> owned = std::move(*popped);
   EXPECT_EQ(owned.data(), payload_address);
-  EXPECT_EQ(owned.size(), kSegmentBytes);
+  EXPECT_EQ(owned.size(), iptv::test::concurrency::kSegmentBytes);
 
   // Second hop through the queue, this time via try_pop(): same address, same bytes.
   q.push(std::move(owned));
   auto polled = q.try_pop();
   ASSERT_TRUE(polled.has_value());
   EXPECT_EQ(polled->data(), payload_address) << "try_pop() copied the payload";
-  EXPECT_EQ(polled->size(), kSegmentBytes);
-  EXPECT_EQ(static_cast<int>((*polled)[kSegmentBytes / 2]),
-            static_cast<int>(payload_byte(kSegmentBytes / 2)));
+  EXPECT_EQ(polled->size(), iptv::test::concurrency::kSegmentBytes);
+  EXPECT_EQ(static_cast<int>((*polled)[iptv::test::concurrency::kSegmentBytes / 2]),
+            static_cast<int>(payloadByte(iptv::test::concurrency::kSegmentBytes / 2)));
   EXPECT_TRUE(q.empty());
 
   // Small payloads keep the same guarantee, in both directions of the API.

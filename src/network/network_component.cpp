@@ -23,13 +23,12 @@ std::optional<NetworkError> NetworkComponent::validateHttpResponse(
 /**
  * @brief Parses the manifest bytes into a Playlist structure without copying memory.
  */
-manifest::ParseResult NetworkComponent::parseManifest(const HttpResponse& response,
-                                                      const std::string& url) {
+manifest::ParseResult NetworkComponent::parseManifest(const HttpResponse& response) {
   const auto& body_ref = response.getBody();
-  std::string_view content(static_cast<const char*>(static_cast<const void*>(body_ref.data())),
-                           body_ref.size());
+  const std::string_view content(
+      static_cast<const char*>(static_cast<const void*>(body_ref.data())), body_ref.size());
 
-  return manifest::M3u8Parser::parse({content, url});
+  return manifest::M3u8Parser::parse({content});
 }
 
 /**
@@ -54,7 +53,7 @@ PlaylistDownloadResult NetworkComponent::downloadPlaylist(const std::string& url
     return *error;
   }
 
-  manifest::ParseResult parse_result = parseManifest(response, url);
+  manifest::ParseResult parse_result = parseManifest(response);
 
   if (!parse_result.hasValue()) {
     return parse_result.error();
