@@ -2,9 +2,11 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <span>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -38,68 +40,82 @@ static_assert(std::is_move_constructible_v<CodecInfo>,
               "CodecInfo must be movable so it can cross thread boundaries by hand-off");
 static_assert(std::is_move_assignable_v<CodecInfo>, "CodecInfo must be move-assignable");
 
+// Strict-partition proof: a frame or codec description is always a fully specified video object or
+// a fully specified audio object. Without this, `DecodedFrame frame;` yields a half-formed object
+// with no picture geometry, no strides and no payload, and a `media_type` of Video that a decoder
+// never actually produced - a zombie state the render path has to defend against at every use.
+static_assert(!std::is_default_constructible_v<DecodedFrame>,
+              "DecodedFrame must not be default constructible: it cannot know which media type "
+              "it is without being told");
+static_assert(!std::is_default_constructible_v<CodecInfo>,
+              "CodecInfo must not be default constructible: an empty codec name describes "
+              "nothing");
+
+// Exactly two shapes of each type, one per media type. There is no overload carrying a MediaType
+// or a CodecInfo media discriminator: the constructor chosen *is* the declaration of which
+// parameter group applies, so a video frame cannot be given audio properties and vice versa.
+static_assert(
+    std::is_constructible_v<DecodedFrame, int64_t, int64_t, int, int, PixelFormat,
+                            const std::array<int, DecodedFrame::kLinesizeSlots>&,
+                            std::vector<uint8_t>>,
+    "DecodedFrame needs a video constructor taking timing, geometry, strides and payload");
+static_assert(std::is_constructible_v<DecodedFrame, int64_t, int64_t, int, int, AudioFormat,
+                                      std::vector<uint8_t>>,
+              "DecodedFrame needs an audio constructor taking timing, rate, channels, format "
+              "and payload");
+static_assert(
+    std::is_constructible_v<CodecInfo, std::string, std::string, int64_t, bool, int, int, double>,
+    "CodecInfo needs a video constructor taking identity, bitrate, geometry and rate");
+static_assert(std::is_constructible_v<CodecInfo, std::string, std::string, int64_t, bool, int, int>,
+              "CodecInfo needs an audio constructor taking identity, bitrate, rate and channels");
+
+// Zero-copy proof: the payload is only ever taken by rvalue reference, so a decoder cannot hand
+// over a buffer it still needs and cannot accidentally make a frame deep-copy its samples.
+static_assert(!std::is_constructible_v<DecodedFrame, int64_t, int64_t, int, int, PixelFormat,
+                                       const std::array<int, DecodedFrame::kLinesizeSlots>&,
+                                       std::vector<uint8_t>&>,
+              "DecodedFrame must take its payload by move, not bind a caller's buffer by "
+              "reference");
+static_assert(!std::is_constructible_v<DecodedFrame, int64_t, int64_t, int, int, AudioFormat,
+                                       std::vector<uint8_t>&>,
+              "DecodedFrame must take its payload by move, not bind a caller's buffer by "
+              "reference");
+
 namespace {
 
 /**
  * @brief Builds a planar YUV420P video frame with coherent plane strides.
  *
- * DecodedFrame is not an aggregate (its copy operations are user-declared), so frames are filled
- * field by field rather than brace-initialised. Strides are derived from the geometry, which is
- * exactly the invariant the render path relies on: chroma is half resolution in both axes.
+ * Delegates to the strict video constructor: it owns the YUV420P-specific geometry, deriving the
+ * half-resolution chroma strides from the width, which is exactly the invariant the render path
+ * relies on. Everything else - including the fact that this is a picture and not a sound - is
+ * the constructor's job, and the audio fields stay zeroed because no one can ask for them here.
  */
 DecodedFrame makeVideoFrame(std::vector<uint8_t> payload, int64_t pts, int width, int height,
                             int64_t duration = 3000) {
-  DecodedFrame frame;
-  frame.data = std::move(payload);
-  frame.pts = pts;
-  frame.duration = duration;
-  frame.media_type = MediaType::Video;
-  frame.width = width;
-  frame.height = height;
-  frame.pixel_format = PixelFormat::YUV420P;
-  frame.linesize = {width, width / 2, width / 2, 0};
-  return frame;
+  return DecodedFrame(pts, duration, width, height, PixelFormat::YUV420P,
+                      std::array<int, DecodedFrame::kLinesizeSlots>{width, width / 2, width / 2, 0},
+                      std::move(payload));
 }
 
 /**
  * @brief Builds a signed 16-bit PCM audio frame, deriving the declared format from the rate.
+ *
+ * Delegates to the strict audio constructor, so the picture fields stay zeroed.
  */
 DecodedFrame makeAudioFrame(std::vector<uint8_t> payload, int64_t pts, int sample_rate,
                             int channels, int64_t duration = 1024) {
-  DecodedFrame frame;
-  frame.data = std::move(payload);
-  frame.pts = pts;
-  frame.duration = duration;
-  frame.media_type = MediaType::Audio;
-  frame.sample_rate = sample_rate;
-  frame.channels = channels;
-  frame.audio_format =
-      sample_rate == 48000 ? AudioFormat::PCM_S16_48KHZ : AudioFormat::PCM_S16_44KHZ;
-  return frame;
+  return DecodedFrame(
+      pts, duration, sample_rate, channels,
+      sample_rate == 48000 ? AudioFormat::PCM_S16_48KHZ : AudioFormat::PCM_S16_44KHZ,
+      std::move(payload));
 }
 
 CodecInfo makeVideoCodecInfo() {
-  CodecInfo info;
-  info.name = "h264";
-  info.profile = "High";
-  info.bitrate = 4500000;
-  info.hardware_accelerated = true;
-  info.width = 1920;
-  info.height = 1080;
-  info.fps = 50.0;
-  return info;
+  return CodecInfo("h264", "High", 4500000, true, 1920, 1080, 50.0);
 }
 
-CodecInfo makeAudioCodecInfo() {
-  CodecInfo info;
-  info.name = "aac";
-  info.profile = "LC";
-  info.bitrate = 128000;
-  info.hardware_accelerated = false;
-  info.sample_rate = 48000;
-  info.channels = 2;
-  return info;
-}
+CodecInfo makeAudioCodecInfo() { return CodecInfo("aac", "LC", 128000, false, 48000, 2); }
 
 /**
  * @brief Builds a frame vector by moving each frame in.
@@ -208,12 +224,12 @@ TEST(DecoderInterfacesTest, VideoFrameTracksPlaneStridesForYuv420p) {
   constexpr int kHeight = 1080;
   constexpr int kChromaWidth = kWidth / 2;
 
-  DecodedFrame frame;
-  frame.media_type = MediaType::Video;
-  frame.width = kWidth;
-  frame.height = kHeight;
-  frame.pixel_format = PixelFormat::YUV420P;
-  frame.linesize = {kWidth, kChromaWidth, kChromaWidth, 0};
+  // Strides are a constructor parameter, never a leftover from a default state: a picture frame
+  // that arrived without them would leave the render path guessing how to address its planes.
+  const DecodedFrame frame(
+      0, 3000, kWidth, kHeight, PixelFormat::YUV420P,
+      std::array<int, DecodedFrame::kLinesizeSlots>{kWidth, kChromaWidth, kChromaWidth, 0},
+      std::vector<uint8_t>{});
 
   ASSERT_EQ(frame.linesize.size(), DecodedFrame::kLinesizeSlots);
   EXPECT_EQ(frame.linesize[0], kWidth);
@@ -236,15 +252,31 @@ TEST(DecoderInterfacesTest, VideoFrameTracksPlaneStridesForYuv420p) {
                 static_cast<std::size_t>(kWidth) * static_cast<std::size_t>(kHeight / 2));
 }
 
-TEST(DecoderInterfacesTest, DefaultConstructedFrameClaimsNoMediaLayout) {
-  const DecodedFrame frame;
+TEST(DecoderInterfacesTest, VideoFrameConstructorLeavesAudioGeometryZeroed) {
+  const DecodedFrame frame = makeVideoFrame({0x00, 0xFF}, 1000, 1920, 1080);
 
-  EXPECT_EQ(frame.pts, 0);
-  EXPECT_EQ(frame.duration, 0);
-  EXPECT_EQ(frame.pixel_format, PixelFormat::Unknown);
+  // The constructor stamps the media type, so a caller never states one and cannot disagree with
+  // the fields it filled in.
+  EXPECT_EQ(frame.media_type, MediaType::Video);
+
+  // No zombie state: a picture frame carries no sample rate, no channel count and no sample
+  // layout, so no consumer can read those and believe the frame described audio.
+  EXPECT_EQ(frame.sample_rate, 0);
+  EXPECT_EQ(frame.channels, 0);
   EXPECT_EQ(frame.audio_format, AudioFormat::Unknown);
-  EXPECT_EQ(frame.linesize[0], 0);
-  EXPECT_TRUE(frame.data.empty());
+}
+
+TEST(DecoderInterfacesTest, AudioFrameConstructorLeavesVideoGeometryZeroed) {
+  const DecodedFrame frame = makeAudioFrame({0xAA, 0xBB}, 1000, 48000, 2);
+
+  EXPECT_EQ(frame.media_type, MediaType::Audio);
+
+  // And the mirror image: no picture geometry and, crucially, no plane strides, so a render path
+  // handed this frame cannot walk planes it does not have.
+  EXPECT_EQ(frame.width, 0);
+  EXPECT_EQ(frame.height, 0);
+  EXPECT_EQ(frame.pixel_format, PixelFormat::Unknown);
+  EXPECT_EQ(frame.linesize, (std::array<int, DecodedFrame::kLinesizeSlots>{0, 0, 0, 0}));
 }
 
 TEST(DecoderInterfacesTest, MoveConstructionTransfersPayloadWithoutCopying) {
@@ -277,9 +309,13 @@ TEST(DecoderInterfacesTest, MoveAssignmentReplacesFrameInPlace) {
   EXPECT_EQ(sink.audio_format, AudioFormat::PCM_S16_48KHZ);
   EXPECT_EQ(sink.data.size(), 4U);
 
-  // Video-only fields of the overwritten frame must not leak into the audio frame.
+  // Video-only fields of the overwritten frame must not leak into the audio frame: the audio
+  // constructor zeroed them, so the memberwise move writes zeros instead of the previous picture
+  // geometry. Move assignment replaces the whole object rather than merging the two.
   EXPECT_EQ(sink.width, 0);
   EXPECT_EQ(sink.height, 0);
+  EXPECT_EQ(sink.pixel_format, PixelFormat::Unknown);
+  EXPECT_EQ(sink.linesize, (std::array<int, DecodedFrame::kLinesizeSlots>{0, 0, 0, 0}));
 }
 
 TEST(DecoderInterfacesTest, VideoDecoderReportsCodecInfo) {
@@ -329,6 +365,23 @@ TEST(DecoderInterfacesTest, CodecInfoMovesAcrossOwnershipBoundary) {
   EXPECT_EQ(sink.name, "aac");
   EXPECT_EQ(sink.sample_rate, 48000);
   EXPECT_EQ(sink.width, 0);
+}
+
+TEST(DecoderInterfacesTest, VideoCodecInfoConstructorLeavesAudioParametersZeroed) {
+  const CodecInfo info = makeVideoCodecInfo();
+
+  // The video constructor takes no audio parameters at all, so the audio group is zero rather than
+  // whatever the caller last happened to have lying around.
+  EXPECT_EQ(info.sample_rate, 0);
+  EXPECT_EQ(info.channels, 0);
+}
+
+TEST(DecoderInterfacesTest, AudioCodecInfoConstructorLeavesVideoParametersZeroed) {
+  const CodecInfo info = makeAudioCodecInfo();
+
+  EXPECT_EQ(info.width, 0);
+  EXPECT_EQ(info.height, 0);
+  EXPECT_DOUBLE_EQ(info.fps, 0.0);
 }
 
 TEST(DecoderInterfacesTest, DecodeReturnsEmptyWhenNoFrameProduced) {
