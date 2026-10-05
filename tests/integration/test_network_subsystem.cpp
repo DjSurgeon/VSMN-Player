@@ -3,7 +3,12 @@
 
 #include <atomic>
 #include <chrono>
+#include <cmath>
+#include <cstdint>
+#include <future>
+#include <optional>
 #include <random>
+#include <stop_token>
 #include <string>
 #include <thread>
 #include <vector>
@@ -20,6 +25,56 @@ using namespace iptv::manifest;
 using namespace iptv::abr;
 
 namespace {
+
+/**
+ * @brief Blocks in ConcurrentQueue::pop() until the orchestrator pushes a bundle.
+ *
+ * Parks in the queue's own condition_variable instead of spinning on try_pop() between
+ * timer naps, so the wait ends the instant the producer signals. The bounded future wait is
+ * only a safety net for "the producer never arrived", which is a failure we want reported
+ * rather than hung on.
+ */
+std::optional<MediaSegmentBundle> popWithin(iptv::ConcurrentQueue<MediaSegmentBundle>& queue,
+                                            std::chrono::milliseconds deadline) {
+  std::promise<std::optional<MediaSegmentBundle>> delivered;
+  std::future<std::optional<MediaSegmentBundle>> ready = delivered.get_future();
+
+  std::jthread consumer([&](std::stop_token st) { delivered.set_value(queue.pop(st)); });
+
+  // If the deadline expires, forward the cancellation into the parked pop so it unwinds
+  // instead of blocking us forever.
+  std::stop_source cancel;
+  std::stop_callback forward(cancel.get_token(), [&consumer] { consumer.request_stop(); });
+
+  if (ready.wait_for(deadline) != std::future_status::ready) {
+    cancel.request_stop();
+  }
+
+  std::optional<MediaSegmentBundle> bundle = ready.get();
+  consumer.join();
+  return bundle;
+}
+
+/**
+ * @brief Chunk size for one step of the jitter stream.
+ *
+ * Jitter is irregular inter-arrival timing, which a stream of uneven chunks reproduces far
+ * better than a uniform pause between them: consecutive reads see instantaneous throughput
+ * swinging by more than an order of magnitude instead of a flat, constant rate. Fixed seed,
+ * so the burst sequence is byte-for-byte identical on every run.
+ */
+std::size_t jitterChunkSize(std::size_t step) {
+  static const std::vector<std::size_t> kPattern = [] {
+    std::mt19937 gen(7);
+    std::uniform_int_distribution<std::size_t> dist(1024, 16384);
+    std::vector<std::size_t> pattern(64);
+    for (auto& size : pattern) {
+      size = dist(gen);
+    }
+    return pattern;
+  }();
+  return kPattern[step % kPattern.size()];
+}
 
 /**
  * @brief Simple CRC32 implementation to verify chunk integrity.
@@ -134,12 +189,9 @@ class NetworkSubsystemIntegrationTest : public ::testing::Test {
               return true;
             }
 
-            // Jitter attack: Serve in tiny chunks with latency
-            size_t chunk = std::min(length, static_cast<size_t>(8192));
-            if (chunk > 1024) {
-              std::this_thread::sleep_for(std::chrono::milliseconds(2));  // Introduce stall
-            }
-
+            // Jitter attack: bursty chunk sizes, so the client's view of arrival rate is
+            // irregular. Deterministic and free, unlike a fixed pause per chunk.
+            size_t chunk = std::min(length, jitterChunkSize(offset / 1024));
             sink.write(reinterpret_cast<const char*>(segment_payload.data() + offset), chunk);
             return true;
           });
@@ -197,22 +249,12 @@ TEST_F(NetworkSubsystemIntegrationTest, EndToEndFlowIntegrity) {
   // We expect 2 segments to be downloaded.
   int segments_popped = 0;
   for (int i = 0; i < 2; ++i) {
-    MediaSegmentBundle bundle;
-    // Timeout of 5 seconds max
-    auto start_time = std::chrono::steady_clock::now();
-    bool popped = false;
-    while (std::chrono::steady_clock::now() - start_time < std::chrono::seconds(5)) {
-      if (auto item = queue.try_pop()) {
-        bundle = std::move(*item);
-        popped = true;
-        break;
-      }
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
+    // Blocks until the orchestrator pushes the next bundle, or fails after 5 seconds.
+    auto bundle = popWithin(queue, std::chrono::seconds(5));
 
-    if (popped) {
-      EXPECT_EQ(bundle.raw_buffer.size(), segment_payload.size());
-      EXPECT_EQ(calculateCrc32(bundle.raw_buffer), expected_crc);
+    if (bundle.has_value()) {
+      EXPECT_EQ(bundle->raw_buffer.size(), segment_payload.size());
+      EXPECT_EQ(calculateCrc32(bundle->raw_buffer), expected_crc);
       segments_popped++;
     }
   }
@@ -252,8 +294,12 @@ TEST_F(NetworkSubsystemIntegrationTest, ChaosMonkey_JitterAttack) {
   EXPECT_EQ(bundle.raw_buffer.size(), segment_payload.size());
   EXPECT_EQ(calculateCrc32(bundle.raw_buffer), expected_crc);
 
-  // Throughput check (must not be zero/inf due to jitter)
-  EXPECT_GT(bundle.metrics.throughputMbps(), 0.0);
+  // Throughput check. The whole point of this route is that arrivals are irregular, so
+  // assert the arithmetic survived it: a finite, non-zero rate. NaN, inf and 0 are the three
+  // ways a jittered transfer can corrupt the metric, and each is caught here.
+  const double mbps = bundle.metrics.throughputMbps();
+  EXPECT_TRUE(std::isfinite(mbps)) << "throughput is not finite: " << mbps;
+  EXPECT_GT(mbps, 0.0);
 }
 
 /**
@@ -293,24 +339,12 @@ TEST_F(NetworkSubsystemIntegrationTest, ChaosMonkey_ThunderingHerd) {
       orchestrator.start(master_url);
 
       auto& queue = orchestrator.getQueue();
-      MediaSegmentBundle bundle;
 
-      // Try to pop at least 1 segment
-      auto start_time = std::chrono::steady_clock::now();
-      bool popped = false;
-      while (std::chrono::steady_clock::now() - start_time < std::chrono::seconds(2)) {
-        if (auto item = queue.try_pop()) {
-          bundle = std::move(*item);
-          popped = true;
-          break;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      }
+      // Try to pop at least 1 segment; blocks until the orchestrator pushes one.
+      auto bundle = popWithin(queue, std::chrono::seconds(2));
 
-      if (popped) {
-        if (calculateCrc32(bundle.raw_buffer) == expected_crc) {
-          successes++;
-        }
+      if (bundle.has_value() && calculateCrc32(bundle->raw_buffer) == expected_crc) {
+        successes++;
       }
       orchestrator.stop();
     });

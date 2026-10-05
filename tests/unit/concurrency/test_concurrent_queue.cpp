@@ -6,9 +6,11 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <latch>
 #include <memory>
 #include <optional>
 #include <random>
+#include <semaphore>
 #include <string>
 #include <thread>
 #include <utility>
@@ -42,26 +44,36 @@ constexpr std::chrono::seconds kTortureDeadline{60};
 
 std::uint8_t payload_byte(std::size_t index) { return static_cast<std::uint8_t>(index * 31u + 7u); }
 
+// The watchdog's completion signal lives at namespace scope, never inside a GTest stack frame.
+// ThreadSanitizer identifies a mutex by its address, and a ProgressWatchdog built in a test
+// frame hands that same address to the next test once the frame is gone; TSan then reads the
+// next lock as a double-lock of a still-held mutex. Static storage keeps one address for the
+// life of the process.
+std::counting_semaphore<1> g_watchdog_done{0};
+
 // Turns a missed wakeup (an unbreakable block) into a deterministic failure with a readable
-// message instead of a test binary that hangs until the CI job timeout kills it. It polls an
-// atomic rather than parking on a condition_variable: a std::mutex inside a helper that lives
-// in a GTest stack frame confuses ThreadSanitizer's mutex ownership tracking, since
-// std::mutex never calls pthread_mutex_destroy and the address gets recycled by the next test.
+// message instead of a test binary that hangs until the CI job timeout kills it. It parks on a
+// timed semaphore rather than polling an atomic on a timer, so it wakes exactly at the
+// deadline: no poll granularity to tune, no spinning while the test makes progress.
+//
+// A semaphore, not a condition_variable, because this toolchain's TSan reports a false
+// "double lock of a mutex" for any *timed* cv wait (reproduced on a 20-line standalone
+// program; untimed cv.wait is clean). try_acquire_for waits on a futex, so TSan has no mutex
+// to mis-track.
 class ProgressWatchdog {
  public:
   explicit ProgressWatchdog(std::chrono::seconds limit) {
-    worker_ = std::jthread([this, limit] {
-      const auto deadline = std::chrono::steady_clock::now() + limit;
-      while (!finished_.load(std::memory_order_acquire)) {
-        if (std::chrono::steady_clock::now() >= deadline) {
-          std::fputs(
-              "\nConcurrentQueueTest: no progress within the deadline. A consumer is still "
-              "blocked in ConcurrentQueue::pop(), so a wakeup was missed (deadlock).\n",
-              stderr);
-          std::fflush(stderr);
-          std::abort();
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    // A leftover count from an earlier test would make the very first wait succeed.
+    while (g_watchdog_done.try_acquire()) {
+    }
+    worker_ = std::jthread([limit] {
+      if (!g_watchdog_done.try_acquire_for(limit)) {
+        std::fputs(
+            "\nConcurrentQueueTest: no progress within the deadline. A consumer is still "
+            "blocked in ConcurrentQueue::pop(), so a wakeup was missed (deadlock).\n",
+            stderr);
+        std::fflush(stderr);
+        std::abort();
       }
     });
   }
@@ -71,11 +83,10 @@ class ProgressWatchdog {
 
   ~ProgressWatchdog() { mark_finished(); }
 
-  void mark_finished() { finished_.store(true, std::memory_order_release); }
+  void mark_finished() { g_watchdog_done.release(); }
 
  private:
-  // Declared before worker_ so the flag outlives the join.
-  std::atomic<bool> finished_{false};
+  // The worker captures nothing, so it cannot outlive this object.
   std::jthread worker_;
 };
 
@@ -151,23 +162,22 @@ TEST_F(ConcurrentQueueTest, TryPop) {
 TEST_F(ConcurrentQueueTest, Cancellation) {
   ConcurrentQueue<int> q;
 
-  std::atomic<bool> thread_started{false};
   std::atomic<bool> pop_returned_nullopt{false};
+  std::latch in_pop{1};
 
   std::jthread worker([&](std::stop_token st) {
-    thread_started = true;
+    // Signal that we are about to block, then block. request_stop() below is issued after
+    // this latch, so the stop either lands while the consumer is parked in cv_.wait() or is
+    // already visible to it via stop_requested(); both paths must unwind to nullopt. No sleep
+    // is needed to guess whether the thread had parked yet.
+    in_pop.count_down();
     auto val = q.pop(st);
     if (!val.has_value()) {
       pop_returned_nullopt = true;
     }
   });
 
-  // Wait for thread to actually start waiting
-  while (!thread_started) {
-    std::this_thread::yield();
-  }
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  in_pop.wait();
 
   // Request stop. This will unblock the cv_.wait() instantly.
   worker.request_stop();
