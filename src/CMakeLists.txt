@@ -3,6 +3,7 @@ find_package(ffmpeg REQUIRED)
 
 # Core library definition
 add_library(iptv_core STATIC
+    decoder/ffmpeg_decoder.cpp
     network/http_client.cpp
     network/http_init.cpp
     network/internal/http_client_impl.cpp

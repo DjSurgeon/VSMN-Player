@@ -24,6 +24,7 @@ add_executable(unit_tests
     unit/concurrency/test_concurrent_queue_cancellation.cpp
     unit/concurrency/test_concurrent_queue_stress.cpp
     unit/decoder/test_decoder_interfaces.cpp
+    unit/decoder/test_ffmpeg_decoder.cpp
     unit/decoder/test_decoder_frame.cpp
     unit/decoder/test_decoder_codec_info.cpp
     unit/abr/test_abr_manager.cpp
