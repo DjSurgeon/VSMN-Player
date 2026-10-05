@@ -1,3 +1,6 @@
+# Media decoding dependency managed by Conan 2
+find_package(ffmpeg REQUIRED)
+
 # Core library definition
 add_library(iptv_core STATIC
     network/http_client.cpp
@@ -20,7 +23,14 @@ target_include_directories(iptv_core PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/network
     ${CMAKE_CURRENT_SOURCE_DIR}/player
 )
-target_link_libraries(iptv_core PUBLIC project_config CURL::libcurl)
+target_link_libraries(iptv_core PUBLIC
+    project_config
+    CURL::libcurl
+    ffmpeg::avcodec
+    ffmpeg::avformat
+    ffmpeg::avutil
+    ffmpeg::swresample
+)
 
 # Main executable
 add_executable(iptv_player main.cpp)
