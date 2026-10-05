@@ -20,6 +20,7 @@ add_executable(unit_tests
     unit/manifest/test_playlist_attribute_scanner.cpp
     unit/manifest/test_playlist_m3u8_parser.cpp
     unit/concurrency/test_concurrent_queue.cpp
+    unit/decoder/test_decoder_interfaces.cpp
     unit/abr/test_abr_manager.cpp
     unit/network/test_network_component.cpp
     unit/player/test_playback_orchestrator.cpp
