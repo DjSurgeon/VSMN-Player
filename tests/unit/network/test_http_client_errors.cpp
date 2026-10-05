@@ -3,7 +3,9 @@
 
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -11,14 +13,47 @@
 
 using namespace iptv::network;
 
+namespace {
+
+// A one-shot gate the test thread opens. Used to model "the server is still busy while the
+// client gives up": the handler parks here until the test releases it, so the stimulus is
+// enforced by happens-before ordering instead of by guessing a delay longer than the
+// timeout. Same guarantee, zero wall-clock guesswork, and the response can never land
+// early enough to make the client succeed.
+class Gate {
+ public:
+  void wait() {
+    std::unique_lock lock(mutex_);
+    cv_.wait(lock, [this] { return open_; });
+  }
+
+  void open() {
+    {
+      std::scoped_lock lock(mutex_);
+      open_ = true;
+    }
+    cv_.notify_all();
+  }
+
+ private:
+  std::mutex mutex_;
+  std::condition_variable cv_;
+  bool open_{false};
+};
+
+}  // namespace
+
 class HttpClientErrorsTest : public ::testing::Test {
  protected:
   void SetUp() override {
     server_ = std::make_unique<httplib::Server>();
 
-    // 1. Timeout Route: Sleeps longer than the client's configured timeout
-    server_->Get("/timeout", [](const httplib::Request&, httplib::Response& res) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    // 1. Timeout Route: held past the client's configured timeout until the test releases it.
+    // Shared ownership so a handler still parked at teardown keeps the gate alive.
+    auto gate = std::make_shared<Gate>();
+    gate_ = gate;
+    server_->Get("/timeout", [gate](const httplib::Request&, httplib::Response& res) {
+      gate->wait();
       res.set_content("Too late", "text/plain");
     });
 
@@ -48,6 +83,11 @@ class HttpClientErrorsTest : public ::testing::Test {
   }
 
   void TearDown() override {
+    // Release the handler before stopping the server: a worker parked in Gate::wait() must
+    // never be left blocked on state that is about to go away.
+    if (gate_) {
+      gate_->open();
+    }
     server_->stop();
     if (server_thread_.joinable()) {
       server_thread_.join();
@@ -60,6 +100,7 @@ class HttpClientErrorsTest : public ::testing::Test {
 
   std::unique_ptr<httplib::Server> server_;
   std::thread server_thread_;
+  std::shared_ptr<Gate> gate_;
   int port_ = 0;
 
  public:
@@ -77,7 +118,8 @@ TEST_F(HttpClientErrorsTest, TimeoutThrowsGracefully) {
   policy.max_retries = 0;
   client.setRetryPolicy(policy);
 
-  // Timeout of 10ms, server takes 50ms
+  // The handler stays parked until TearDown opens the gate, so the server cannot answer
+  // within the 10ms timeout no matter how fast the machine is.
   auto response = client.download(getUrl("/timeout"), std::chrono::milliseconds(10));
 
   EXPECT_FALSE(response.isSuccess());
