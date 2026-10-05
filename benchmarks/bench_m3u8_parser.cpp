@@ -55,7 +55,7 @@ static void BM_ParseLargePlaylist(benchmark::State& state) {
     g_allocations.store(0, std::memory_order_relaxed);
     g_track_allocations.store(true, std::memory_order_relaxed);
 
-    auto result = iptv::manifest::M3u8Parser::parse({large_manifest, "http://cdn.example.com/"});
+    auto result = iptv::manifest::M3u8Parser::parse({large_manifest});
 
     g_track_allocations.store(false, std::memory_order_relaxed);
 

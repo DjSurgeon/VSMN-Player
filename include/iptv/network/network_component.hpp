@@ -116,11 +116,12 @@ class NetworkComponent {
   /**
    * @brief Parses the raw HTTP response body into a manifest playlist.
    * @param response The HTTP response containing the raw manifest bytes.
-   * @param url The absolute URL of the manifest for relative URI resolution.
    * @return A ParseResult containing either the parsed playlist or an error.
+   *
+   * URIs are kept verbatim; the orchestrator resolves them against the URL it
+   * requested them from.
    */
-  [[nodiscard]] static manifest::ParseResult parseManifest(const HttpResponse& response,
-                                                           const std::string& url);
+  [[nodiscard]] static manifest::ParseResult parseManifest(const HttpResponse& response);
 
   /**
    * @brief Assembles the raw memory and parsed playlist into a secure, zero-copy bundle.

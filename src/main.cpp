@@ -40,8 +40,7 @@ int main(int argc, char* argv[]) {
   std::cout << "Descarga OK (" << content.size() << " bytes). Parseando...\n";
 
   // Parsear
-  ParseOptions options{content, url};
-  ParseResult result = M3u8Parser::parse(options);
+  ParseResult result = M3u8Parser::parse({content});
 
   if (!result.hasValue()) {
     const auto& err = result.error();
