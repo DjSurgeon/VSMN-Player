@@ -24,12 +24,12 @@ target_include_directories(iptv_core PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/player
 )
 target_link_libraries(iptv_core PUBLIC
-    project_config
     CURL::libcurl
     ffmpeg::avcodec
     ffmpeg::avformat
     ffmpeg::avutil
     ffmpeg::swresample
+    project_config
 )
 
 # Main executable
