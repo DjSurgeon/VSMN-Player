@@ -23,8 +23,10 @@ add_executable(unit_tests
     unit/concurrency/test_concurrent_queue.cpp
     unit/concurrency/test_concurrent_queue_cancellation.cpp
     unit/concurrency/test_concurrent_queue_stress.cpp
+    unit/decoder/mpeg4_source.cpp
     unit/decoder/test_decoder_interfaces.cpp
     unit/decoder/test_ffmpeg_decoder.cpp
+    unit/decoder/test_ffmpeg_frame_extractor.cpp
     unit/decoder/test_decoder_frame.cpp
     unit/decoder/test_decoder_codec_info.cpp
     unit/abr/test_abr_manager.cpp
@@ -34,6 +36,8 @@ add_executable(unit_tests
 target_include_directories(unit_tests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/unit
+    # The frame extractor is an internal helper, so its own test reaches into the decoder module.
+    ${PROJECT_SOURCE_DIR}/src/decoder
 )
 target_link_libraries(unit_tests PRIVATE GTest::gmock GTest::gtest_main iptv_core project_config httplib::httplib)
 

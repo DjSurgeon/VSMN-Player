@@ -4,6 +4,8 @@ find_package(ffmpeg REQUIRED)
 # Core library definition
 add_library(iptv_core STATIC
     decoder/ffmpeg_decoder.cpp
+    decoder/internal/ffmpeg_buffers.cpp
+    decoder/internal/ffmpeg_frame_extractor.cpp
     network/http_client.cpp
     network/http_init.cpp
     network/internal/http_client_impl.cpp
@@ -20,6 +22,7 @@ add_library(iptv_core STATIC
     player/playback_orchestrator.cpp
 )
 target_include_directories(iptv_core PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/decoder
     ${CMAKE_CURRENT_SOURCE_DIR}/manifest
     ${CMAKE_CURRENT_SOURCE_DIR}/network
     ${CMAKE_CURRENT_SOURCE_DIR}/player

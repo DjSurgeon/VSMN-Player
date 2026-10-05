@@ -38,7 +38,32 @@ class FFmpegDecoder : public IVideoDecoder {
   FFmpegDecoder(FFmpegDecoder&&) noexcept;
   FFmpegDecoder& operator=(FFmpegDecoder&&) noexcept;
 
+  /**
+   * @brief Decodes one compressed packet, releasing every frame the codec completes on it.
+   *
+   * A packet does not map one-to-one onto a frame: the codec may hold pictures back for reordering
+   * and may release several, or none, for any one packet, so every frame it produces is returned.
+   * Frame times are synthesized in milliseconds from the rate the codec reports, because the
+   * packets carry no timestamps of their own.
+   *
+   * @param compressed_data Raw bytes of the compressed packet. Borrowed for the duration of the
+   *                        call and copied into a buffer the codec owns.
+   * @return Frames in output order. Empty when the packet yields no picture, which includes the
+   *         codec rejecting the packet as corrupt: a bad packet is dropped and the decoder stays
+   *         usable for the next one.
+   * @throws std::runtime_error when FFmpeg fails for a reason other than unusable input, or when
+   *         the codec produced a picture that is not 8-bit 4:2:0 YUV.
+   * @throws std::logic_error when the decoder was moved from, or when it is fed after flush().
+   */
   std::vector<DecodedFrame> decode(std::span<const uint8_t> compressed_data) override;
+
+  /**
+   * @brief Signals end of stream and drains the frames the codec was still holding.
+   * @return Remaining frames in output order. Empty when nothing was buffered, and empty on a
+   *         repeated call: the first flush closes the codec to further input.
+   * @throws std::runtime_error when FFmpeg fails to drain its buffers.
+   * @throws std::logic_error when the decoder was moved from.
+   */
   std::vector<DecodedFrame> flush() override;
   CodecInfo getCodecInfo() const override;
 
@@ -50,6 +75,7 @@ class FFmpegDecoder : public IVideoDecoder {
    * @throws std::logic_error if this decoder has been moved from.
    */
   const Impl& requireImpl() const;
+  Impl& requireImpl();
 
   std::unique_ptr<Impl> pimpl_;
 };

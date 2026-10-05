@@ -1,95 +1,57 @@
 #include "iptv/decoder/ffmpeg_decoder.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <limits>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
+
+#include "internal/ffmpeg_buffers.hpp"
+#include "internal/ffmpeg_frame_extractor.hpp"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
+#include <libavutil/error.h>
+#include <libavutil/mathematics.h>
 }
 
 namespace iptv::decoder {
 
 namespace {
 
-// Custom deleters for FFmpeg C structs to ensure zero leaks.
-struct AVCodecContextDeleter {
-  void operator()(AVCodecContext* ctx) const noexcept {
-    if (ctx) {
-      avcodec_free_context(&ctx);
-    }
-  }
-};
+using internal::allocateFrameBuffer;
+using internal::allocatePacketBuffer;
+using internal::CodecContextPtr;
+using internal::FramePtr;
+using internal::kFrameTimeBase;
+using internal::openCodecContext;
+using internal::PacketPtr;
 
-struct AVFrameDeleter {
-  void operator()(AVFrame* frame) const noexcept {
-    if (frame) {
-      av_frame_free(&frame);
-    }
-  }
-};
-
-struct AVPacketDeleter {
-  void operator()(AVPacket* pkt) const noexcept {
-    if (pkt) {
-      av_packet_free(&pkt);
-    }
-  }
-};
-
-using CodecContextPtr = std::unique_ptr<AVCodecContext, AVCodecContextDeleter>;
-using FramePtr = std::unique_ptr<AVFrame, AVFrameDeleter>;
-using PacketPtr = std::unique_ptr<AVPacket, AVPacketDeleter>;
+// Smallest step a synthesized timestamp advances by, so frames stay ordered in time order even
+// when the codec reports no frame rate to derive a real duration from.
+constexpr int64_t kMinimumFrameStepMs = 1;
 
 /**
- * @brief Locates the decoder named by @p codec_hint and opens it.
- * @throws std::runtime_error when the codec is unknown, its context cannot be allocated,
- *         or it cannot be opened. The caller receives ownership of the context on success.
+ * @brief Names an FFmpeg status code, which is otherwise an opaque integer.
  */
-CodecContextPtr openCodecContext(const std::string& codec_hint) {
-  const AVCodec* codec = avcodec_find_decoder_by_name(codec_hint.c_str());
-  if (codec == nullptr) {
-    throw std::runtime_error("FFmpeg codec not found: '" + codec_hint +
-                             "'. Supply a decoder name supported by this FFmpeg build.");
-  }
-
-  CodecContextPtr context(avcodec_alloc_context3(codec));
-  if (!context) {
-    throw std::runtime_error("Failed to allocate AVCodecContext for codec '" + codec_hint +
-                             "'. The system is out of memory.");
-  }
-
-  if (avcodec_open2(context.get(), codec, nullptr) < 0) {
-    throw std::runtime_error("Failed to open FFmpeg codec '" + codec_hint +
-                             "'. Verify the codec is supported by this FFmpeg build.");
-  }
-
-  return context;
+std::string describeStatus(int status) {
+  char message[AV_ERROR_MAX_STRING_SIZE] = {};
+  av_strerror(status, message, sizeof(message));
+  return std::string(message);
 }
 
 /**
- * @brief Allocates the reusable frame buffer.
- * @throws std::runtime_error when the allocation fails.
+ * @brief Reports whether a status means the input packet was unusable.
+ *
+ * A corrupt packet is the stream's fault, not this decoder's: the codec rejects it and stays
+ * usable for the next one, so the packet is dropped instead of failing the whole call.
  */
-FramePtr allocateFrameBuffer() {
-  FramePtr frame(av_frame_alloc());
-  if (!frame) {
-    throw std::runtime_error("Failed to allocate FFmpeg AVFrame. The system is out of memory.");
-  }
-  return frame;
-}
-
-/**
- * @brief Allocates the reusable packet buffer.
- * @throws std::runtime_error when the allocation fails.
- */
-PacketPtr allocatePacketBuffer() {
-  PacketPtr packet(av_packet_alloc());
-  if (!packet) {
-    throw std::runtime_error("Failed to allocate FFmpeg AVPacket. The system is out of memory.");
-  }
-  return packet;
-}
+[[nodiscard]] bool isCorruptInput(int status) noexcept { return status == AVERROR_INVALIDDATA; }
 
 }  // namespace
 
@@ -98,19 +60,146 @@ struct FFmpegDecoder::Impl {
   CodecContextPtr codec_context;
   FramePtr frame;
   PacketPtr packet;
+  int64_t next_pts_ms{0};
+  bool end_of_stream{false};
 
   explicit Impl(const std::string& codec_hint)
       : codec_name(codec_hint),
         codec_context(openCodecContext(codec_hint)),
         frame(allocateFrameBuffer()),
         packet(allocatePacketBuffer()) {}
+
+  // Feeds one packet to the codec and appends every frame it completes on it.
+  void decodePacket(std::span<const uint8_t> compressed_data, std::vector<DecodedFrame>& frames);
+
+  // Signals end of stream, then appends every frame the codec was still holding.
+  void drainRemainingFrames(std::vector<DecodedFrame>& frames);
+
+  // Appends every frame the codec currently has ready, in output order.
+  void releaseReadyFrames(std::vector<DecodedFrame>& frames);
+
+  // Packs the frame the codec just produced, stamped with the next synthesized time.
+  [[nodiscard]] DecodedFrame packReadyFrame();
+
+  // How long a frame stays on screen in milliseconds; 0 when the codec reports no frame rate.
+  [[nodiscard]] int64_t frameDurationMs() const noexcept;
 };
+
+/**
+ * @brief Reports whether the codec took the packet.
+ * @param status Status returned when the packet was sent.
+ * @param packet_size Size of the packet, quoted in the failure message.
+ * @return True when the packet was taken, false when it was corrupt and safely dropped.
+ * @throws std::runtime_error when FFmpeg failed for a reason other than unusable input.
+ */
+[[nodiscard]] bool requirePacketAccepted(int status, std::size_t packet_size) {
+  if (status >= 0) {
+    return true;
+  }
+  if (isCorruptInput(status)) {
+    return false;
+  }
+  throw std::runtime_error("FFmpeg rejected a packet of " + std::to_string(packet_size) +
+                           " byte(s): " + describeStatus(status) + ".");
+}
+
+int64_t FFmpegDecoder::Impl::frameDurationMs() const noexcept {
+  const AVRational rate = codec_context->framerate;
+  if (rate.num <= 0 || rate.den <= 0) {
+    return 0;
+  }
+  // The codec reports a rate in frames per second; a duration is the inverse of that rate,
+  // expressed in the time base the decoder was pinned to.
+  return av_rescale_q(1, av_inv_q(rate), kFrameTimeBase);
+}
+
+DecodedFrame FFmpegDecoder::Impl::packReadyFrame() {
+  const int64_t duration = frameDurationMs();
+  DecodedFrame packed = internal::extractDecodedFrame(*frame, next_pts_ms, duration);
+  next_pts_ms += std::max(duration, kMinimumFrameStepMs);
+  return packed;
+}
+
+void FFmpegDecoder::Impl::releaseReadyFrames(std::vector<DecodedFrame>& frames) {
+  // One packet does not yield one frame: a codec may hold several pictures back for reordering
+  // and may release a different number per call, so frames are collected until it says it needs
+  // more input or has nothing left.
+  while (true) {
+    const int status = avcodec_receive_frame(codec_context.get(), frame.get());
+    if (status == 0) {
+      frames.push_back(packReadyFrame());
+      continue;
+    }
+    if (isCorruptInput(status)) {
+      return;  // This frame is unusable; later packets can still decode.
+    }
+    if (status == AVERROR(EAGAIN) || status == AVERROR_EOF) {
+      return;
+    }
+    throw std::runtime_error("FFmpeg failed to produce a frame: " + describeStatus(status) + ".");
+  }
+}
+
+void FFmpegDecoder::Impl::decodePacket(std::span<const uint8_t> compressed_data,
+                                       std::vector<DecodedFrame>& frames) {
+  if (compressed_data.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+    throw std::runtime_error("Packet of " + std::to_string(compressed_data.size()) +
+                             " byte(s) is larger than the biggest packet FFmpeg can address.");
+  }
+
+  // The bytes are copied into a buffer FFmpeg owns rather than pointed at: sending a packet hands
+  // the codec a reference to it, and a reference can outlive this call when the codec is holding
+  // pictures back for reordering. Reading caller memory then would be a use-after-free.
+  av_packet_unref(packet.get());
+  const int allocated = av_new_packet(packet.get(), static_cast<int>(compressed_data.size()));
+  if (allocated < 0) {
+    throw std::runtime_error("Failed to allocate an FFmpeg packet for " +
+                             std::to_string(compressed_data.size()) + " byte(s) of input.");
+  }
+  std::memcpy(packet->data, compressed_data.data(), compressed_data.size());
+
+  const int status = avcodec_send_packet(codec_context.get(), packet.get());
+  av_packet_unref(packet.get());  // The codec keeps its own reference to whatever it still needs.
+
+  if (requirePacketAccepted(status, compressed_data.size())) {
+    releaseReadyFrames(frames);
+  }
+}
+
+void FFmpegDecoder::Impl::drainRemainingFrames(std::vector<DecodedFrame>& frames) {
+  if (end_of_stream) {
+    return;  // Already drained; a second flush has nothing left to release.
+  }
+  const int status = avcodec_send_packet(codec_context.get(), nullptr);
+  end_of_stream = true;
+
+  if (status < 0 && status != AVERROR_EOF) {
+    throw std::runtime_error("FFmpeg refused the end of stream signal: " + describeStatus(status) +
+                             ".");
+  }
+  releaseReadyFrames(frames);
+}
+
+/**
+ * @brief Reports the one failure a moved-from decoder can produce.
+ * @throws std::logic_error always; a moved-from decoder holds no resources to reach into.
+ */
+[[noreturn]] void throwMovedFromDecoder() {
+  throw std::logic_error(
+      "Operation called on a moved-from FFmpegDecoder, which holds no resources. "
+      "Use the move destination, or reassign the source before calling again.");
+}
 
 const FFmpegDecoder::Impl& FFmpegDecoder::requireImpl() const {
   if (!pimpl_) {
-    throw std::logic_error(
-        "Operation called on a moved-from FFmpegDecoder, which holds no resources. "
-        "Use the move destination, or reassign the source before calling again.");
+    throwMovedFromDecoder();
+  }
+  return *pimpl_;
+}
+
+FFmpegDecoder::Impl& FFmpegDecoder::requireImpl() {
+  if (!pimpl_) {
+    throwMovedFromDecoder();
   }
   return *pimpl_;
 }
@@ -124,24 +213,37 @@ FFmpegDecoder::FFmpegDecoder(FFmpegDecoder&&) noexcept = default;
 FFmpegDecoder& FFmpegDecoder::operator=(FFmpegDecoder&&) noexcept = default;
 
 std::vector<DecodedFrame> FFmpegDecoder::decode(std::span<const uint8_t> compressed_data) {
-  requireImpl();
-  throw std::logic_error(
-      "FFmpegDecoder::decode received " + std::to_string(compressed_data.size()) +
-      " byte(s) but packet decoding is not implemented in this build. Returning no frames would "
-      "silently drop video data; wire up an IVideoDecoder implementation before decoding.");
+  Impl& impl = requireImpl();
+  std::vector<DecodedFrame> frames;
+  if (compressed_data.empty()) {
+    return frames;  // No bytes to hand the codec: an empty packet is not a picture.
+  }
+  if (impl.end_of_stream) {
+    throw std::logic_error(
+        "FFmpegDecoder::decode was called after flush(), which closed the codec to input. Any "
+        "further packet would be dropped without notice, so this is reported instead.");
+  }
+  impl.decodePacket(compressed_data, frames);
+  return frames;
 }
 
 std::vector<DecodedFrame> FFmpegDecoder::flush() {
-  requireImpl();
-  return {};
+  Impl& impl = requireImpl();
+  std::vector<DecodedFrame> frames;
+  impl.drainRemainingFrames(frames);
+  return frames;
 }
 
 CodecInfo FFmpegDecoder::getCodecInfo() const {
   const Impl& impl = requireImpl();
   CodecIdentity identity{impl.codec_name, "", 0, false};
+  const AVRational rate = impl.codec_context->framerate;
+  // The codec reports its frame rate from the stream it decoded, so it stays unknown until fed.
+  const double fps = (rate.num > 0 && rate.den > 0) ? av_q2d(rate) : 0.0;
   VideoCodecParameters params{
-      impl.codec_context->width, impl.codec_context->height,
-      0.0  // Frame rate is derived from the codec time base, which is only known once fed.
+      impl.codec_context->width,
+      impl.codec_context->height,
+      fps,
   };
   return CodecInfo(std::move(identity), std::move(params));
 }
