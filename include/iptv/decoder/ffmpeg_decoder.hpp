@@ -1,7 +1,10 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
+#include <span>
 #include <string>
+#include <vector>
 
 #include "iptv/decoder/i_video_decoder.hpp"
 
@@ -13,6 +16,10 @@ namespace iptv::decoder {
  * Implements IVideoDecoder using the Pimpl idiom to prevent FFmpeg C headers from leaking
  * into the public interface. Manages internal allocations (AVCodecContext, AVFrame, AVPacket)
  * ensuring safe destruction and strict move-only semantics.
+ *
+ * @par Moved-from state
+ * A moved-from decoder holds no resources. Any subsequent call other than destruction or
+ * reassignment throws std::logic_error instead of dereferencing a null implementation.
  */
 class FFmpegDecoder : public IVideoDecoder {
  public:
@@ -37,6 +44,13 @@ class FFmpegDecoder : public IVideoDecoder {
 
  private:
   struct Impl;
+
+  /**
+   * @brief Returns the active implementation.
+   * @throws std::logic_error if this decoder has been moved from.
+   */
+  const Impl& requireImpl() const;
+
   std::unique_ptr<Impl> pimpl_;
 };
 
