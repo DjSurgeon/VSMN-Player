@@ -11,10 +11,9 @@
 #include <utility>
 #include <vector>
 
-#include "iptv/decoder/decoder_error.hpp"
-
 #include "internal/ffmpeg_buffers.hpp"
 #include "internal/ffmpeg_frame_extractor.hpp"
+#include "iptv/decoder/decoder_error.hpp"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -101,8 +100,9 @@ struct FFmpegDecoder::Impl {
   if (isCorruptInput(status)) {
     return false;
   }
-  throw DecoderException(DecoderError::UnknownError, "FFmpeg rejected a packet of " + std::to_string(packet_size) +
-                            " byte(s): " + describeStatus(status) + ".");
+  throw DecoderException(DecoderError::UnknownError,
+                         "FFmpeg rejected a packet of " + std::to_string(packet_size) +
+                             " byte(s): " + describeStatus(status) + ".");
 }
 
 int64_t FFmpegDecoder::Impl::frameDurationMs() const noexcept {
@@ -138,15 +138,17 @@ void FFmpegDecoder::Impl::releaseReadyFrames(std::vector<DecodedFrame>& frames) 
     if (status == AVERROR(EAGAIN) || status == AVERROR_EOF) {
       return;
     }
-    throw DecoderException(DecoderError::UnknownError, "FFmpeg failed to produce a frame: " + describeStatus(status) + ".");
+    throw DecoderException(DecoderError::UnknownError,
+                           "FFmpeg failed to produce a frame: " + describeStatus(status) + ".");
   }
 }
 
 void FFmpegDecoder::Impl::decodePacket(std::span<const uint8_t> compressed_data,
                                        std::vector<DecodedFrame>& frames) {
   if (compressed_data.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
-    throw DecoderException(DecoderError::UnknownError, "Packet of " + std::to_string(compressed_data.size()) +
-                              " byte(s) is larger than the biggest packet FFmpeg can address.");
+    throw DecoderException(DecoderError::UnknownError,
+                           "Packet of " + std::to_string(compressed_data.size()) +
+                               " byte(s) is larger than the biggest packet FFmpeg can address.");
   }
 
   // The bytes are copied into a buffer FFmpeg owns rather than pointed at: sending a packet hands
@@ -155,8 +157,9 @@ void FFmpegDecoder::Impl::decodePacket(std::span<const uint8_t> compressed_data,
   av_packet_unref(packet.get());
   const int allocated = av_new_packet(packet.get(), static_cast<int>(compressed_data.size()));
   if (allocated < 0) {
-    throw DecoderException(DecoderError::AllocationFailed, "Failed to allocate an FFmpeg packet for " +
-                              std::to_string(compressed_data.size()) + " byte(s) of input.");
+    throw DecoderException(DecoderError::AllocationFailed,
+                           "Failed to allocate an FFmpeg packet for " +
+                               std::to_string(compressed_data.size()) + " byte(s) of input.");
   }
   std::memcpy(packet->data, compressed_data.data(), compressed_data.size());
 
@@ -176,8 +179,8 @@ void FFmpegDecoder::Impl::drainRemainingFrames(std::vector<DecodedFrame>& frames
   end_of_stream = true;
 
   if (status < 0 && status != AVERROR_EOF) {
-    throw DecoderException(DecoderError::UnknownError, "FFmpeg refused the end of stream signal: " + describeStatus(status) +
-                              ".");
+    throw DecoderException(DecoderError::UnknownError, "FFmpeg refused the end of stream signal: " +
+                                                           describeStatus(status) + ".");
   }
   releaseReadyFrames(frames);
 }

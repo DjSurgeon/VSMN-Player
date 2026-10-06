@@ -61,6 +61,7 @@ if(ENABLE_STRESS_TESTS)
         stress/player/chaos_planning.cpp
         stress/player/chaos_transport.cpp
         stress/player/test_orchestrator_chaos.cpp
+        stress/decoder/decoder_stress_test.cpp
     )
     target_link_libraries(stress_tests PRIVATE GTest::gmock GTest::gtest_main iptv_core project_config httplib::httplib)
     target_include_directories(stress_tests PRIVATE
