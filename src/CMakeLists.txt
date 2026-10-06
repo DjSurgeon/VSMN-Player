@@ -3,6 +3,7 @@ find_package(ffmpeg REQUIRED)
 
 # Core library definition
 add_library(iptv_core STATIC
+    decoder/ffmpeg_audio_decoder.cpp
     decoder/ffmpeg_decoder.cpp
     decoder/internal/ffmpeg_buffers.cpp
     decoder/internal/ffmpeg_frame_extractor.cpp
