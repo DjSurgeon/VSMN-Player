@@ -23,11 +23,11 @@ namespace iptv::decoder {
  */
 class FFmpegAudioDecoder : public IAudioDecoder {
  public:
-  /**
-   * @brief Constructs an audio decoder for the specified codec.
-   * @param codec_hint The FFmpeg codec name (e.g., "aac", "mp3").
-   * @throws std::runtime_error if the codec cannot be found or opened.
-   */
+   /**
+    * @brief Constructs an audio decoder for the specified codec.
+    * @param codec_hint The FFmpeg codec name (e.g., "aac", "mp3").
+    * @throws DecoderException if the codec cannot be found or opened, or if the codec hint is empty.
+    */
   explicit FFmpegAudioDecoder(const std::string& codec_hint);
 
   ~FFmpegAudioDecoder() override;

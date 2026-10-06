@@ -13,6 +13,8 @@ extern "C" {
 
 #include "internal/ffmpeg_buffers.hpp"
 
+#include "iptv/decoder/decoder_error.hpp"
+
 namespace iptv::decoder {
 
 namespace {
@@ -52,12 +54,12 @@ struct FFmpegAudioDecoder::Impl {
                                   &codec_ctx->ch_layout, codec_ctx->sample_fmt, codec_ctx->sample_rate,
                                   0, nullptr);
     if (ret < 0 || !raw_swr) {
-      throw std::runtime_error("Failed to allocate SwrContext");
+      throw DecoderException(DecoderError::AllocationFailed, "Failed to allocate SwrContext");
     }
     swr_ctx.reset(raw_swr);
     if (swr_init(swr_ctx.get()) < 0) {
       swr_ctx.reset();
-      throw std::runtime_error("Failed to initialize SwrContext");
+      throw DecoderException(DecoderError::UnknownError, "Failed to initialize SwrContext");
     }
   }
 
@@ -69,19 +71,19 @@ struct FFmpegAudioDecoder::Impl {
         break;
       }
       if (ret < 0) {
-        throw std::runtime_error("Error receiving audio frame");
+        throw DecoderException(DecoderError::UnknownError, "Error receiving audio frame");
       }
 
       initSwrContext();
 
       int out_samples = swr_get_out_samples(swr_ctx.get(), frame->nb_samples);
       if (out_samples < 0) {
-        throw std::runtime_error("Failed to calculate out samples");
+        throw DecoderException(DecoderError::AllocationFailed, "Failed to calculate out samples");
       }
 
       int data_size = av_samples_get_buffer_size(nullptr, 2, out_samples, AV_SAMPLE_FMT_S16, 1);
       if (data_size < 0) {
-        throw std::runtime_error("Failed to calculate buffer size");
+        throw DecoderException(DecoderError::AllocationFailed, "Failed to calculate buffer size");
       }
 
       std::vector<uint8_t> out_buf(data_size);
@@ -90,7 +92,7 @@ struct FFmpegAudioDecoder::Impl {
       int resampled_samples = swr_convert(swr_ctx.get(), out_data, out_samples,
                                           const_cast<const uint8_t**>(frame->data), frame->nb_samples);
       if (resampled_samples < 0) {
-        throw std::runtime_error("Error while resampling audio");
+        throw DecoderException(DecoderError::CorruptInput, "Error while resampling audio");
       }
 
       int actual_size = av_samples_get_buffer_size(nullptr, 2, resampled_samples, AV_SAMPLE_FMT_S16, 1);
@@ -104,8 +106,18 @@ struct FFmpegAudioDecoder::Impl {
   }
 };
 
-FFmpegAudioDecoder::FFmpegAudioDecoder(const std::string& codec_hint)
-    : pimpl_(std::make_unique<Impl>(codec_hint)) {}
+FFmpegAudioDecoder::FFmpegAudioDecoder(const std::string& codec_hint) {
+  if (codec_hint.empty()) {
+    throw DecoderException(DecoderError::InvalidCodec,
+                           "Codec hint must be non-empty; automatic codec detection is "
+                           "disabled and a decoder name is required.");
+  }
+  try {
+    pimpl_ = std::make_unique<Impl>(codec_hint);
+  } catch (const std::runtime_error& e) {
+    throw DecoderException(DecoderError::InvalidCodec, e.what());
+  }
+}
 
 FFmpegAudioDecoder::~FFmpegAudioDecoder() = default;
 
@@ -131,7 +143,7 @@ std::vector<DecodedFrame> FFmpegAudioDecoder::decode(std::span<const uint8_t> co
 
   int ret = avcodec_send_packet(impl.codec_ctx.get(), impl.packet.get());
   if (ret < 0 && ret != AVERROR_EOF) {
-    throw std::runtime_error("Error sending packet to decoder");
+    throw DecoderException(DecoderError::UnknownError, "Error sending packet to decoder");
   }
 
   return impl.drainFrames();
