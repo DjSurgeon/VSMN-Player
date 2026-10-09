@@ -30,17 +30,17 @@ Engineered with a **Zero-Copy Memory Architecture** and heavily influenced by **
   - **Package Management:** Conan 2.0 orchestrating heavy dependencies (FFmpeg, SDL2, Dear ImGui) with absolute version pinning for reproducible builds.
 - **Zero-Friction Dev Environment:** 100% Plug & Play development using VSCode DevContainers. Your host machine stays clean.
 
-## 🏗️ Architecture Overview (Phase 4: Zero-Copy & Context Architecture Completed)
+## 🏗️ Architecture Overview (Phase 5: FFmpeg Decoders & Subsystem Integration Completed)
 
 The system strictly adheres to the **Feature-Sliced Design (FSD)**, keeping domains decoupled and testable.
-*Note: We employ strict **YAGNI** (You Aren't Gonna Need It). Speculative architecture (GUI, Audio, Video Decoders) has been aggressively purged from the build system until the Core Network and Orchestrator layers are fully tested and functional.*
+*Note: We employ strict **YAGNI** (You Aren't Gonna Need It). Speculative architecture is purged until needed. Currently, Network, Orchestrator, and FFmpeg Decoders are fully tested and functional.*
 
 ```mermaid
 graph TD;
     Network[Network Subsystem <br> libcurl] -->|Zero-Copy ByteBuffer| Orchestrator
     Parser[HLS Parser <br> DOD SIMD Pipeline] --> Orchestrator
     Orchestrator[Playback Orchestrator <br> std::jthread + ABR EWMA] --> Queue[ConcurrentQueue <br> TSAN Safe]
-    Queue --> Decoders[Future Demuxers/Decoders]
+    Queue --> Decoders[FFmpeg Decoders <br> H.264 & AAC]
 ```
 
 ## 🛠️ Tech Stack
@@ -49,9 +49,10 @@ graph TD;
 |--------|------------|---------------|
 | **Language** | `C++20` | Leverages modern concepts, smart pointers, and concurrency features. |
 | **Build System** | `CMake` + `Conan 2.0` | Industry standard. Guarantees reproducible builds across Linux/macOS/Windows. |
-| **Testing** | `GTest` + `gcovr` | Robust unit testing with HTML coverage reports. |
+| **Testing** | `GTest` + `gcovr` | Robust unit testing with HTML coverage reports (>90% overall coverage). |
 | **Sanitizers** | `ASan`, `TSan`, `UBSan` | Memory leaks, Data Races, and Undefined Behavior are blocked at CI level. |
-| **Planned** | `FFmpeg`, `SDL2`, `ImGui` | Currently purged from `conanfile.py` (YAGNI) to keep the build blazing fast. |
+| **Decoders** | `FFmpeg (libavcodec)` | Fully integrated via Conan, with auto-detection, robust `DecoderException` error typing, and verified memory-safety. |
+| **Planned** | `SDL2`, `ImGui` | GUI/Render subsystems are next on the roadmap. |
 
 ## 🚦 Quick Start (VSCode DevContainers)
 
