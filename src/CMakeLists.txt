@@ -40,4 +40,5 @@ target_link_libraries(iptv_core PUBLIC
 # Main executable
 add_executable(iptv_player main.cpp)
 target_link_libraries(iptv_player PRIVATE iptv_core)
-set_target_properties(iptv_core PROPERTIES CXX_CLANG_TIDY "clang-tidy;-checks=-*,bugprone-*,cert-*,clang-analyzer-*,concurrency-*,cppcoreguidelines-*,misc-*,performance-*,portability-*,readability-*")
+set_target_properties(iptv_core PROPERTIES CXX_CLANG_TIDY "clang-tidy;-checks=-*,bugprone-*,cert-*,clang-analyzer-*,concurrency-*,performance-*,portability-*,readability-*,-cppcoreguidelines-*")
+

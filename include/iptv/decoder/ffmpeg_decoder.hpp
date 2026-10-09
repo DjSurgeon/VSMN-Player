@@ -25,8 +25,9 @@ class FFmpegDecoder : public IVideoDecoder {
  public:
   /**
    * @brief Constructs a decoder for the specified codec.
-   * @param codec_hint The FFmpeg codec name (e.g., "h264").
-   * @throws DecoderException if the codec cannot be found or opened, or if the codec hint is empty.
+   * @param codec_hint The FFmpeg codec name (e.g., "h264"). May be empty to enable automatic
+   * codec detection from the bitstream.
+   * @throws DecoderException if the codec cannot be found or opened, or if auto-detection fails.
    */
   explicit FFmpegDecoder(const std::string& codec_hint);
 
@@ -47,12 +48,12 @@ class FFmpegDecoder : public IVideoDecoder {
    * packets carry no timestamps of their own.
    *
    * @param compressed_data Raw bytes of the compressed packet. Borrowed for the duration of the
-   *                        call and copied into a buffer the codec owns.
+   * call and copied into a buffer the codec owns.
    * @return Frames in output order. Empty when the packet yields no picture, which includes the
-   *         codec rejecting the packet as corrupt: a bad packet is dropped and the decoder stays
-   *         usable for the next one.
+   * codec rejecting the packet as corrupt: a bad packet is dropped and the decoder stays
+   * usable for the next one.
    * @throws DecoderException when FFmpeg fails for a reason other than unusable input, or when
-   *         the codec produced a picture that is not 8-bit 4:2:0 YUV.
+   * the codec produced a picture that is not 8-bit 4:2:0 YUV.
    * @throws std::logic_error when the decoder was moved from, or when it is fed after flush().
    */
   std::vector<DecodedFrame> decode(std::span<const uint8_t> compressed_data) override;
@@ -60,7 +61,7 @@ class FFmpegDecoder : public IVideoDecoder {
   /**
    * @brief Signals end of stream and drains the frames the codec was still holding.
    * @return Remaining frames in output order. Empty when nothing was buffered, and empty on a
-   *         repeated call: the first flush closes the codec to further input.
+   * repeated call: the first flush closes the codec to further input.
    * @throws DecoderException when FFmpeg fails to drain its buffers.
    * @throws std::logic_error when the decoder was moved from.
    */

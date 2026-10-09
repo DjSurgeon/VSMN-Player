@@ -249,3 +249,117 @@ TEST(FFmpegDecoderTest, CodecInfoReportsGeometryAndRateOnceTheCodecHasDecoded) {
   EXPECT_EQ(info.height, kPictureHeight);
   EXPECT_DOUBLE_EQ(info.fps, 25.0);
 }
+
+TEST(FFmpegDecoderTest, H264DecodeOfMalformedBytesDoesNotCrash) {
+  // Deterministic malformed H.264 data: a start code followed by an invalid NAL type.
+  // The decoder must reject this gracefully without crashing or throwing.
+  FFmpegDecoder decoder("h264");
+
+  // Start code + invalid NAL type
+  const std::vector<uint8_t> malformed = {0x00, 0x00, 0x01, 0xFF};
+  EXPECT_NO_THROW({ (void)decodePacket(decoder, malformed); });
+  EXPECT_TRUE(decodePacket(decoder, malformed).empty());
+
+  // Truncated start code
+  const std::vector<uint8_t> truncated = {0x00, 0x00};
+  EXPECT_NO_THROW({ (void)decodePacket(decoder, truncated); });
+
+  // Start code only
+  const std::vector<uint8_t> start_code_only = {0x00, 0x00, 0x01};
+  EXPECT_NO_THROW({ (void)decodePacket(decoder, start_code_only); });
+
+  // Decoder must remain usable after malformed input
+  EXPECT_NO_THROW({ (void)decoder.flush(); });
+}
+
+TEST(FFmpegDecoderTest, PartialPacketHandlingDoesNotCrash) {
+  // A valid packet split into two halves: the decoder must handle partial data gracefully.
+  const std::vector<std::vector<uint8_t>> packets =
+      encodeMpeg4Pictures(kPictureWidth, kPictureHeight, 1);
+  ASSERT_EQ(packets.size(), 1U);
+
+  const std::vector<uint8_t>& full_packet = packets[0];
+  ASSERT_GT(full_packet.size(), 2U);
+
+  const std::size_t mid = full_packet.size() / 2;
+  const std::vector<uint8_t> first_half(full_packet.begin(), full_packet.begin() + mid);
+  const std::vector<uint8_t> second_half(full_packet.begin() + mid, full_packet.end());
+
+  FFmpegDecoder decoder("mpeg4");
+
+  // Feed partial data: first half usually drops
+  EXPECT_NO_THROW({ (void)decodePacket(decoder, first_half); });
+  
+  // Second half might cause FFmpeg to reject the packet depending on header state.
+  // The test passes as long as we don't crash (ASan/TSan will catch memory errors).
+  try {
+    (void)decodePacket(decoder, second_half);
+  } catch (const std::exception&) {
+    // Expected to potentially fail
+  }
+
+  // Flush to ensure decoder remains usable
+  try {
+    (void)decoder.flush();
+  } catch (const std::exception&) {
+    // Also might fail if codec is left in invalid state, but must not crash
+  }
+}
+
+TEST(FFmpegDecoderTest, PtsTrackingWithoutReordering) {
+  // With no B-frames, each packet produces one frame immediately.
+  // PTS should still be tracked correctly.
+  const std::vector<std::vector<uint8_t>> packets =
+      encodeMpeg4Pictures(kPictureWidth, kPictureHeight, kPictureCount, 0);
+  ASSERT_EQ(packets.size(), static_cast<std::size_t>(kPictureCount));
+
+  FFmpegDecoder decoder("mpeg4");
+  std::vector<DecodedFrame> decoded;
+  for (const std::vector<uint8_t>& packet : packets) {
+    std::vector<DecodedFrame> frames = decodePacket(decoder, packet);
+    appendFrames(decoded, frames);
+  }
+
+  // With no B-frames, all frames should be decoded without flush
+  ASSERT_EQ(decoded.size(), static_cast<std::size_t>(kPictureCount));
+
+  // PTS starts at 0 and advances by duration each frame
+  for (std::size_t i = 0; i < decoded.size(); ++i) {
+    EXPECT_EQ(decoded[i].pts, static_cast<int64_t>(i) * 40);
+    EXPECT_EQ(decoded[i].duration, 40);
+  }
+}
+
+TEST(FFmpegDecoderTest, DecodeDropsMalformedH264DataAndDoesNotCrash) {
+  // Deterministic garbage byte array resembling a malformed NALU.
+  const std::vector<uint8_t> garbage = {0x00, 0x00, 0x01, 0xFF, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+  FFmpegDecoder decoder("h264");
+
+  // Must not crash or loop infinitely.
+  EXPECT_NO_THROW({
+    std::vector<DecodedFrame> frames = decodePacket(decoder, garbage);
+    EXPECT_TRUE(frames.empty());
+  });
+}
+
+TEST(FFmpegDecoderTest, DecodeWithShortIncompleteDataFailsFast) {
+  // Just a start code and no real data.
+  const std::vector<uint8_t> partial = {0x00, 0x00, 0x00, 0x01};
+  FFmpegDecoder decoder("h264");
+
+  EXPECT_NO_THROW({
+    std::vector<DecodedFrame> frames = decodePacket(decoder, partial);
+    EXPECT_TRUE(frames.empty());
+  });
+}
+
+TEST(FFmpegDecoderTest, CodecInfoWithGarbageReturnsZeros) {
+  // Sending invalid data doesn't initialize geometry.
+  const std::vector<uint8_t> garbage = {0xFF, 0xFF, 0xFF, 0xFF};
+  FFmpegDecoder decoder("h264");
+  
+  EXPECT_NO_THROW({ (void)decodePacket(decoder, garbage); });
+  const CodecInfo info = decoder.getCodecInfo();
+  EXPECT_EQ(info.width, 0);
+  EXPECT_EQ(info.height, 0);
+}

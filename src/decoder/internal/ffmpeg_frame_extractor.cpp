@@ -1,4 +1,5 @@
 #include "internal/ffmpeg_frame_extractor.hpp"
+#include <iptv/decoder/decoder_error.hpp>
 
 #include <array>
 #include <cstddef>
@@ -56,16 +57,16 @@ void copyPlane(const PlaneCopy& copy, uint8_t* destination) {
 
 /**
  * @brief Rejects planes that cannot be read row by row.
- * @throws std::runtime_error when a plane is absent or its stride cannot hold a visible row.
+ * @throws DecoderException when a plane is absent or its stride cannot hold a visible row.
  */
 void requireReadablePlanes(const std::array<PlaneCopy, kYuvPlaneCount>& planes) {
   for (const PlaneCopy& plane : planes) {
     if (plane.source == nullptr) {
-      throw std::runtime_error("Decoder produced a frame with one of its YUV420P planes missing.");
+      throw DecoderException(DecoderError::CorruptData, "Decoder produced a frame with one of its YUV420P planes missing.");
     }
     const int linesize = plane.linesize < 0 ? -plane.linesize : plane.linesize;
     if (static_cast<std::size_t>(linesize) < plane.width_bytes) {
-      throw std::runtime_error("Decoder produced a plane whose stride of " +
+      throw DecoderException(DecoderError::CorruptData, "Decoder produced a plane whose stride of " +
                                std::to_string(plane.linesize) + " byte(s) cannot hold a row of " +
                                std::to_string(plane.width_bytes) + " byte(s).");
     }
@@ -74,7 +75,7 @@ void requireReadablePlanes(const std::array<PlaneCopy, kYuvPlaneCount>& planes) 
 
 /**
  * @brief Rejects a picture the render path cannot display.
- * @throws std::runtime_error when the frame is not 8-bit 4:2:0 YUV.
+ * @throws DecoderException when the frame is not 8-bit 4:2:0 YUV.
  */
 void requireYuv420p(const AVFrame& frame) {
   const auto format = static_cast<AVPixelFormat>(frame.format);
@@ -84,7 +85,7 @@ void requireYuv420p(const AVFrame& frame) {
     return;
   }
   const char* format_name = av_get_pix_fmt_name(format);
-  throw std::runtime_error("Decoder produced pixel format '" +
+  throw DecoderException(DecoderError::InvalidFormat, "Decoder produced pixel format '" +
                            std::string(format_name != nullptr ? format_name : "unknown") +
                            "', but only 8-bit 4:2:0 YUV can be handed to the render path.");
 }
@@ -97,7 +98,7 @@ DecodedFrame extractDecodedFrame(const AVFrame& frame, int64_t pts, int64_t dura
   const int width = frame.width;
   const int height = frame.height;
   if (width <= 0 || height <= 0) {
-    throw std::runtime_error("Decoder produced a frame with no picture area (" +
+    throw DecoderException(DecoderError::InvalidFormat, "Decoder produced a frame with no picture area (" +
                              std::to_string(width) + "x" + std::to_string(height) + ").");
   }
 

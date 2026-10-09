@@ -19,6 +19,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavutil/error.h>
 #include <libavutil/mathematics.h>
+#include <libavformat/avformat.h>
 }
 
 namespace iptv::decoder {
@@ -66,7 +67,10 @@ struct FFmpegDecoder::Impl {
 
   explicit Impl(const std::string& codec_hint)
       : codec_name(codec_hint),
-        codec_context(openCodecContext(codec_hint)),
+        codec_context(
+            codec_hint.empty()
+                ? nullptr
+                : openCodecContext(codec_hint)),
         frame(allocateFrameBuffer()),
         packet(allocatePacketBuffer()) {}
 
@@ -151,6 +155,39 @@ void FFmpegDecoder::Impl::decodePacket(std::span<const uint8_t> compressed_data,
                                " byte(s) is larger than the biggest packet FFmpeg can address.");
   }
 
+  // If codec_context is null, attempt automatic codec detection from the bitstream.
+  if (!codec_context) {
+    std::size_t buf_size = compressed_data.size() + AVPROBE_PADDING_SIZE;
+    uint8_t* buffer = static_cast<uint8_t*>(av_malloc(buf_size));
+    if (!buffer) {
+      throw DecoderException(DecoderError::AllocationFailed,
+                             "Failed to allocate probe buffer for auto-detection.");
+    }
+    std::memcpy(buffer, compressed_data.data(), compressed_data.size());
+    std::memset(buffer + compressed_data.size(), 0, AVPROBE_PADDING_SIZE);
+
+    AVProbeData probe_data{};
+    probe_data.buf = buffer;
+    probe_data.buf_size = static_cast<int>(compressed_data.size());
+
+    const AVInputFormat* fmt = av_probe_input_format(&probe_data, 1);
+    av_free(buffer);
+
+    if (!fmt || !fmt->name) {
+      throw DecoderException(DecoderError::CodecNotFound,
+                             "Auto-detection failed for raw bitstream.");
+    }
+
+    // Try using the detected format as the codec hint.
+    try {
+      codec_context = openCodecContext(fmt->name);
+      codec_name = fmt->name;
+    } catch (const DecoderException&) {
+      throw DecoderException(DecoderError::CodecNotFound,
+                             "Auto-detection failed for raw bitstream.");
+    }
+  }
+
   // The bytes are copied into a buffer FFmpeg owns rather than pointed at: sending a packet hands
   // the codec a reference to it, and a reference can outlive this call when the codec is holding
   // pictures back for reordering. Reading caller memory then would be a use-after-free.
@@ -210,11 +247,6 @@ FFmpegDecoder::Impl& FFmpegDecoder::requireImpl() {
 }
 
 FFmpegDecoder::FFmpegDecoder(const std::string& codec_hint) {
-  if (codec_hint.empty()) {
-    throw DecoderException(DecoderError::InvalidCodec,
-                           "Codec hint must be non-empty; automatic codec detection is "
-                           "disabled and a decoder name is required.");
-  }
   try {
     pimpl_ = std::make_unique<Impl>(codec_hint);
   } catch (const std::runtime_error& e) {
