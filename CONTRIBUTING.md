@@ -19,9 +19,15 @@ We follow a strict Git Flow model:
 
 1. Ensure your code complies with C++20 standards.
 2. Run `clang-format` and `clang-tidy` before committing (we recommend using our `./scripts/install-hooks.sh`).
-3. Ensure all unit tests pass locally (`ctest`).
-4. Update the `README.md` or `docs/` with details of changes to the interface, this includes new environment variables, exposed ports, useful file locations and container parameters.
-5. You may merge the Pull Request in once you have the sign-off of at least one core maintainer and the CI pipeline (ASan, TSan, Coverage) gives a green light.
+3. Ensure all unit tests pass locally (`ctest`) and code coverage remains above 90%.
+4. **The Devil Protocol**: For any risky, architectural, or irreversible changes (e.g. public API modifications, memory pooling, multi-threading), you must run the `/deal` workflow with the `devil` agent before writing code. Ensure you document the Devil's verdict (PROCEED-WITH-CONDITIONS) in your PR description.
+5. Update the `README.md` or `docs/` with details of changes to the interface.
+6. You may merge the Pull Request in once you have the sign-off of at least one core maintainer and the CI pipeline (ASan, TSan, Coverage) gives a green light.
+
+## Agent Guidelines
+We heavily utilize Google Antigravity agents (`opencode`, `builder`, `devil`, etc.).
+- **Zero Mocks:** Agents are strictly instructed to avoid FFmpeg mocks.
+- **Caveman Mode:** Code reviews and commit messages follow the ultra-compressed "Caveman" style (terse, factual, no fluff).
 
 ## Setting up your environment
 
