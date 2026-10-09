@@ -1,10 +1,15 @@
 #include <gtest/gtest.h>
+#include <algorithm>
+#include <cstdint>
+#include <iterator>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
-#include <cstdint>
 
 #include "iptv/decoder/ffmpeg_audio_decoder.hpp"
+#include "aac_source.hpp"
+
+using iptv::decoder::testing::encodeAacSineWave;
 
 namespace iptv::decoder::test {
 
@@ -53,6 +58,55 @@ TEST(FFmpegAudioDecoderTest, EmptyDecodeReturnsEmptyFrames) {
   std::vector<uint8_t> empty_data;
   auto frames = decoder.decode(empty_data);
   EXPECT_TRUE(frames.empty());
+}
+
+TEST(FFmpegAudioDecoderTest, AacDecodeAndResample44100To48000) {
+  constexpr int kSourceRate = 44100;
+  constexpr int kChannels = 2;
+  constexpr int kDurationMs = 200;
+
+  auto packets = encodeAacSineWave(kSourceRate, kChannels, kDurationMs);
+  ASSERT_FALSE(packets.empty());
+
+  FFmpegAudioDecoder decoder("aac");
+  std::vector<DecodedFrame> all_frames;
+
+  for (const auto& packet : packets) {
+    auto frames = decoder.decode(packet);
+    all_frames.insert(all_frames.end(), std::make_move_iterator(frames.begin()),
+                      std::make_move_iterator(frames.end()));
+  }
+
+  auto flushed = decoder.flush();
+  all_frames.insert(all_frames.end(), std::make_move_iterator(flushed.begin()),
+                    std::make_move_iterator(flushed.end()));
+
+  ASSERT_FALSE(all_frames.empty());
+  for (const auto& frame : all_frames) {
+    EXPECT_EQ(frame.media_type, MediaType::Audio);
+    EXPECT_EQ(frame.sample_rate, 48000);
+    EXPECT_EQ(frame.channels, 2);
+    EXPECT_EQ(frame.audio_format, AudioFormat::PCM_S16_48KHZ);
+    EXPECT_FALSE(frame.data.empty());
+  }
+}
+
+TEST(FFmpegAudioDecoderTest, PartialPacketDropsDoNotThrow) {
+  constexpr int kSourceRate = 44100;
+  constexpr int kChannels = 2;
+  constexpr int kDurationMs = 200;
+
+  auto packets = encodeAacSineWave(kSourceRate, kChannels, kDurationMs);
+  ASSERT_GT(packets.size(), 2u);
+
+  FFmpegAudioDecoder decoder("aac");
+
+  // Drop every other packet to simulate partial loss.
+  for (size_t i = 0; i < packets.size(); i += 2) {
+    EXPECT_NO_THROW({ decoder.decode(packets[i]); });
+  }
+
+  EXPECT_NO_THROW({ decoder.flush(); });
 }
 
 }  // namespace iptv::decoder::test
