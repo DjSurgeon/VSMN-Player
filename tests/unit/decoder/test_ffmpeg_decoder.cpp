@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "iptv/decoder/ffmpeg_decoder.hpp"
+#include "iptv/decoder/decoder_error.hpp"
 #include "mpeg4_source.hpp"
 
 using namespace iptv::decoder;
@@ -363,3 +364,25 @@ TEST(FFmpegDecoderTest, CodecInfoWithGarbageReturnsZeros) {
   EXPECT_EQ(info.width, 0);
   EXPECT_EQ(info.height, 0);
 }
+TEST(FFmpegDecoderTest, DecodeThrowsOnOversizedPacket) {
+  FFmpegDecoder decoder("mpeg4");
+  std::span<const uint8_t> giant_span(static_cast<const uint8_t*>(nullptr), static_cast<std::size_t>(std::numeric_limits<int>::max()) + 1);
+  try {
+    decoder.decode(giant_span);
+    FAIL() << "Expected DecoderException";
+  } catch (const DecoderException& e) {
+    EXPECT_EQ(e.error(), DecoderError::UnknownError);
+  }
+}
+
+TEST(FFmpegDecoderTest, AutoDetectThrowsOnUnrecognizedBitstream) {
+  FFmpegDecoder decoder(""); // Empty hint enables auto-detect
+  const std::vector<uint8_t> garbage = {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00};
+  try {
+    decoder.decode(garbage);
+    FAIL() << "Expected DecoderException";
+  } catch (const DecoderException& e) {
+    EXPECT_EQ(e.error(), DecoderError::CodecNotFound);
+  }
+}
+

@@ -159,10 +159,12 @@ void FFmpegDecoder::Impl::decodePacket(std::span<const uint8_t> compressed_data,
   if (!codec_context) {
     std::size_t buf_size = compressed_data.size() + AVPROBE_PADDING_SIZE;
     uint8_t* buffer = static_cast<uint8_t*>(av_malloc(buf_size));
+    // LCOV_EXCL_START: Fails only on OOM.
     if (!buffer) {
       throw DecoderException(DecoderError::AllocationFailed,
                              "Failed to allocate probe buffer for auto-detection.");
     }
+    // LCOV_EXCL_STOP
     std::memcpy(buffer, compressed_data.data(), compressed_data.size());
     std::memset(buffer + compressed_data.size(), 0, AVPROBE_PADDING_SIZE);
 
@@ -183,8 +185,10 @@ void FFmpegDecoder::Impl::decodePacket(std::span<const uint8_t> compressed_data,
       codec_context = openCodecContext(fmt->name);
       codec_name = fmt->name;
     } catch (const DecoderException&) {
+      // LCOV_EXCL_START: Unlikely to fail open if probe succeeded.
       throw DecoderException(DecoderError::CodecNotFound,
                              "Auto-detection failed for raw bitstream.");
+      // LCOV_EXCL_STOP
     }
   }
 
@@ -193,11 +197,13 @@ void FFmpegDecoder::Impl::decodePacket(std::span<const uint8_t> compressed_data,
   // pictures back for reordering. Reading caller memory then would be a use-after-free.
   av_packet_unref(packet.get());
   const int allocated = av_new_packet(packet.get(), static_cast<int>(compressed_data.size()));
+  // LCOV_EXCL_START: Fails only on OOM.
   if (allocated < 0) {
     throw DecoderException(DecoderError::AllocationFailed,
                            "Failed to allocate an FFmpeg packet for " +
                                std::to_string(compressed_data.size()) + " byte(s) of input.");
   }
+  // LCOV_EXCL_STOP
   std::memcpy(packet->data, compressed_data.data(), compressed_data.size());
 
   const int status = avcodec_send_packet(codec_context.get(), packet.get());

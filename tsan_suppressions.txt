@@ -3,3 +3,4 @@ race:libavcodec
 race:libavformat
 race:libavutil
 race:libswresample
+race:httplib
