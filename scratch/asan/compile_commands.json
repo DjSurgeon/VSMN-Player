@@ -1,0 +1,217 @@
+[
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/decoder/ffmpeg_decoder.cpp.o -c /workspace/src/decoder/ffmpeg_decoder.cpp",
+  "file": "/workspace/src/decoder/ffmpeg_decoder.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/decoder/internal/ffmpeg_buffers.cpp.o -c /workspace/src/decoder/internal/ffmpeg_buffers.cpp",
+  "file": "/workspace/src/decoder/internal/ffmpeg_buffers.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/decoder/internal/ffmpeg_frame_extractor.cpp.o -c /workspace/src/decoder/internal/ffmpeg_frame_extractor.cpp",
+  "file": "/workspace/src/decoder/internal/ffmpeg_frame_extractor.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/network/http_client.cpp.o -c /workspace/src/network/http_client.cpp",
+  "file": "/workspace/src/network/http_client.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/network/http_init.cpp.o -c /workspace/src/network/http_init.cpp",
+  "file": "/workspace/src/network/http_init.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/network/internal/http_client_impl.cpp.o -c /workspace/src/network/internal/http_client_impl.cpp",
+  "file": "/workspace/src/network/internal/http_client_impl.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/network/internal/transfer_callbacks.cpp.o -c /workspace/src/network/internal/transfer_callbacks.cpp",
+  "file": "/workspace/src/network/internal/transfer_callbacks.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/network/network_component.cpp.o -c /workspace/src/network/network_component.cpp",
+  "file": "/workspace/src/network/network_component.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/manifest/playlist_attribute_scanner.cpp.o -c /workspace/src/manifest/playlist_attribute_scanner.cpp",
+  "file": "/workspace/src/manifest/playlist_attribute_scanner.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/manifest/playlist_m3u8_parser.cpp.o -c /workspace/src/manifest/playlist_m3u8_parser.cpp",
+  "file": "/workspace/src/manifest/playlist_m3u8_parser.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/manifest/internal/line_reader.cpp.o -c /workspace/src/manifest/internal/line_reader.cpp",
+  "file": "/workspace/src/manifest/internal/line_reader.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/manifest/internal/playlist_line_parser.cpp.o -c /workspace/src/manifest/internal/playlist_line_parser.cpp",
+  "file": "/workspace/src/manifest/internal/playlist_line_parser.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/manifest/internal/playlist_state.cpp.o -c /workspace/src/manifest/internal/playlist_state.cpp",
+  "file": "/workspace/src/manifest/internal/playlist_state.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/manifest/internal/playlist_tag_handlers.cpp.o -c /workspace/src/manifest/internal/playlist_tag_handlers.cpp",
+  "file": "/workspace/src/manifest/internal/playlist_tag_handlers.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/abr/abr_manager.cpp.o -c /workspace/src/abr/abr_manager.cpp",
+  "file": "/workspace/src/abr/abr_manager.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/player/internal/url_resolver.cpp.o -c /workspace/src/player/internal/url_resolver.cpp",
+  "file": "/workspace/src/player/internal/url_resolver.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/src/decoder -I/workspace/src/manifest -I/workspace/src/network -I/workspace/src/player -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_core.dir/player/playback_orchestrator.cpp.o -c /workspace/src/player/playback_orchestrator.cpp",
+  "file": "/workspace/src/player/playback_orchestrator.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/src",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/iptv_player.dir/main.cpp.o -c /workspace/src/main.cpp",
+  "file": "/workspace/src/main.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/test_sanity.cpp.o -c /workspace/tests/unit/test_sanity.cpp",
+  "file": "/workspace/tests/unit/test_sanity.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/network/test_http_response.cpp.o -c /workspace/tests/unit/network/test_http_response.cpp",
+  "file": "/workspace/tests/unit/network/test_http_response.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/network/test_retry_policy.cpp.o -c /workspace/tests/unit/network/test_retry_policy.cpp",
+  "file": "/workspace/tests/unit/network/test_retry_policy.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/network/test_i_http_client.cpp.o -c /workspace/tests/unit/network/test_i_http_client.cpp",
+  "file": "/workspace/tests/unit/network/test_i_http_client.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/network/test_http_client_advanced.cpp.o -c /workspace/tests/unit/network/test_http_client_advanced.cpp",
+  "file": "/workspace/tests/unit/network/test_http_client_advanced.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/network/test_http_client_errors.cpp.o -c /workspace/tests/unit/network/test_http_client_errors.cpp",
+  "file": "/workspace/tests/unit/network/test_http_client_errors.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/manifest/test_playlist_parse_result.cpp.o -c /workspace/tests/unit/manifest/test_playlist_parse_result.cpp",
+  "file": "/workspace/tests/unit/manifest/test_playlist_parse_result.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/manifest/test_playlist_attribute_scanner.cpp.o -c /workspace/tests/unit/manifest/test_playlist_attribute_scanner.cpp",
+  "file": "/workspace/tests/unit/manifest/test_playlist_attribute_scanner.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/manifest/test_playlist_m3u8_parser.cpp.o -c /workspace/tests/unit/manifest/test_playlist_m3u8_parser.cpp",
+  "file": "/workspace/tests/unit/manifest/test_playlist_m3u8_parser.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/concurrency/concurrent_queue_fixture.cpp.o -c /workspace/tests/unit/concurrency/concurrent_queue_fixture.cpp",
+  "file": "/workspace/tests/unit/concurrency/concurrent_queue_fixture.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/concurrency/test_concurrent_queue.cpp.o -c /workspace/tests/unit/concurrency/test_concurrent_queue.cpp",
+  "file": "/workspace/tests/unit/concurrency/test_concurrent_queue.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/concurrency/test_concurrent_queue_cancellation.cpp.o -c /workspace/tests/unit/concurrency/test_concurrent_queue_cancellation.cpp",
+  "file": "/workspace/tests/unit/concurrency/test_concurrent_queue_cancellation.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/concurrency/test_concurrent_queue_stress.cpp.o -c /workspace/tests/unit/concurrency/test_concurrent_queue_stress.cpp",
+  "file": "/workspace/tests/unit/concurrency/test_concurrent_queue_stress.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/decoder/mpeg4_source.cpp.o -c /workspace/tests/unit/decoder/mpeg4_source.cpp",
+  "file": "/workspace/tests/unit/decoder/mpeg4_source.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/decoder/test_decoder_interfaces.cpp.o -c /workspace/tests/unit/decoder/test_decoder_interfaces.cpp",
+  "file": "/workspace/tests/unit/decoder/test_decoder_interfaces.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/decoder/test_ffmpeg_decoder.cpp.o -c /workspace/tests/unit/decoder/test_ffmpeg_decoder.cpp",
+  "file": "/workspace/tests/unit/decoder/test_ffmpeg_decoder.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/decoder/test_ffmpeg_frame_extractor.cpp.o -c /workspace/tests/unit/decoder/test_ffmpeg_frame_extractor.cpp",
+  "file": "/workspace/tests/unit/decoder/test_ffmpeg_frame_extractor.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/decoder/test_decoder_frame.cpp.o -c /workspace/tests/unit/decoder/test_decoder_frame.cpp",
+  "file": "/workspace/tests/unit/decoder/test_decoder_frame.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/decoder/test_decoder_codec_info.cpp.o -c /workspace/tests/unit/decoder/test_decoder_codec_info.cpp",
+  "file": "/workspace/tests/unit/decoder/test_decoder_codec_info.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/abr/test_abr_manager.cpp.o -c /workspace/tests/unit/abr/test_abr_manager.cpp",
+  "file": "/workspace/tests/unit/abr/test_abr_manager.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/network/test_network_component.cpp.o -c /workspace/tests/unit/network/test_network_component.cpp",
+  "file": "/workspace/tests/unit/network/test_network_component.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/tests/unit -I/workspace/src/decoder -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/unit_tests.dir/unit/player/test_playback_orchestrator.cpp.o -c /workspace/tests/unit/player/test_playback_orchestrator.cpp",
+  "file": "/workspace/tests/unit/player/test_playback_orchestrator.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/integration_tests.dir/integration/network_subsystem_fixture.cpp.o -c /workspace/tests/integration/network_subsystem_fixture.cpp",
+  "file": "/workspace/tests/integration/network_subsystem_fixture.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/integration_tests.dir/integration/test_network_subsystem.cpp.o -c /workspace/tests/integration/test_network_subsystem.cpp",
+  "file": "/workspace/tests/integration/test_network_subsystem.cpp"
+},
+{
+  "directory": "/workspace/scratch/asan/tests",
+  "command": "/usr/bin/c++ -DCURL_STATICLIB=1 -I/workspace/tests -I/workspace/include -isystem /home/developer/.conan2/p/b/gtest58e1235b58a59/p/include -isystem /home/developer/.conan2/p/b/libcu39c7303af1283/p/include -isystem /home/developer/.conan2/p/b/ffmpe6461eaabcab79/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include -isystem /home/developer/.conan2/p/cpp-h42bdad9386456/p/include/httplib -m64 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wshadow -fsanitize=address,undefined -fno-omit-frame-pointer -std=c++20 -o CMakeFiles/integration_tests.dir/integration/test_network_metrics.cpp.o -c /workspace/tests/integration/test_network_metrics.cpp",
+  "file": "/workspace/tests/integration/test_network_metrics.cpp"
+}
+]

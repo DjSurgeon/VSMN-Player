@@ -285,8 +285,10 @@ TsSegment generateTsSegment(int video_frame_count, int audio_frame_count,
       throw std::runtime_error("Failed to allocate audio frame buffer");
     }
 
-    // Fill with silence (zeroed buffer is fine for pipeline test)
-    // FFmpeg's av_frame_get_buffer zero-initializes, so we just send it.
+    // Fill with silence
+    for (int ch = 0; ch < frame->ch_layout.nb_channels; ++ch) {
+      std::memset(frame->data[ch], 0, frame->nb_samples * sizeof(float));
+    }
 
     ret = avcodec_send_frame(audio_ctx.get(), frame.get());
     if (ret < 0) {

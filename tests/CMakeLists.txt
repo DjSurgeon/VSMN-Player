@@ -47,6 +47,7 @@ add_executable(integration_tests
     integration/network_subsystem_fixture.cpp
     integration/test_network_subsystem.cpp
     integration/test_network_metrics.cpp
+    integration/test_pipeline_integration.cpp
 )
 target_include_directories(integration_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(integration_tests PRIVATE GTest::gmock GTest::gtest_main iptv_core project_config httplib::httplib)
