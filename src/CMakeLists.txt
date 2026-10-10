@@ -21,6 +21,7 @@ add_library(iptv_core STATIC
     abr/abr_manager.cpp
     player/internal/url_resolver.cpp
     player/playback_orchestrator.cpp
+    renderer/pts_frame_buffer.cpp
     demux/ts_demuxer.cpp
 )
 target_include_directories(iptv_core PRIVATE

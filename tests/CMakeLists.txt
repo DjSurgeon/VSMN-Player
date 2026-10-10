@@ -34,6 +34,7 @@ add_executable(unit_tests
     unit/abr/test_abr_manager.cpp
     unit/network/test_network_component.cpp
     unit/player/test_playback_orchestrator.cpp
+    unit/renderer/test_pts_frame_buffer.cpp
 )
 target_include_directories(unit_tests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
