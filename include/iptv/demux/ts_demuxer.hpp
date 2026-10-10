@@ -10,6 +10,7 @@ struct DemuxedPacket {
   int stream_index;
   std::vector<uint8_t> data;
   int64_t pts;
+  int64_t dts;
 };
 
 enum class StreamType { Video, Audio, Unknown };

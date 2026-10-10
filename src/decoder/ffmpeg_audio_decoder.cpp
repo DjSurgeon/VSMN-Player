@@ -135,12 +135,20 @@ FFmpegAudioDecoder::Impl& FFmpegAudioDecoder::requireMutableImpl() {
   return *pimpl_;
 }
 
-std::vector<DecodedFrame> FFmpegAudioDecoder::decode(std::span<const uint8_t> compressed_data) {
+std::vector<DecodedFrame> FFmpegAudioDecoder::decode(std::span<const uint8_t> compressed_data, int64_t pts_us, int64_t dts_us) {
   auto& impl = requireMutableImpl();
 
   // Set up packet
   impl.packet->data = const_cast<uint8_t*>(compressed_data.data());
   impl.packet->size = static_cast<int>(compressed_data.size());
+
+  if (pts_us != -1) {
+    impl.packet->pts = pts_us;
+    impl.packet->time_base = {1, 1000000};
+  }
+  if (dts_us != -1) {
+    impl.packet->dts = dts_us;
+  }
 
   int ret = avcodec_send_packet(impl.codec_ctx.get(), impl.packet.get());
   if (ret < 0 && ret != AVERROR_EOF) {

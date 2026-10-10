@@ -76,14 +76,14 @@ static_assert(
 
 class MockVideoDecoder : public IVideoDecoder {
  public:
-  MOCK_METHOD(std::vector<DecodedFrame>, decode, (std::span<const uint8_t>), (override));
+  MOCK_METHOD(std::vector<DecodedFrame>, decode, (std::span<const uint8_t>, int64_t, int64_t), (override));
   MOCK_METHOD(std::vector<DecodedFrame>, flush, (), (override));
   MOCK_METHOD(CodecInfo, getCodecInfo, (), (const, override));
 };
 
 class MockAudioDecoder : public IAudioDecoder {
  public:
-  MOCK_METHOD(std::vector<DecodedFrame>, decode, (std::span<const uint8_t>), (override));
+  MOCK_METHOD(std::vector<DecodedFrame>, decode, (std::span<const uint8_t>, int64_t, int64_t), (override));
   MOCK_METHOD(std::vector<DecodedFrame>, flush, (), (override));
   MOCK_METHOD(CodecInfo, getCodecInfo, (), (const, override));
 };
@@ -92,10 +92,10 @@ TEST(DecoderInterfacesTest, VideoDecoderMocking) {
   MockVideoDecoder mock_video;
   DecodedFrame dummy_frame = makeVideoFrame({0x00, 0xFF}, 1000, 1920, 1080);
 
-  EXPECT_CALL(mock_video, decode(_)).WillOnce(Return(makeFrames(std::move(dummy_frame))));
+  EXPECT_CALL(mock_video, decode(_, _, _)).WillOnce(Return(makeFrames(std::move(dummy_frame))));
 
   const std::vector<uint8_t> packet = {0x12, 0x34};
-  const std::vector<DecodedFrame> result = mock_video.decode(std::span<const uint8_t>{packet});
+  const std::vector<DecodedFrame> result = mock_video.decode(std::span<const uint8_t>{packet}, -1, -1);
 
   ASSERT_EQ(result.size(), 1U);
   EXPECT_EQ(result[0].media_type, MediaType::Video);
@@ -108,10 +108,10 @@ TEST(DecoderInterfacesTest, AudioDecoderMocking) {
   MockAudioDecoder mock_audio;
   DecodedFrame dummy_frame = makeAudioFrame({0xAA, 0xBB}, 1000, 48000, 2);
 
-  EXPECT_CALL(mock_audio, decode(_)).WillOnce(Return(makeFrames(std::move(dummy_frame))));
+  EXPECT_CALL(mock_audio, decode(_, _, _)).WillOnce(Return(makeFrames(std::move(dummy_frame))));
 
   const std::vector<uint8_t> packet = {0x01, 0x02};
-  const std::vector<DecodedFrame> result = mock_audio.decode(std::span<const uint8_t>{packet});
+  const std::vector<DecodedFrame> result = mock_audio.decode(std::span<const uint8_t>{packet}, -1, -1);
 
   ASSERT_EQ(result.size(), 1U);
   EXPECT_EQ(result[0].media_type, MediaType::Audio);
@@ -126,11 +126,11 @@ TEST(DecoderInterfacesTest, VideoDecoderReturnsMultipleFramesInOrder) {
   DecodedFrame second = makeVideoFrame({0x02}, 2000, 1280, 720);
   DecodedFrame third = makeVideoFrame({0x03}, 3000, 640, 480);
 
-  EXPECT_CALL(mock_video, decode(_))
+  EXPECT_CALL(mock_video, decode(_, _, _))
       .WillOnce(Return(makeFrames(std::move(first), std::move(second), std::move(third))));
 
   const std::vector<uint8_t> packet = {0x12, 0x34, 0x56};
-  const std::vector<DecodedFrame> result = mock_video.decode(std::span<const uint8_t>{packet});
+  const std::vector<DecodedFrame> result = mock_video.decode(std::span<const uint8_t>{packet}, -1, -1);
 
   ASSERT_EQ(result.size(), 3U);
   EXPECT_EQ(result[0].pts, 1000);
@@ -146,11 +146,11 @@ TEST(DecoderInterfacesTest, AudioDecoderReturnsMultipleFramesInOrder) {
   DecodedFrame first = makeAudioFrame({0xAA}, 1000, 44100, 1);
   DecodedFrame second = makeAudioFrame({0xBB}, 1024, 44100, 2);
 
-  EXPECT_CALL(mock_audio, decode(_))
+  EXPECT_CALL(mock_audio, decode(_, _, _))
       .WillOnce(Return(makeFrames(std::move(first), std::move(second))));
 
   const std::vector<uint8_t> packet = {0x01, 0x02};
-  const std::vector<DecodedFrame> result = mock_audio.decode(std::span<const uint8_t>{packet});
+  const std::vector<DecodedFrame> result = mock_audio.decode(std::span<const uint8_t>{packet}, -1, -1);
 
   ASSERT_EQ(result.size(), 2U);
   EXPECT_EQ(result[0].sample_rate, 44100);
@@ -164,13 +164,13 @@ TEST(DecoderInterfacesTest, DecodeReturnsEmptyWhenNoFrameProduced) {
   MockVideoDecoder mock_video;
   MockAudioDecoder mock_audio;
 
-  EXPECT_CALL(mock_video, decode(_)).WillOnce(Return(std::vector<DecodedFrame>{}));
-  EXPECT_CALL(mock_audio, decode(_)).WillOnce(Return(std::vector<DecodedFrame>{}));
+  EXPECT_CALL(mock_video, decode(_, _, _)).WillOnce(Return(std::vector<DecodedFrame>{}));
+  EXPECT_CALL(mock_audio, decode(_, _, _)).WillOnce(Return(std::vector<DecodedFrame>{}));
 
   const std::vector<uint8_t> packet = {0x00};
 
-  EXPECT_TRUE(mock_video.decode(std::span<const uint8_t>{packet}).empty());
-  EXPECT_TRUE(mock_audio.decode(std::span<const uint8_t>{packet}).empty());
+  EXPECT_TRUE(mock_video.decode(std::span<const uint8_t>{packet}, -1, -1).empty());
+  EXPECT_TRUE(mock_audio.decode(std::span<const uint8_t>{packet}, -1, -1).empty());
 }
 
 TEST(DecoderInterfacesTest, DecodeSeesSpanOverContiguousBytesWithoutCopying) {
@@ -187,11 +187,11 @@ TEST(DecoderInterfacesTest, DecodeSeesSpanOverContiguousBytesWithoutCopying) {
            std::equal(received.begin(), received.end(), expected.begin());
   };
 
-  EXPECT_CALL(mock_video, decode(Truly(matches_packet)))
+  EXPECT_CALL(mock_video, decode(Truly(matches_packet), _, _))
       .WillOnce(Return(std::vector<DecodedFrame>{}));
-  EXPECT_CALL(mock_audio, decode(Truly(matches_packet)))
+  EXPECT_CALL(mock_audio, decode(Truly(matches_packet), _, _))
       .WillOnce(Return(std::vector<DecodedFrame>{}));
 
-  EXPECT_TRUE(mock_video.decode(packet).empty());
-  EXPECT_TRUE(mock_audio.decode(packet).empty());
+  EXPECT_TRUE(mock_video.decode(packet, -1, -1).empty());
+  EXPECT_TRUE(mock_audio.decode(packet, -1, -1).empty());
 }

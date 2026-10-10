@@ -75,7 +75,7 @@ struct FFmpegDecoder::Impl {
         packet(allocatePacketBuffer()) {}
 
   // Feeds one packet to the codec and appends every frame it completes on it.
-  void decodePacket(std::span<const uint8_t> compressed_data, std::vector<DecodedFrame>& frames);
+  void decodePacket(std::span<const uint8_t> compressed_data, std::vector<DecodedFrame>& frames, int64_t pts_us, int64_t dts_us);
 
   // Signals end of stream, then appends every frame the codec was still holding.
   void drainRemainingFrames(std::vector<DecodedFrame>& frames);
@@ -148,7 +148,9 @@ void FFmpegDecoder::Impl::releaseReadyFrames(std::vector<DecodedFrame>& frames) 
 }
 
 void FFmpegDecoder::Impl::decodePacket(std::span<const uint8_t> compressed_data,
-                                       std::vector<DecodedFrame>& frames) {
+                                       std::vector<DecodedFrame>& frames,
+                                       int64_t pts_us,
+                                       int64_t dts_us) {
   if (compressed_data.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
     throw DecoderException(DecoderError::UnknownError,
                            "Packet of " + std::to_string(compressed_data.size()) +
@@ -205,6 +207,16 @@ void FFmpegDecoder::Impl::decodePacket(std::span<const uint8_t> compressed_data,
   }
   // LCOV_EXCL_STOP
   std::memcpy(packet->data, compressed_data.data(), compressed_data.size());
+
+  // Set presentation and decode timestamps in microseconds, if provided.
+  // This enables correct B-frame reordering and preserves timestamp precision.
+  if (pts_us != -1) {
+    packet->pts = pts_us;
+    packet->time_base = {1, 1000000};  // microseconds
+  }
+  if (dts_us != -1) {
+    packet->dts = dts_us;
+  }
 
   const int status = avcodec_send_packet(codec_context.get(), packet.get());
   av_packet_unref(packet.get());  // The codec keeps its own reference to whatever it still needs.
@@ -265,7 +277,7 @@ FFmpegDecoder::~FFmpegDecoder() = default;
 FFmpegDecoder::FFmpegDecoder(FFmpegDecoder&&) noexcept = default;
 FFmpegDecoder& FFmpegDecoder::operator=(FFmpegDecoder&&) noexcept = default;
 
-std::vector<DecodedFrame> FFmpegDecoder::decode(std::span<const uint8_t> compressed_data) {
+std::vector<DecodedFrame> FFmpegDecoder::decode(std::span<const uint8_t> compressed_data, int64_t pts_us, int64_t dts_us) {
   Impl& impl = requireImpl();
   std::vector<DecodedFrame> frames;
   if (compressed_data.empty()) {
@@ -276,7 +288,7 @@ std::vector<DecodedFrame> FFmpegDecoder::decode(std::span<const uint8_t> compres
         "FFmpegDecoder::decode was called after flush(), which closed the codec to input. Any "
         "further packet would be dropped without notice, so this is reported instead.");
   }
-  impl.decodePacket(compressed_data, frames);
+  impl.decodePacket(compressed_data, frames, pts_us, dts_us);
   return frames;
 }
 

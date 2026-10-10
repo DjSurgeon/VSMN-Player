@@ -136,7 +136,20 @@ std::vector<DemuxedPacket> TsDemuxer::demux(
     DemuxedPacket dp;
     dp.stream_index = pkt->stream_index;
     dp.data.assign(pkt->data, pkt->data + pkt->size);
-    dp.pts = pkt->pts;
+
+    // Convert PTS and DTS from stream time_base to microseconds
+    AVRational stream_time_base = fmt_ctx->streams[pkt->stream_index]->time_base;
+    if (pkt->pts != AV_NOPTS_VALUE) {
+      dp.pts = av_rescale_q(pkt->pts, stream_time_base, {1, 1000000});
+    } else {
+      dp.pts = AV_NOPTS_VALUE;
+    }
+    if (pkt->dts != AV_NOPTS_VALUE) {
+      dp.dts = av_rescale_q(pkt->dts, stream_time_base, {1, 1000000});
+    } else {
+      dp.dts = AV_NOPTS_VALUE;
+    }
+
     packets.push_back(std::move(dp));
     av_packet_unref(pkt.get());
   }

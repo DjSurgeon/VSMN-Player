@@ -56,7 +56,7 @@ class FFmpegDecoder : public IVideoDecoder {
    * the codec produced a picture that is not 8-bit 4:2:0 YUV.
    * @throws std::logic_error when the decoder was moved from, or when it is fed after flush().
    */
-  std::vector<DecodedFrame> decode(std::span<const uint8_t> compressed_data) override;
+  std::vector<DecodedFrame> decode(std::span<const uint8_t> compressed_data, int64_t pts_us = -1, int64_t dts_us = -1) override;
 
   /**
    * @brief Signals end of stream and drains the frames the codec was still holding.

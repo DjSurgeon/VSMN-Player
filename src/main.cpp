@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
             for (const auto& pkt : packets) {
                 if (pkt.stream_index == video_idx && video_idx >= 0) {
                     auto frames = video_decoder.decode(
-                        std::span<const uint8_t>(pkt.data));
+                        std::span<const uint8_t>(pkt.data), pkt.pts, pkt.dts);
                     frames_last_interval += static_cast<int>(frames.size());
                     // Discard raw frames (no render path); frame data is freed when frames go out of scope
                     for (const auto& frame : frames) {
@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
             for (const auto& pkt : packets) {
                 if (pkt.stream_index == audio_idx && audio_idx >= 0) {
                     auto frames = audio_decoder.decode(
-                        std::span<const uint8_t>(pkt.data));
+                        std::span<const uint8_t>(pkt.data), pkt.pts, pkt.dts);
                     frames_last_interval += static_cast<int>(frames.size());
                     // Discard raw frames (no render path); audio data is freed when frames go out of scope
                     for (const auto& frame : frames) {

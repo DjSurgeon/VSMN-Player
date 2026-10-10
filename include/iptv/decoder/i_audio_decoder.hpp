@@ -31,7 +31,7 @@ class IAudioDecoder {
    * @return std::vector<DecodedFrame> The uncompressed audio frames produced, in output order.
    *         Empty if the packet produced no frame.
    */
-  virtual std::vector<DecodedFrame> decode(std::span<const uint8_t> compressed_data) = 0;
+  virtual std::vector<DecodedFrame> decode(std::span<const uint8_t> compressed_data, int64_t pts_us = -1, int64_t dts_us = -1) = 0;
 
   /**
    * @brief Flushes internal decoder buffers, draining any delayed frames.

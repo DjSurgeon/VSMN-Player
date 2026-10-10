@@ -38,7 +38,7 @@ class FFmpegAudioDecoder : public IAudioDecoder {
   FFmpegAudioDecoder(FFmpegAudioDecoder&&) noexcept;
   FFmpegAudioDecoder& operator=(FFmpegAudioDecoder&&) noexcept;
 
-  std::vector<DecodedFrame> decode(std::span<const uint8_t> compressed_data) override;
+  std::vector<DecodedFrame> decode(std::span<const uint8_t> compressed_data, int64_t pts_us = -1, int64_t dts_us = -1) override;
   std::vector<DecodedFrame> flush() override;
   CodecInfo getCodecInfo() const override;
 

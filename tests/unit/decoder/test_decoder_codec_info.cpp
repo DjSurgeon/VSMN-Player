@@ -35,14 +35,14 @@ CodecInfo makeAudioCodecInfo() {
 
 class MockVideoCodecDecoder : public IVideoDecoder {
  public:
-  MOCK_METHOD(std::vector<DecodedFrame>, decode, (std::span<const uint8_t>), (override));
+  MOCK_METHOD(std::vector<DecodedFrame>, decode, (std::span<const uint8_t>, int64_t, int64_t), (override));
   MOCK_METHOD(std::vector<DecodedFrame>, flush, (), (override));
   MOCK_METHOD(CodecInfo, getCodecInfo, (), (const, override));
 };
 
 class MockAudioCodecDecoder : public IAudioDecoder {
  public:
-  MOCK_METHOD(std::vector<DecodedFrame>, decode, (std::span<const uint8_t>), (override));
+  MOCK_METHOD(std::vector<DecodedFrame>, decode, (std::span<const uint8_t>, int64_t, int64_t), (override));
   MOCK_METHOD(std::vector<DecodedFrame>, flush, (), (override));
   MOCK_METHOD(CodecInfo, getCodecInfo, (), (const, override));
 };

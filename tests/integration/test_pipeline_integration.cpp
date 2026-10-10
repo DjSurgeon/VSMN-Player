@@ -337,7 +337,7 @@ TsSegment generateTsSegment(int video_frame_count, int audio_frame_count,
 struct DemuxedPacket {
   int stream_index;
   std::vector<uint8_t> data;
-  int64_t pts;
+  int64_t pts; int64_t dts;
 };
 
 struct DemuxState {
@@ -419,7 +419,7 @@ std::vector<DemuxedPacket> demuxTs(const std::vector<uint8_t>& ts_data,
     DemuxedPacket dp;
     dp.stream_index = pkt->stream_index;
     dp.data.assign(pkt->data, pkt->data + pkt->size);
-    dp.pts = pkt->pts;
+    dp.pts = pkt->pts; dp.dts = pkt->dts;
     packets.push_back(std::move(dp));
     av_packet_unref(pkt.get());
   }
@@ -463,12 +463,12 @@ TEST_F(PipelineIntegrationTest, DecodesVideoAndAudioFromTsSegment) {
 
   for (const auto& packet : packets) {
     if (packet.stream_index == video_idx) {
-      auto frames = video_decoder.decode(std::span<const uint8_t>{packet.data});
+      auto frames = video_decoder.decode(std::span<const uint8_t>{packet.data}, packet.pts, packet.dts);
       for (auto& f : frames) {
         video_frames.push_back(std::move(f));
       }
     } else if (packet.stream_index == audio_idx) {
-      auto frames = audio_decoder.decode(std::span<const uint8_t>{packet.data});
+      auto frames = audio_decoder.decode(std::span<const uint8_t>{packet.data}, packet.pts, packet.dts);
       for (auto& f : frames) {
         audio_frames.push_back(std::move(f));
       }
@@ -567,7 +567,7 @@ TEST_F(PipelineIntegrationTest, SurvivesDroppedPackets) {
       if (video_packet_count % 3 == 0) {
         continue;  // Simulate dropped packet
       }
-      auto frames = video_decoder.decode(std::span<const uint8_t>{packet.data});
+      auto frames = video_decoder.decode(std::span<const uint8_t>{packet.data}, packet.pts, packet.dts);
       for (auto& f : frames) {
         video_frames.push_back(std::move(f));
       }
@@ -576,7 +576,7 @@ TEST_F(PipelineIntegrationTest, SurvivesDroppedPackets) {
       if (audio_packet_count % 5 == 0) {
         continue;  // Simulate dropped packet
       }
-      auto frames = audio_decoder.decode(std::span<const uint8_t>{packet.data});
+      auto frames = audio_decoder.decode(std::span<const uint8_t>{packet.data}, packet.pts, packet.dts);
       for (auto& f : frames) {
         audio_frames.push_back(std::move(f));
       }
@@ -639,7 +639,7 @@ TEST_F(PipelineIntegrationTest, SurvivesMalformedPackets) {
         packet.data[6] ^= 0xFF;
         packet.data[7] ^= 0xFF;
       }
-      auto frames = video_decoder.decode(std::span<const uint8_t>{packet.data});
+      auto frames = video_decoder.decode(std::span<const uint8_t>{packet.data}, packet.pts, packet.dts);
       for (auto& f : frames) {
         video_frames.push_back(std::move(f));
       }
@@ -651,7 +651,7 @@ TEST_F(PipelineIntegrationTest, SurvivesMalformedPackets) {
         packet.data[4] ^= 0xFF;
         packet.data[5] ^= 0xFF;
       }
-      auto frames = audio_decoder.decode(std::span<const uint8_t>{packet.data});
+      auto frames = audio_decoder.decode(std::span<const uint8_t>{packet.data}, packet.pts, packet.dts);
       for (auto& f : frames) {
         audio_frames.push_back(std::move(f));
       }
@@ -705,12 +705,12 @@ TEST_F(PipelineIntegrationTest, HandlesExtremeAvSyncDrift) {
 
   for (const auto& packet : packets) {
     if (packet.stream_index == video_idx) {
-      auto frames = video_decoder.decode(std::span<const uint8_t>{packet.data});
+      auto frames = video_decoder.decode(std::span<const uint8_t>{packet.data}, packet.pts, packet.dts);
       for (auto& f : frames) {
         video_frames.push_back(std::move(f));
       }
     } else if (packet.stream_index == audio_idx) {
-      auto frames = audio_decoder.decode(std::span<const uint8_t>{packet.data});
+      auto frames = audio_decoder.decode(std::span<const uint8_t>{packet.data}, packet.pts, packet.dts);
       for (auto& f : frames) {
         audio_frames.push_back(std::move(f));
       }
@@ -772,10 +772,10 @@ TEST_F(PipelineIntegrationTest, CodecInfoReflectsDecodedStream) {
   bool fed_audio = false;
   for (const auto& packet : packets) {
     if (packet.stream_index == video_idx && !fed_video) {
-      video_decoder.decode(std::span<const uint8_t>{packet.data});
+      video_decoder.decode(std::span<const uint8_t>{packet.data}, packet.pts, packet.dts);
       fed_video = true;
     } else if (packet.stream_index == audio_idx && !fed_audio) {
-      audio_decoder.decode(std::span<const uint8_t>{packet.data});
+      audio_decoder.decode(std::span<const uint8_t>{packet.data}, packet.pts, packet.dts);
       fed_audio = true;
     }
     if (fed_video && fed_audio) break;
