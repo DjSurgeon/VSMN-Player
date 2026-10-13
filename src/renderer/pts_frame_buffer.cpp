@@ -40,7 +40,7 @@ std::optional<iptv::decoder::DecodedFrame> PtsFrameBuffer::pop() {
 
   lock.unlock();
   cv_full_.notify_one();
-  return std::move(frame);
+  return frame;
 }
 
 void PtsFrameBuffer::abort() {

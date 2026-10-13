@@ -42,11 +42,7 @@ struct PtsComparator {
 
     if (std::abs(diff) > kWrapThreshold) {
       // The smaller PTS is the wrapped-around later time.
-      if (ptsA < ptsB) {
-        return true;  // ptsA is later, so A > B for min-heap
-      } else {
-        return false; // ptsA is earlier, so A < B for min-heap
-      }
+      return ptsA < ptsB;
     }
 
     if (ptsA != ptsB) {
