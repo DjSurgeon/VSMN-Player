@@ -23,9 +23,6 @@ extern "C" {
 }
 
 namespace iptv::decoder {
-
-namespace {
-
 using internal::allocateFrameBuffer;
 using internal::allocatePacketBuffer;
 using internal::CodecContextPtr;
@@ -33,30 +30,9 @@ using internal::FramePtr;
 using internal::kFrameTimeBase;
 using internal::openCodecContext;
 using internal::PacketPtr;
-
 // Smallest step a synthesized timestamp advances by, so frames stay ordered in time order even
 // when the codec reports no frame rate to derive a real duration from.
 constexpr int64_t kMinimumFrameStepMs = 1;
-
-/**
- * @brief Names an FFmpeg status code, which is otherwise an opaque integer.
- */
-std::string describeStatus(int status) {
-  char message[AV_ERROR_MAX_STRING_SIZE] = {};
-  av_strerror(status, message, sizeof(message));
-  return std::string(message);
-}
-
-/**
- * @brief Reports whether a status means the input packet was unusable.
- *
- * A corrupt packet is the stream's fault, not this decoder's: the codec rejects it and stays
- * usable for the next one, so the packet is dropped instead of failing the whole call.
- */
-[[nodiscard]] bool isCorruptInput(int status) noexcept { return status == AVERROR_INVALIDDATA; }
-
-}  // namespace
-
 struct FFmpegDecoder::Impl {
   std::string codec_name;
   CodecContextPtr codec_context;
@@ -64,7 +40,6 @@ struct FFmpegDecoder::Impl {
   PacketPtr packet;
   int64_t next_pts_ms{0};
   bool end_of_stream{false};
-
   explicit Impl(const std::string& codec_hint)
       : codec_name(codec_hint),
         codec_context(
@@ -73,19 +48,15 @@ struct FFmpegDecoder::Impl {
                 : openCodecContext(codec_hint)),
         frame(allocateFrameBuffer()),
         packet(allocatePacketBuffer()) {}
-
   // Feeds one packet to the codec and appends every frame it completes on it.
   void decodePacket(std::span<const uint8_t> compressed_data, std::vector<DecodedFrame>& frames, int64_t pts_us, int64_t dts_us);
 
   // Signals end of stream, then appends every frame the codec was still holding.
   void drainRemainingFrames(std::vector<DecodedFrame>& frames);
-
   // Appends every frame the codec currently has ready, in output order.
   void releaseReadyFrames(std::vector<DecodedFrame>& frames);
-
   // Packs the frame the codec just produced, stamped with the next synthesized time.
   [[nodiscard]] DecodedFrame packReadyFrame();
-
   // How long a frame stays on screen in milliseconds; 0 when the codec reports no frame rate.
   [[nodiscard]] int64_t frameDurationMs() const noexcept;
 };
@@ -101,12 +72,12 @@ struct FFmpegDecoder::Impl {
   if (status >= 0) {
     return true;
   }
-  if (isCorruptInput(status)) {
+  if (internal::isCorruptInput(status)) {
     return false;
   }
   throw DecoderException(DecoderError::UnknownError,
                          "FFmpeg rejected a packet of " + std::to_string(packet_size) +
-                             " byte(s): " + describeStatus(status) + ".");
+                             " byte(s): " + internal::describeStatus(status) + ".");
 }
 
 int64_t FFmpegDecoder::Impl::frameDurationMs() const noexcept {
@@ -136,14 +107,14 @@ void FFmpegDecoder::Impl::releaseReadyFrames(std::vector<DecodedFrame>& frames) 
       frames.push_back(packReadyFrame());
       continue;
     }
-    if (isCorruptInput(status)) {
+    if (internal::isCorruptInput(status)) {
       return;  // This frame is unusable; later packets can still decode.
     }
     if (status == AVERROR(EAGAIN) || status == AVERROR_EOF) {
       return;
     }
     throw DecoderException(DecoderError::UnknownError,
-                           "FFmpeg failed to produce a frame: " + describeStatus(status) + ".");
+                           "FFmpeg failed to produce a frame: " + internal::describeStatus(status) + ".");
   }
 }
 
@@ -234,7 +205,7 @@ void FFmpegDecoder::Impl::drainRemainingFrames(std::vector<DecodedFrame>& frames
 
   if (status < 0 && status != AVERROR_EOF) {
     throw DecoderException(DecoderError::UnknownError, "FFmpeg refused the end of stream signal: " +
-                                                           describeStatus(status) + ".");
+                                                           internal::describeStatus(status) + ".");
   }
   releaseReadyFrames(frames);
 }

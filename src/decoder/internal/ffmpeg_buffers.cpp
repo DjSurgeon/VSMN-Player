@@ -56,4 +56,12 @@ PacketPtr allocatePacketBuffer() {
   return packet;
 }
 
+std::string describeStatus(int status) {
+  char message[AV_ERROR_MAX_STRING_SIZE] = {};
+  av_strerror(status, message, sizeof(message));
+  return std::string(message);
+}
+
+[[nodiscard]] bool isCorruptInput(int status) noexcept { return status == AVERROR_INVALIDDATA; }
+
 }  // namespace iptv::decoder::internal
