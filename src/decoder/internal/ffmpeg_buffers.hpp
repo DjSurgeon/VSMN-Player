@@ -5,6 +5,7 @@
 
 extern "C" {
 #include <libavcodec/avcodec.h>
+#include <libavutil/error.h>
 }
 
 namespace iptv::decoder::internal {
@@ -73,4 +74,16 @@ using PacketPtr = std::unique_ptr<AVPacket, AVPacketDeleter>;
  */
 [[nodiscard]] PacketPtr allocatePacketBuffer();
 
+/**
+ * @brief Names an FFmpeg status code, which is otherwise an opaque integer.
+ */
+std::string describeStatus(int status);
+
+/**
+ * @brief Reports whether a status means the input packet was unusable.
+ *
+ * A corrupt packet is the stream's fault, not this decoder's: the codec rejects it and stays
+ * usable for the next one, so the packet is dropped instead of failing the whole call.
+ */
+[[nodiscard]] bool isCorruptInput(int status) noexcept;
 }  // namespace iptv::decoder::internal
