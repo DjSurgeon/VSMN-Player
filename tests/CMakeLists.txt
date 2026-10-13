@@ -27,6 +27,7 @@ add_executable(unit_tests
     unit/decoder/aac_source.cpp
     unit/decoder/test_decoder_interfaces.cpp
     unit/decoder/test_ffmpeg_audio_decoder.cpp
+    unit/decoder/test_pts_ordering.cpp
     unit/decoder/test_ffmpeg_decoder.cpp
     unit/decoder/test_ffmpeg_frame_extractor.cpp
     unit/decoder/test_decoder_frame.cpp
