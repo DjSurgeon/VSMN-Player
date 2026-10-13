@@ -212,7 +212,6 @@ void FFmpegDecoder::Impl::decodePacket(std::span<const uint8_t> compressed_data,
   // This enables correct B-frame reordering and preserves timestamp precision.
   if (pts_us != -1) {
     packet->pts = pts_us;
-    packet->time_base = {1, 1000000};  // microseconds
   }
   if (dts_us != -1) {
     packet->dts = dts_us;

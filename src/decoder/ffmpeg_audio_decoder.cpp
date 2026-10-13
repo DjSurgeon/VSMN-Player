@@ -31,7 +31,7 @@ struct FFmpegAudioDecoder::Impl {
   SwrCtxPtr swr_ctx;
   internal::PacketPtr packet;
   internal::FramePtr frame;
-  AVChannelLayout out_ch_layout;
+  AVChannelLayout out_ch_layout{};
 
   explicit Impl(const std::string& codec_hint) {
     codec_ctx = internal::openCodecContext(codec_hint);
@@ -144,7 +144,6 @@ std::vector<DecodedFrame> FFmpegAudioDecoder::decode(std::span<const uint8_t> co
 
   if (pts_us != -1) {
     impl.packet->pts = pts_us;
-    impl.packet->time_base = {1, 1000000};
   }
   if (dts_us != -1) {
     impl.packet->dts = dts_us;
@@ -191,7 +190,7 @@ std::vector<DecodedFrame> FFmpegAudioDecoder::flush() {
 CodecInfo FFmpegAudioDecoder::getCodecInfo() const {
   auto& impl = requireImpl();
   CodecIdentity id{impl.codec_ctx->codec->name, "", impl.codec_ctx->bit_rate, false};
-  AudioCodecParameters params{impl.codec_ctx->sample_rate, impl.codec_ctx->ch_layout.nb_channels};
+  AudioCodecParameters params{impl.codec_ctx->sample_rate, av_get_channel_layout_nb_channels(impl.codec_ctx->channel_layout)};
   return CodecInfo(std::move(id), params);
 }
 
