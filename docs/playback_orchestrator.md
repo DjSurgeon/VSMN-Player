@@ -34,11 +34,13 @@ Supervivencia bajo condiciones de red extremas (ej. 2G / túneles).
 - **Experiencia de usuario:** Se prefiere imagen congelada con audio continuo antes que un "loading" silencioso.
 - **Consideración:** El Demuxer (FFmpeg) deberá tolerar "agujeros" (gaps) masivos en los timestamps del stream de vídeo sin desincronizar la pista de audio principal, logrando reenganchar limpiamente cuando el vídeo vuelva a estar disponible.
 
-## Integración C++20 Propuesta
+## Integración C++20 Lograda (V1)
 
-Para aislar esta complejidad y no contaminar la capa de red ni la del parser:
+Para aislar esta complejidad y no contaminar la capa de red ni la del parser, hemos conseguido la siguiente arquitectura en nuestra versión actual (V1):
 
-1. **Hilo de Ingesta (Productor):** Dedicado exclusivamente a las peticiones HTTP y evaluación ABR.
-2. **Hilo de Reproducción (Consumidor):** Interacciona con el decodificador.
-3. **Comunicación Concurrent Lock-Free:** Mediante colas seguras para transferir bloques de memoria sin bloqueos indeseados.
-4. **Alimentación del Filtro ABR:** Utilizando el throughput reportado por `metrics.throughput_mbps()` de nuestro módulo `HttpClient`.
+1. **Hilo de Ingesta (Productor):** El `PlaybackOrchestrator` arranca un hilo C++20 (`std::jthread`) autónomo.
+2. **Evaluación ABR Pura:** El `AbrManager` inyectado aplica el EWMA ($\alpha = 0.3$) y una histéresis asimétrica matemáticamente estable sobre las métricas que nos provee el `HttpClient`.
+3. **Comunicación Segura:** La ingesta inyecta los `MediaSegmentBundle` en una `ConcurrentQueue` basada en cerrojos (`std::mutex` y `std::condition_variable`), asegurando paso por movimiento (`std::move`) sin copias de memoria (Zero-Copy).
+4. **Fast Cancellation (Abortos en Vuelo):** A través del `std::stop_token` nativo, si el usuario hace "Stop" o el orquestador requiere vaciar el *buffer* por un cambio abrupto de calidad, las conexiones `libcurl` se detienen internamente devolviendo `CURLE_ABORTED_BY_CALLBACK`.
+
+El siguiente paso en la evolución será el consumidor final: conectar el Demuxer a la cola para iniciar el canal de decodificación.

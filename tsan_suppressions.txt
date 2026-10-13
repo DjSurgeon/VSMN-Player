@@ -1,0 +1,6 @@
+# FFmpeg internal threads and data races that we cannot fix
+race:libavcodec
+race:libavformat
+race:libavutil
+race:libswresample
+race:httplib

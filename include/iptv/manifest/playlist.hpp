@@ -35,8 +35,7 @@ struct Resolution {
  */
 struct MediaSegmentRef {
   std::string_view uri{};  ///< URL of the segment (.ts / .m4s).
-  std::optional<std::string_view>
-      init_segment_uri;           ///< Initialization segment (#EXT-X-MAP) for CMAF/fMP4.
+
   FloatingSeconds duration{0.0};  ///< Precise duration from #EXTINF.
   uint64_t sequence_index{0};     ///< Absolute media sequence index.
   bool is_discontinuity{false};   ///< Timestamp jump marker (#EXT-X-DISCONTINUITY).

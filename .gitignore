@@ -8,6 +8,7 @@ Makefile
 
 .vscode/
 .idea/
+.cache/
 *.swp
 *.swo
 *~
@@ -33,3 +34,6 @@ htmlcov/
 
 *.log
 .env
+TASK_SPEC.md
+scratch/
+build_release_new/

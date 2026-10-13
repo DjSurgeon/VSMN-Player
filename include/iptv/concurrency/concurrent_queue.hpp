@@ -1,10 +1,12 @@
 #pragma once
 
 #include <condition_variable>
+#include <cstddef>
 #include <mutex>
 #include <optional>
 #include <queue>
 #include <stop_token>
+#include <utility>
 
 namespace iptv {
 
@@ -26,8 +28,15 @@ class ConcurrentQueue {
   ConcurrentQueue(const ConcurrentQueue&) = delete;
   ConcurrentQueue& operator=(const ConcurrentQueue&) = delete;
 
+  // Delete move semantics (mutexes are generally not movable)
+  ConcurrentQueue(ConcurrentQueue&&) = delete;
+  ConcurrentQueue& operator=(ConcurrentQueue&&) = delete;
+
   /**
    * @brief Pushes an item into the queue and notifies one waiting thread.
+   *
+   * @param item Taken by value and moved into the internal storage, so large media buffers
+   * transit without copying their payload bytes.
    */
   void push(T item) {
     std::scoped_lock lock(mutex_);
@@ -38,17 +47,39 @@ class ConcurrentQueue {
   /**
    * @brief Blocking pop with cancellation support (C++20 std::stop_token).
    *
-   * @param st Token to safely abort the block if the thread needs to shutdown.
+   * The wait is re-armed under the queue mutex whenever the predicate is still false, so a
+   * stop request arriving before or after the thread parks always wakes it up: no missed
+   * wakeups, no lost items.
+   *
+   * @param stop_token Token to safely abort the block if the thread needs to shutdown.
    * @return std::optional<T> containing the item, or nullopt if cancelled.
    */
-  std::optional<T> pop(std::stop_token st) {
+  std::optional<T> pop(std::stop_token stop_token) {
     std::unique_lock lock(mutex_);
-    cv_.wait(lock, st, [this] { return !queue_.empty(); });
+    cv_.wait(lock, stop_token, [this] { return !queue_.empty(); });
 
-    if (st.stop_requested()) {
+    if (stop_token.stop_requested()) {
       return std::nullopt;
     }
 
+    T item = std::move(queue_.front());
+    queue_.pop();
+    return item;
+  }
+
+  /**
+   * @brief Non-blocking pop (Polling).
+   *
+   * Useful for consumers that need to perform other tasks (e.g. render a loading spinner)
+   * when the queue is empty.
+   *
+   * @return std::optional<T> containing the item, or nullopt if empty.
+   */
+  std::optional<T> try_pop() {
+    std::scoped_lock lock(mutex_);
+    if (queue_.empty()) {
+      return std::nullopt;
+    }
     T item = std::move(queue_.front());
     queue_.pop();
     return item;

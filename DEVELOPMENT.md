@@ -71,10 +71,17 @@ Para proteger la calidad del código, aplicamos reglas estrictas. No permitimos 
 - `develop`: Es la rama de integración. Si `main` es producción, `develop` es "staging".
 - `feature/*`: **Aquí es donde debes trabajar.** (Ejemplo: `feature/añadir-hls-parser`).
 
+### Agentes e IA (Google Antigravity / OpenCode)
+
+El proyecto utiliza asistentes autónomos de codificación que operan bajo reglas muy estrictas:
+1. **Delegación Total**: El código de las features principales y testing a bajo nivel suele ser delegado al agente mediante `./run_agent.sh` utilizando el modelo `opencode`.
+2. **The Devil**: Cualquier cambio arquitectónico, de memoria o de concurrencia debe someterse al escrutinio del protocolo `/deal` (ver `CONTRIBUTING.md`).
+3. **Restricciones**: El agente operará bajo la premisa "Caveman mode" (comentarios precisos, cero padding), cero mocks de FFmpeg, y validación estricta de ASan/TSan.
+
 ### Cómo Colaborar
 
 1. Actualiza tu local: `git checkout develop && git pull`.
 2. Crea tu rama: `git checkout -b feature/mi-nueva-idea`.
-3. Escribe el código y, sobre todo, **¡añade tests!** (Revisa `TESTING.md` para aprender cómo).
+3. Invoca la ayuda del agente de OpenCode si lo necesitas, pero siempre **¡añade tests!** (Revisa `TESTING.md` para aprender cómo).
 4. Sube la rama y abre un **Pull Request (PR)** apuntando a `develop`.
 5. Los GitHub Actions (nuestro robot de Integración Continua) compilarán tu código y le pasarán los sanitizers de memoria (ASan/UBSan). Si la luz se pone verde, un mantenedor aprobará tu código.

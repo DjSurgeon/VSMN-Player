@@ -7,36 +7,29 @@
 namespace iptv::manifest {
 
 /**
- * @brief Concrete parser for HLS Media Playlists (VOD & Live).
+ * @brief Options for parsing a playlist.
  *
- * Implements a zero-copy line iteration approach to process M3U8 tags.
+ * Only the raw content is needed: URIs are stored exactly as written, and
+ * resolving them against the playlist URL is the network layer's job, so no
+ * base URL is carried here.
  */
-class M3u8Parser final {
- public:
-  /**
-   * @brief Default constructor.
-   */
-  M3u8Parser() = default;
-
-  /**
-   * @brief Virtual destructor.
-   */
-  ~M3u8Parser() = default;
-
-  // Rule of 5: Moveable, non-copyable parser
-  M3u8Parser(const M3u8Parser&) = delete;
-  M3u8Parser& operator=(const M3u8Parser&) = delete;
-  M3u8Parser(M3u8Parser&&) noexcept = default;
-  M3u8Parser& operator=(M3u8Parser&&) noexcept = default;
-
-  /**
-   * @brief Parses the M3U8 media playlist.
-   *
-   * @param content Raw UTF-8 string view of the M3U8 payload.
-   * @param base_url Absolute URL of the playlist used to resolve relative segment URIs.
-   * @return ParseResult Encapsulating either a valid Playlist or a diagnostic ParseError.
-   */
-  [[nodiscard]] ParseResult parse(std::string_view content, std::string_view base_url) const;
+struct ParseOptions {
+  std::string_view content;
 };
+
+/**
+ * @brief Namespace for parsing HLS M3U8 playlists (Master and Media).
+ */
+namespace M3u8Parser {
+
+/**
+ * @brief Parses the M3U8 media playlist.
+ *
+ * @param options The struct containing the manifest content as a string_view.
+ * @return ParseResult Encapsulating either a valid Playlist or a diagnostic ParseError.
+ */
+[[nodiscard]] ParseResult parse(const ParseOptions& options);
+
+}  // namespace M3u8Parser
 
 }  // namespace iptv::manifest

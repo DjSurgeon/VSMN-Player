@@ -1,24 +1,30 @@
 #include "iptv/network/http_client.hpp"
 
-#include <curl/curl.h>
-
+#include <algorithm>
+#include <chrono>
+#include <cstdint>
 #include <random>
-#include <stdexcept>
+#include <stop_token>
+#include <string>
 #include <thread>
+#include <utility>
 
-#include "iptv/network/http_curl_callbacks.hpp"
+#include "internal/http_client_impl.hpp"
+#include "internal/transfer_callbacks.hpp"
 
 namespace iptv::network {
 
 namespace {
 
-[[nodiscard]] bool isTransientError(CURLcode res, HttpStatusCode status) noexcept {
-  const auto code = static_cast<long>(status);
-  return (res == CURLE_OPERATION_TIMEDOUT || res == CURLE_COULDNT_CONNECT ||
-          res == CURLE_COULDNT_RESOLVE_HOST) ||
-         (code >= 500 && code < 600) || (code == 429);
-}
-
+/**
+ * @brief Sleeps a jittered interval and advances the delay for the next attempt.
+ * @param strategy The configured backoff strategy; None is a no-op.
+ * @param current_delay In/out delay: read for the sleep, then advanced in place.
+ * @param max_delay Ceiling applied when doubling.
+ *
+ * Jitter is drawn from [0, current_delay] so concurrent clients do not retry in
+ * lockstep after a shared outage.
+ */
 void applyBackoffDelay(BackoffStrategy strategy, std::chrono::milliseconds& current_delay,
                        std::chrono::milliseconds max_delay) {
   if (strategy == BackoffStrategy::None) {
@@ -34,83 +40,23 @@ void applyBackoffDelay(BackoffStrategy strategy, std::chrono::milliseconds& curr
   }
 }
 
+/**
+ * @brief Decides whether the retry loop may stop after a failed attempt.
+ * @param aborted True when the caller cancelled the request.
+ * @param transient True when the failure class is worth retrying.
+ * @param attempt The zero-based attempt number just completed.
+ * @param retries The configured maximum retry count.
+ * @return true when the loop should return the current response.
+ */
+[[nodiscard]] bool shouldStopRetrying(bool aborted, bool transient, uint32_t attempt,
+                                      uint32_t retries) noexcept {
+  if (aborted) {
+    return true;
+  }
+  return !transient || attempt == retries;
+}
+
 }  // namespace
-
-// Define the hidden implementation class with strict RAII
-class HttpClient::Impl {
-  friend class HttpClient;
-
- public:
-  Impl() : handle_(curl_easy_init()) {
-    if (handle_ == nullptr) {
-      throw std::runtime_error("Failed to initialize curl easy handle.");
-    }
-    curl_easy_setopt(handle_, CURLOPT_WRITEFUNCTION, detail::writeCallback);
-    curl_easy_setopt(handle_, CURLOPT_HEADERFUNCTION, detail::headerCallback);
-  }
-
-  ~Impl() {
-    if (handle_ != nullptr) {
-      curl_easy_cleanup(handle_);
-      handle_ = nullptr;
-    }
-  }
-
-  // Rule of 5: Prohibit copy/move for Impl to ensure strict lifecycle of raw
-  // handle
-  Impl(const Impl&) = delete;
-  Impl& operator=(const Impl&) = delete;
-  Impl(Impl&&) = delete;
-  Impl& operator=(Impl&&) = delete;
-
-  [[nodiscard]] CURL* get() const noexcept { return handle_; }
-
-  void prepareHandle(const std::string& url, std::chrono::milliseconds timeout) {
-    curl_easy_setopt(handle_, CURLOPT_URL, url.c_str());
-    if (timeout.count() > 0) {
-      curl_easy_setopt(handle_, CURLOPT_TIMEOUT_MS, static_cast<long>(timeout.count()));
-    }
-  }
-
-  void bindResponseBuffers(HttpResponse& response) {
-    curl_easy_setopt(handle_, CURLOPT_WRITEDATA, &response);
-    curl_easy_setopt(handle_, CURLOPT_HEADERDATA, &response);
-  }
-
-  CURLcode executeTransfer(std::chrono::microseconds& duration) {
-    const auto start_wall_clock = std::chrono::steady_clock::now();
-    CURLcode res = curl_easy_perform(handle_);
-    const auto end_wall_clock = std::chrono::steady_clock::now();
-    duration =
-        std::chrono::duration_cast<std::chrono::microseconds>(end_wall_clock - start_wall_clock);
-    return res;
-  }
-
-  void collectMetrics(CURLcode res, const std::chrono::microseconds& duration,
-                      HttpResponse& response) {
-    auto& metrics = response.getMetricsRef();
-    metrics.total_duration = duration;
-
-    long status = 0;
-    curl_easy_getinfo(handle_, CURLINFO_RESPONSE_CODE, &status);
-    if (res != CURLE_OK) {
-      response.setStatusCode(HttpStatusCode::Unknown);
-    } else {
-      response.setStatusCode(static_cast<HttpStatusCode>(status));
-    }
-
-    curl_off_t starttransfer_us = 0;
-    curl_easy_getinfo(handle_, CURLINFO_STARTTRANSFER_TIME_T, &starttransfer_us);
-    metrics.ttfb = std::chrono::microseconds(starttransfer_us);
-    metrics.bytes_downloaded = response.getBytesDownloaded();
-  }
-
- private:
-  CURL* handle_ = nullptr;
-  RetryPolicy policy_;
-};
-
-// Lifecycle methods for HttpClient
 
 HttpClient::HttpClient() : pimpl_(std::make_unique<Impl>()) {}
 
@@ -125,30 +71,41 @@ HttpClient& HttpClient::operator=(HttpClient&& other) noexcept {
   return *this;
 }
 
-// Interface implementations (Skeleton for now)
-
-HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseconds timeout) {
+HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseconds timeout,
+                                  const std::stop_token& stop_token) {
   pimpl_->prepareHandle(url, timeout);
 
   HttpResponse response(HttpStatusCode::Unknown);
-  pimpl_->bindResponseBuffers(response);
+
+  internal::TransferContext ctx{
+      .response = &response,
+      .stop_token = &stop_token,
+      .aborted_by_user = false,
+  };
+
+  internal::bindTransferContext(pimpl_->get(), ctx);
 
   const auto retries = pimpl_->policy_.max_retries;
   auto current_delay = pimpl_->policy_.initial_delay;
 
-  for (std::uint32_t attempt = 0; attempt <= retries; ++attempt) {
+  for (uint32_t attempt = 0; attempt <= retries; ++attempt) {
     response.clear();
 
     std::chrono::microseconds duration{0};
     const CURLcode res = pimpl_->executeTransfer(duration);
 
-    pimpl_->collectMetrics(res, duration, response);
+    pimpl_->collectTiming(res, duration, response);
+    pimpl_->collectStatusCode(res, response);
 
     if (res == CURLE_OK && response.isSuccess()) {
       return response;
     }
 
-    if (!isTransientError(res, response.getStatusCode()) || attempt == retries) {
+    // Do not retry if the operation was aborted by the user
+    const bool aborted =
+        res == CURLE_ABORTED_BY_CALLBACK || ctx.aborted_by_user || stop_token.stop_requested();
+    const bool transient = internal::isTransientError(res, response.getStatusCode());
+    if (shouldStopRetrying(aborted, transient, attempt, retries)) {
       return response;
     }
 
@@ -159,18 +116,19 @@ HttpResponse HttpClient::download(const std::string& url, std::chrono::milliseco
 }
 
 void HttpClient::setNetworkConfig(const NetworkConfig& config) {
-  curl_easy_setopt(pimpl_->get(), CURLOPT_USERAGENT, config.user_agent.c_str());
-  curl_easy_setopt(pimpl_->get(), CURLOPT_FOLLOWLOCATION, config.follow_redirects ? 1L : 0L);
-  curl_easy_setopt(pimpl_->get(), CURLOPT_SSL_VERIFYPEER, config.ssl_verify ? 1L : 0L);
-  curl_easy_setopt(pimpl_->get(), CURLOPT_SSL_VERIFYHOST, config.ssl_verify ? 2L : 0L);
+  CURL* handle = pimpl_->get();
+  curl_easy_setopt(handle, CURLOPT_USERAGENT, config.user_agent.c_str());
+  curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, config.follow_redirects ? 1L : 0L);
+  curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, config.ssl_verify ? 1L : 0L);
+  curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, config.ssl_verify ? 2L : 0L);
 
   // Connection timeout vs general timeout anti-stall
-  curl_easy_setopt(pimpl_->get(), CURLOPT_CONNECTTIMEOUT_MS,
+  curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS,
                    static_cast<long>(config.connect_timeout.count()));
 
   // Anti-stall safeguards: abort if < 10KB/s for 3s
-  curl_easy_setopt(pimpl_->get(), CURLOPT_LOW_SPEED_LIMIT, 10240L);
-  curl_easy_setopt(pimpl_->get(), CURLOPT_LOW_SPEED_TIME, 3L);
+  curl_easy_setopt(handle, CURLOPT_LOW_SPEED_LIMIT, 10240L);
+  curl_easy_setopt(handle, CURLOPT_LOW_SPEED_TIME, 3L);
 }
 
 void HttpClient::setRetryPolicy(const RetryPolicy& policy) { pimpl_->policy_ = policy; }

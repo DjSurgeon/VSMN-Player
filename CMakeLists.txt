@@ -14,6 +14,7 @@ option(ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
 option(ENABLE_FUZZER "Enable libFuzzer target" OFF)
 option(BUILD_TESTS "Build unit test suite" ON)
+option(ENABLE_STRESS_TESTS "Enable massive stress tests" OFF)
 option(ENABLE_BENCHMARKS "Enable Google Benchmark suite" OFF)
 
 # Strict warnings flags
@@ -34,6 +35,11 @@ if(ENABLE_WARNINGS_AS_ERRORS)
     list(APPEND PROJECT_WARNINGS -Werror)
 endif()
 
+# Global Project Configuration Interface
+add_library(project_config INTERFACE)
+target_include_directories(project_config INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_options(project_config INTERFACE ${PROJECT_WARNINGS})
+
 # Sanitizers configuration
 if(ENABLE_SANITIZERS AND ENABLE_TSAN)
     message(FATAL_ERROR "ASan and TSan cannot be compiled together at the same time")
@@ -41,28 +47,25 @@ endif()
 
 if(ENABLE_SANITIZERS)
     message(STATUS "AddressSanitizer and UBSan enabled")
-    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=address,undefined)
+    target_compile_options(project_config INTERFACE -fsanitize=address,undefined -fno-omit-frame-pointer)
+    target_link_options(project_config INTERFACE -fsanitize=address,undefined)
 endif()
 
 if(ENABLE_TSAN)
     message(STATUS "ThreadSanitizer enabled")
-    add_compile_options(-fsanitize=thread -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=thread)
+    target_compile_options(project_config INTERFACE -fsanitize=thread -fno-omit-frame-pointer)
+    target_link_options(project_config INTERFACE -fsanitize=thread)
 endif()
 
 # Coverage configuration
 if(ENABLE_COVERAGE)
     message(STATUS "Code Coverage enabled")
-    add_compile_options(--coverage -O0 -g)
-    add_link_options(--coverage)
+    target_compile_options(project_config INTERFACE --coverage -O0 -g)
+    target_link_options(project_config INTERFACE --coverage)
 endif()
 
 # Locate dependencies managed by Conan 2
 find_package(CURL REQUIRED)
-
-# Include public headers
-include_directories(include)
 
 # Include source directories
 add_subdirectory(src)

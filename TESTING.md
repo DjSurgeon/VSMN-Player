@@ -133,7 +133,26 @@ Si ves texto verde diciendo `100% tests passed`, ¡Enhorabuena, tu código funci
 
 ---
 
-## 6. Los Escudos Ocultos: Sanitizers y CI/CD
+## 6. Code Coverage (>90% Mandatory)
+
+En VSMN-Player no aceptamos ramas con baja cobertura. Actualmente superamos el **90%** global.
+Para comprobar tu cobertura en local, compila usando el tipo `Coverage`:
+
+```bash
+# Compilar con soporte de cobertura
+cmake -B build/Coverage -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake -DENABLE_COVERAGE=ON
+cmake --build build/Coverage -j4
+ctest --test-dir build/Coverage
+
+# Generar reporte (gcovr)
+gcovr -r . --html-details -o coverage.html
+```
+
+*Nota: Ciertas ramas matemáticas o fallos de asignación del sistema operativo (OOM en FFmpeg) están marcadas con `// LCOV_EXCL_START` si son imposibles de testear sin mocks (que están estrictamente prohibidos).*
+
+---
+
+## 7. Los Escudos Ocultos: Sanitizers y CI/CD
 
 No te asustes si tu test pasa en tu ordenador pero falla cuando subes el código a GitHub (GitHub Actions).
 
@@ -141,6 +160,6 @@ Nuestro pipeline ejecuta el código bajo **Sanitizers**:
 
 - **ASan (AddressSanitizer):** Buscará si te has olvidado de liberar memoria (Memory Leaks) o si has accedido a un array fuera de sus límites.
 - **UBSan (UndefinedBehaviorSanitizer):** Se quejará si haces divisiones por cero o matemáticas corruptas.
-- **TSan (ThreadSanitizer):** Detectará si dos hilos están modificando la misma variable a la vez sin un mutex.
+- **TSan (ThreadSanitizer):** Detectará si dos hilos están modificando la misma variable a la vez sin un mutex. *(Nota: usamos `tsan_suppressions.txt` para falsos positivos externos como httplib)*.
 
 Si el pipeline de GitHub se pone rojo, revisa el *Log* de la acción. El Sanitizer te dirá exactamente en qué línea de tu test ocurrió el problema. ¡Arréglalo, súbelo de nuevo y siéntete orgulloso de estar escribiendo C++ de grado industrial!

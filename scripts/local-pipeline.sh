@@ -87,12 +87,16 @@ fi
 
 # ---- Step 7: Markdown Lint ----
 step "7/7" "Markdown Lint (markdownlint)"
-if npx -y markdownlint-cli "*.md" "docs/**/*.md" --config .markdownlint.json 2>&1; then
-  pass "Markdown Lint"
+if command -v npx &> /dev/null; then
+  if npx -y markdownlint-cli "*.md" "docs/**/*.md" --config .markdownlint.json 2>&1; then
+    pass "Markdown Lint"
+  else
+    echo ""
+    echo "  💡 Fix: npx -y markdownlint-cli --fix '*.md' 'docs/**/*.md' --config .markdownlint.json"
+    fail "Markdown Lint"
+  fi
 else
-  echo ""
-  echo "  💡 Fix: npx -y markdownlint-cli --fix '*.md' 'docs/**/*.md' --config .markdownlint.json"
-  fail "Markdown Lint"
+  echo -e "${YELLOW}⚠️  npx not installed, skipping Markdown Lint.${NC}"
 fi
 
 # ---- Summary ----

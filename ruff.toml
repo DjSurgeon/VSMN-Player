@@ -1,0 +1,14 @@
+# Ruff config for build scripts (conanfile.py and any future Python tooling).
+# Keeps `.agents/tools/quality.sh` runnable — a gate that cannot run is
+# uncovered surface, not a pass.
+
+[lint.isort]
+# `conan` is the Conan 2 package, not the repo-local conan/ directory that holds
+# build profiles. Without this, ruff classifies it as first-party and reports a
+# bogus import-order violation.
+known-third-party = ["conan"]
+
+[lint.per-file-ignores]
+# RUF012: Conan 2 reads `default_options` as a class attribute. Moving it into
+# __init__ or annotating it ClassVar would break the recipe contract.
+"conanfile.py" = ["RUF012"]

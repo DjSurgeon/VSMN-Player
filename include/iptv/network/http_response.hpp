@@ -3,7 +3,6 @@
 #include <chrono>
 #include <cstdint>
 #include <cstring>
-#include <string>
 #include <vector>
 
 #include "iptv/network/http_status_code.hpp"
@@ -120,6 +119,12 @@ class HttpResponse {
    * @return const std::vector<uint8_t>& The response body.
    */
   [[nodiscard]] const std::vector<uint8_t>& getBody() const noexcept { return body_; }
+
+  /**
+   * @brief Extracts the raw binary body via move semantics.
+   * @return std::vector<uint8_t> The moved response body.
+   */
+  std::vector<uint8_t> extractBody() noexcept { return std::move(body_); }
 
   /**
    * @brief Retrieves the total number of bytes downloaded.

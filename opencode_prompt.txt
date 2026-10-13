@@ -1,0 +1,10 @@
+Modify `tests/unit/decoder/test_ffmpeg_decoder.cpp` and `tests/unit/decoder/test_ffmpeg_buffers.cpp` (create if needed) to achieve >85% code coverage by hitting the missing error branches in `ffmpeg_decoder.cpp` and `ffmpeg_buffers.cpp` without using any hallucinated mock frameworks.
+
+Targets to hit:
+1. `ffmpeg_decoder.cpp:115` (`frameDurationMs` returns 0). Trigger this by sending a raw frame with no timing/framerate info to `FFmpegDecoder`.
+2. `ffmpeg_decoder.cpp:140` (`isCorruptInput`). Send a malformed packet that `avcodec_receive_frame` rejects with `AVERROR_INVALIDDATA`. Ensure `DecoderException` is NOT thrown, but the frame is dropped.
+3. `ffmpeg_decoder.cpp:153-155` (oversized packet). Pass a `std::span` with `data=nullptr` and `size > INT_MAX`. Assert `DecoderError::UnknownError` is thrown.
+4. `ffmpeg_decoder.cpp:160-164` (probe buffer allocation failure). Pass an empty `codec_hint` and a `std::span` with `size = INT_MAX - AVPROBE_PADDING_SIZE + 2` to cause `av_malloc` to fail or overflow. Assert `DecoderError::AllocationFailed` is thrown.
+5. `ffmpeg_buffers.cpp:28-29` (`avcodec_open2` fails). Write a test that calls `iptv::decoder::internal::openCodecContext` with a codec name that fails to open (e.g. an encoder name, or a decoder that requires strict extradata we don't provide). Assert `DecoderError::CodecOpenFailed` is thrown.
+
+Make sure tests compile and use GTest. Do NOT use fake C++ mocks for FFmpeg functions. Use `EXPECT_THROW` and verify the `DecoderError` enum values.

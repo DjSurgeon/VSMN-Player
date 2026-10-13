@@ -15,11 +15,13 @@ services:
       - QT_X11_GL_THREAD_SAFE=1 # QT GUI
       - PULSE_SERVER=unix:/run/user/${MY_UID:-1000}/pulse/native
       - CONAN_USER_HOME=/home/developer
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       
     # Volumes mapping (Code, Cache, GUI and Audio)
     volumes:
       - .:/workspace:z
       - conan-cache:/home/developer/.conan2                             # Conan cache (Docker volume - clean perms)
+      - opencode-config:/home/developer/.config                         # OpenCode cache
       - /run/user/${MY_UID:-1000}/pulse/native:/run/user/${MY_UID:-1000}/pulse/native:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${HOME}/.Xauthority:/home/developer/.Xauthority:rw
@@ -60,3 +62,4 @@ services:
 volumes:
   conan-cache:
     driver: local
+  opencode-config:

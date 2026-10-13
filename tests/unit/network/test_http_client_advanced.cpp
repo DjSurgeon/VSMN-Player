@@ -2,7 +2,9 @@
 #include <httplib.h>
 
 #include <chrono>
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <numeric>
 #include <thread>
 #include <vector>
@@ -10,6 +12,36 @@
 #include "iptv/network/http_client.hpp"
 
 using namespace iptv::network;
+
+namespace {
+
+// One-shot gate the test thread opens. Models a server that has stopped sending mid-body:
+// the content provider parks here instead of sleeping, so the transfer is stalled for an
+// unbounded duration by construction rather than by a delay that has to outlast curl's
+// low-speed timer. Releases via shared ownership so a provider still parked at teardown
+// stays valid.
+class Gate {
+ public:
+  void wait() {
+    std::unique_lock lock(mutex_);
+    cv_.wait(lock, [this] { return open_; });
+  }
+
+  void open() {
+    {
+      std::scoped_lock lock(mutex_);
+      open_ = true;
+    }
+    cv_.notify_all();
+  }
+
+ private:
+  std::mutex mutex_;
+  std::condition_variable cv_;
+  bool open_{false};
+};
+
+}  // namespace
 
 class HttpClientAdvancedTest : public ::testing::Test {
  protected:
@@ -35,14 +67,17 @@ class HttpClientAdvancedTest : public ::testing::Test {
       res.set_content("Target Reached", "text/plain");
     });
 
-    // Stall route
-    server_->Get("/stall", [](const httplib::Request&, httplib::Response& res) {
-      res.set_content_provider(100, "text/plain",
-                               [](size_t /*offset*/, size_t /*length*/, httplib::DataSink& sink) {
-                                 sink.write("1", 1);
-                                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                                 return true;
-                               });
+    // Stall route: sends the first byte, then never sends another one until the test
+    // releases the gate. A stalled stream is what curl's low-speed limiter exists for.
+    auto gate = std::make_shared<Gate>();
+    gate_ = gate;
+    server_->Get("/stall", [gate](const httplib::Request&, httplib::Response& res) {
+      res.set_content_provider(
+          100, "text/plain", [gate](size_t /*offset*/, size_t /*length*/, httplib::DataSink& sink) {
+            sink.write("1", 1);
+            gate->wait();
+            return true;
+          });
     });
 
     // Large payload for Move Semantics
@@ -56,6 +91,10 @@ class HttpClientAdvancedTest : public ::testing::Test {
   }
 
   void TearDown() override {
+    // Never leave a content provider parked on a gate we are about to destroy.
+    if (gate_) {
+      gate_->open();
+    }
     server_->stop();
     if (server_thread_.joinable()) {
       server_thread_.join();
@@ -68,6 +107,7 @@ class HttpClientAdvancedTest : public ::testing::Test {
 
   std::unique_ptr<httplib::Server> server_;
   std::thread server_thread_;
+  std::shared_ptr<Gate> gate_;
   int port_ = 0;
 };
 
@@ -124,6 +164,9 @@ TEST_F(HttpClientAdvancedTest, LowSpeedLimitStall) {
   auto start = std::chrono::steady_clock::now();
   auto response = client.download(getUrl("/stall"), std::chrono::milliseconds(0));
   auto duration = std::chrono::steady_clock::now() - start;
+
+  // The provider is still parked, so nothing could have completed the transfer early.
+  gate_->open();
 
   EXPECT_FALSE(response.isSuccess());
   // The stall time should be around 3 seconds (low speed time configured in http_client.cpp)
