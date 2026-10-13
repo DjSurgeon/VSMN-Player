@@ -30,17 +30,35 @@ Engineered with a **Zero-Copy Memory Architecture** and heavily influenced by **
   - **Package Management:** Conan 2.0 orchestrating heavy dependencies (FFmpeg, SDL2, Dear ImGui) with absolute version pinning for reproducible builds.
 - **Zero-Friction Dev Environment:** 100% Plug & Play development using VSCode DevContainers. Your host machine stays clean.
 
+## 📦 Week 2 Decoder MVP
+
+**Media Pipeline Architecture:** MPEG-TS demuxing (`TsDemuxer`) → Elementary streams → Video/Audio decoders → PTS-ordered frame buffer (`PtsFrameBuffer`).
+
+- **MPEG-TS Demuxing:** `TsDemuxer` parses transport stream containers, extracting elementary video/audio packets with PTS/DTS timing.
+- **Elementary Streams:** H.264 (AVC), MPEG-4 Visual video streams and AAC audio streams are routed to respective decoders.
+- **Video Decoding:** `FFmpegDecoder` handles H.264/AVC decoding with B-frame reordering support via DTS propagation.
+- **Audio Decoding:** `FFmpegAudioDecoder` decodes AAC and resamples to standard 48kHz, 16-bit, stereo PCM with automatic channel configuration.
+- **PTS Synchronization:** Microsecond-precision PTS (`{1, 1000000}` microsecond timebase) throughout the pipeline, preserving decoding order through B-frames using DTS-based reordering.
+- **Thread-Safe Frame Buffer:** `PtsFrameBuffer` uses a min-heap priority queue with 33-bit PTS wrap-around handling and FIFO tie-breaking sequence IDs, with bounded capacity blocking and cancellation abort semantics.
+
+Supported codecs: H.264 (AVC), MPEG-4 Visual, AAC (with automatic 48kHz stereo resampling).
+
+Microsecond-precision PTS synchronization and B-frame reordering capabilities are highlighted.
+
 ## 🏗️ Architecture Overview (Phase 5: FFmpeg Decoders & Subsystem Integration Completed)
 
 The system strictly adheres to the **Feature-Sliced Design (FSD)**, keeping domains decoupled and testable.
-*Note: We employ strict **YAGNI** (You Aren't Gonna Need It). Speculative architecture is purged until needed. Currently, Network, Orchestrator, and FFmpeg Decoders are fully tested and functional.*
+*Note: We employ strict **YAGNI** (You Aren't Gonna Need IT). Speculative architecture is purged until needed. Currently, Network, Orchestrator, and FFmpeg Decoders are fully tested and functional.*
 
 ```mermaid
 graph TD;
     Network[Network Subsystem <br> libcurl] -->|Zero-Copy ByteBuffer| Orchestrator
     Parser[HLS Parser <br> DOD SIMD Pipeline] --> Orchestrator
     Orchestrator[Playback Orchestrator <br> std::jthread + ABR EWMA] --> Queue[ConcurrentQueue <br> TSAN Safe]
-    Queue --> Decoders[FFmpeg Decoders <br> H.264 & AAC]
+    Queue --> Decoders[FFmpeg Decoders <br> H.264 & AAC & MPEG-4 Visual]
+    Demux[MPEG-TS Demuxer <br> TsDemuxer] -->|Elementary Streams| Decoders
+    Decoders -->|PTS-ordered Frames| Buffer[PtsFrameBuffer]
+    Buffer -->|Synchronized Output| Player
 ```
 
 ## 🛠️ Tech Stack
